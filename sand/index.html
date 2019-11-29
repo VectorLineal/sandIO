@@ -19,16 +19,25 @@ var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.i
 function preload() {
 
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    game.load.image('minotaur', 'assets/generic_minotaur.png');
+    game.load.image('minotaurLArm', 'assets/generic_centaur_l_arm.png');
+    game.load.image('minotaurRArm', 'assets/generic_centaur_r_arm.png');
     game.load.tilemap('duelMap', 'assets/duel_map.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('tiles', 'assets/maptiles.png');
 
 }
 
 var player;
+var armR;
+var armL;
 var cursors;
 var scaleRatio = window.devicePixelRatio*3;
 var map;
 var layer;
+var up;
+var down;
+var left;
+var right;
 
 function create() {
 
@@ -41,19 +50,31 @@ function create() {
     map.addTilesetImage('maptiles', 'tiles');
 
     layer = map.createLayer('duel');
-    //layer.scale.set(scaleRatio);
+    layer.scale.set(scaleRatio);
     layer.resizeWorld();
+    game.world.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
 
     // The player and its settings
-    player = game.add.sprite(game.world.centerX, game.world.centerY, 'dude');
-    player.scale.setTo(scaleRatio*1.25, scaleRatio*1.25);
-
+    player = game.add.sprite(game.world.centerX, game.world.centerY);
+    player.width = 46;
+    player.height = 41;
+    
     //  We need to enable physics on the player
     game.physics.p2.enable(player);
-    player.body.fixedRotation = true;
+    player.body.collideWorldBounds = true;
+
+    //we add children sprites
+    armR = player.addChild(game.make.sprite(-player.width/2, - (15), 'minotaurRArm'));
+    armL = player.addChild(game.make.sprite(player.width/2 - 16, - (15), 'minotaurLArm'));
+    player.addChild(game.make.sprite(-player.width/2, -player.height/2, 'minotaur'));
+
+    player.scale.setTo(scaleRatio, scaleRatio);
 
     //  Our controls.
-    cursors = game.input.keyboard.createCursorKeys();
+    up = game.input.keyboard.addKey(Phaser.Keyboard.W);
+    down = game.input.keyboard.addKey(Phaser.Keyboard.S);
+    left = game.input.keyboard.addKey(Phaser.Keyboard.A);
+    right = game.input.keyboard.addKey(Phaser.Keyboard.D);
 
     game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
     game.camera.setBoundsToWorld();
@@ -64,23 +85,25 @@ function update() {
     //  Reset the players velocity (movement)
     player.body.setZeroVelocity();
 
-    if (cursors.left.isDown) {
-        player.body.moveLeft(300);
+    if (left.isDown) {
+        player.body.x -= 30/scaleRatio;
     }
-    else if (cursors.right.isDown) {
-        player.body.moveRight(300);
+    else if (right.isDown) {
+        player.body.x += 30/scaleRatio;
     }
 
-    if (cursors.up.isDown) {
-        player.body.moveUp(300);
-    }else if (cursors.down.isDown) {
-        player.body.moveDown(300);
+    if (up.isDown) {
+        player.body.y -= 30/scaleRatio;
+    }else if (down.isDown) {
+        player.body.y += 30/scaleRatio;
     }
+
+    //player.body.rotation += 0.05;
 }
 
 function render() {
     game.debug.cameraInfo(game.camera, 32, 32);
-    game.debug.spriteCoords(player, 32, 500);
+    game.debug.spriteCoords(player, 32, 100);
 }
 
 </script>
