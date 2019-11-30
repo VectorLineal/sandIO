@@ -18,23 +18,34 @@ var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.i
 
 function preload() {
 
-    game.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur.png', 60, 76, 8);
+    //game.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur.png', 60, 76, 10);
+    game.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur_test.png', 60, 76, 15);
     game.load.tilemap('duelMap', 'assets/duel_map.json', null, Phaser.Tilemap.TILED_JSON);
     game.load.image('tiles', 'assets/maptiles.png');
 
 }
-
-var player;
-var armR;
-var armL;
-var cursors;
+//muy importante para hacer escalado de forma correcta
 var scaleRatio = window.devicePixelRatio*3;
+//objetos que se renderizan
 var map;
 var layer;
+var player;
+//controles
 var up;
 var down;
 var left;
 var right;
+var spell1;
+var spell2;
+var spell3;
+var spell4;
+var spell5;
+var consumable1;
+var consumable2;
+var shop;
+var cancel;
+
+var lastKeyPressed = "";
 
 function create() {
 
@@ -57,25 +68,43 @@ function create() {
     
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
-    //13 y -34 representan la diferencia de pixeles que se pretende eliminar para poner el cuerpo fisico solo en el personaje, no el arma ni nada más
-    player.body.setSize(46, 41, 12 * (1 - player.anchor.x) * scaleRatio, -35 * (player.anchor.y) * scaleRatio);
-    player.body.collideWorldBounds = true;
 
+    //hay que asegurarse que el body quede cuadrado puesto que no se puede rotar
+    //13 y -34 representan la diferencia de pixeles que se pretende eliminar para poner el cuerpo fisico solo en el personaje, no el arma ni nada más
+    player.body.setSize(46, 46, 12 * (1 - player.anchor.x) * scaleRatio, -40 * (player.anchor.y) * scaleRatio);
+    player.body.collideWorldBounds = true;
     player.scale.setTo(scaleRatio, scaleRatio);
 
-    player.animations.add('attack', [0, 1, 2, 3, 4, 5, 6, 7, 5, 2, 0], 20);
+    //animations
+    var attackSpeed=600;
+    player.animations.add('attack', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0], (13*attackSpeed)/200);
+    player.animations.add('spell1', [0, 11, 12, 13, 14, 12, 0], 10);
+    player.animations.add('spell4', [0, 10, 10, 10, 10, 10, 10, 0], 10);
+
+    player.animations.getAnimation("spell1").onComplete.add(changeAction);
+    player.animations.getAnimation("spell4").onComplete.add(changeAction);
 
     //  Our controls.
     up = game.input.keyboard.addKey(Phaser.Keyboard.W);
     down = game.input.keyboard.addKey(Phaser.Keyboard.S);
     left = game.input.keyboard.addKey(Phaser.Keyboard.A);
     right = game.input.keyboard.addKey(Phaser.Keyboard.D);
+    spell1 = game.input.keyboard.addKey(Phaser.Keyboard.Q);
+    spell2 = game.input.keyboard.addKey(Phaser.Keyboard.E);
+    spell3 = game.input.keyboard.addKey(Phaser.Keyboard.F);
+    spell4 = game.input.keyboard.addKey(Phaser.Keyboard.R);
+    spell5 = game.input.keyboard.addKey(Phaser.Keyboard.V);
+    consumable1 = game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+    consumable2 = game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+    shop = game.input.keyboard.addKey(Phaser.Keyboard.I);
+    cancel = game.input.keyboard.addKey(Phaser.Keyboard.G);
 
-    game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+    //camera
+    game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0, 0);
     game.camera.setBoundsToWorld();
-    
 }
 
+var previousAnim;
 function update() {
     //  Reset the player's velocity
     player.body.velocity.x = 0;
@@ -94,16 +123,58 @@ function update() {
         player.body.y += 30/scaleRatio;
     }
 
+    if(cancel.isDown){
+        lastKeyPressed = "";
+    }
+
     if(game.input.mousePointer.isDown){
-        player.play('attack');
+        switch(lastKeyPressed){
+            case "q":
+                player.play('spell1');
+                previousAnim = "spell1";
+                break;
+            case "r":
+                player.play('spell4');
+                previousAnim = "spell4";
+                break;
+            default:
+                player.play('attack');
+                previousAnim = "attack";
+                break;
+        }
     }
     player.rotation = game.physics.arcade.angleToPointer(player) - (Math.PI / 2);
-    //player.rotation += 0.05;
+
+    //input con tiempo de debounce .downDuration(200)
+    if (spell1.isDown){
+        /*if(lastKeyPressed != "q"){
+            lastKeyPressed = "q";
+        }else{
+            lastKeyPressed = "";
+        }*/
+		lastKeyPressed = "q";
+	} else if(spell4.isDown){
+        /*if(lastKeyPressed != "r"){
+            lastKeyPressed = "r";
+        }else{
+            lastKeyPressed = "";
+        }*/
+        lastKeyPressed = "r";
+    }
+
+    if(player.animations.currentAnim.isFinished){
+        player.frame = 0;
+    }
+}
+
+function changeAction(){
+    lastKeyPressed = "";
 }
 
 function render() {
     game.debug.cameraInfo(game.camera, 32, 10);
     game.debug.spriteCoords(player, 32, 150);
+    game.debug.bodyInfo(player, 32, 300);
     //game.debug.body(player);
 }
 
