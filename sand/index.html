@@ -14,14 +14,39 @@
 
 <script type="text/javascript">
 
-var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
+var config = {
+    type: Phaser.AUTO,
+    parent: '',
+    width: window.innerWidth * window.devicePixelRatio,
+    height: window.innerHeight * window.devicePixelRatio,
+    backgroundColor: '#fbf0e4',
+    physics: {
+        default: 'matter',
+        matter: {
+            debug: true,
+            gravity:{
+                x: 0,
+                y:0
+            }
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    },
+    title: 'sand',
+    pixelArt: true
+};
+
+var game = new Phaser.Game(config);
 
 function preload() {
 
     //game.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur.png', 60, 76, 10);
-    game.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur_test.png', 60, 76, 15);
-    game.load.tilemap('duelMap', 'assets/duel_map.json', null, Phaser.Tilemap.TILED_JSON);
-    game.load.image('tiles', 'assets/maptiles.png');
+    this.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur_test.png', {frameWidth: 60, frameHeight: 76});
+    this.load.tilemapTiledJSON('duelMap', 'assets/duel_map.json');
+    this.load.image('tiles', 'assets/maptiles.png');
 
 }
 //muy importante para hacer escalado de forma correcta
@@ -49,133 +74,129 @@ var lastKeyPressed = "";
 
 function create() {
 
-    //  We're going to be using physics, so enable the Arcade Physics system
-    game.physics.startSystem(Phaser.Physics.ARCADE);
-
     //map generation
-    map = game.add.tilemap('duelMap');
+    map = this.make.tilemap({key: 'duelMap'});
 
-    map.addTilesetImage('maptiles', 'tiles');
+    var tileset = map.addTilesetImage('maptiles', 'tiles');
 
-    layer = map.createLayer('duel');
-    layer.scale.set(scaleRatio);
-    layer.resizeWorld();
-    game.world.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
-
-    // The player and its settings
-    player = game.add.sprite(game.world.centerX, game.world.centerY, 'minotaur_warrior');
-    player.anchor.set((13+(46/2))/60, ((41/2)/76));
+    layer = map.createStaticLayer("duel", tileset, 0, 0);
+    layer.setScale(scaleRatio);
+    this.cameras.main.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
+    this.matter.world.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
     
-    //  We need to enable physics on the player
-    game.physics.arcade.enable(player);
-
+    // The player and its settings
     //hay que asegurarse que el body quede cuadrado puesto que no se puede rotar
     //13 y -34 representan la diferencia de pixeles que se pretende eliminar para poner el cuerpo fisico solo en el personaje, no el arma ni nada más
-    player.body.setSize(46, 46, 12 * (1 - player.anchor.x) * scaleRatio, -40 * (player.anchor.y) * scaleRatio);
-    player.body.collideWorldBounds = true;
-    player.scale.setTo(scaleRatio, scaleRatio);
+    player = this.matter.add.sprite(480 * scaleRatio, 800 *scaleRatio, 'minotaur_warrior', null, {
+        shape: {
+            type: 'rectangle',
+            width: 46,
+            height: 41
+        },
+        render:{ sprite: { xOffset:((13+(46/2))/60) - 0.5, yOffset:-((34/2)/76)}}
+    });
+    player.setScale(scaleRatio);
 
     //animations
     var attackSpeed=600;
-    player.animations.add('attack', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0], (13*attackSpeed)/200);
-    player.animations.add('spell1', [0, 11, 12, 13, 14, 12, 0], 10);
-    player.animations.add('spell4', [0, 10, 10, 10, 10, 10, 10, 0], 10);
 
-    player.animations.getAnimation("spell1").onComplete.add(changeAction);
-    player.animations.getAnimation("spell4").onComplete.add(changeAction);
+    this.anims.create({
+        key: 'attack',
+        frames: this.anims.generateFrameNumbers('minotaur_warrior', { frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0] }),
+        frameRate: (13*attackSpeed)/200
+    });
+
+    this.anims.create({
+        key: 'spell1',
+        frames: this.anims.generateFrameNumbers('minotaur_warrior', { frames: [0, 11, 12, 13, 14, 12, 0] }),
+        frameRate: 10
+    });
+
+    this.anims.create({
+        key: 'spell4',
+        frames: this.anims.generateFrameNumbers('minotaur_warrior', { frames: [0, 10, 10, 10, 10, 10, 10, 0] }),
+        frameRate: 10
+    });
+
+    player.on('animationcomplete', changeAction, this);
 
     //  Our controls.
-    up = game.input.keyboard.addKey(Phaser.Keyboard.W);
-    down = game.input.keyboard.addKey(Phaser.Keyboard.S);
-    left = game.input.keyboard.addKey(Phaser.Keyboard.A);
-    right = game.input.keyboard.addKey(Phaser.Keyboard.D);
-    spell1 = game.input.keyboard.addKey(Phaser.Keyboard.Q);
-    spell2 = game.input.keyboard.addKey(Phaser.Keyboard.E);
-    spell3 = game.input.keyboard.addKey(Phaser.Keyboard.F);
-    spell4 = game.input.keyboard.addKey(Phaser.Keyboard.R);
-    spell5 = game.input.keyboard.addKey(Phaser.Keyboard.V);
-    consumable1 = game.input.keyboard.addKey(Phaser.Keyboard.ONE);
-    consumable2 = game.input.keyboard.addKey(Phaser.Keyboard.TWO);
-    shop = game.input.keyboard.addKey(Phaser.Keyboard.I);
-    cancel = game.input.keyboard.addKey(Phaser.Keyboard.G);
+    up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+    down = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+    left = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+    right = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+    spell1 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+    spell2 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    spell3 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+    spell4 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    spell5 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V);
+    consumable1 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
+    consumable2 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
+    shop = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
+    cancel = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
+    //input
+    //this.input.mouse.disableContextMenu(); se reactiva en producción
+    this.input.on('pointermove', adjustPlayerRotation, this);
 
     //camera
-    game.camera.follow(player, Phaser.Camera.FOLLOW_LOCKON, 0, 0);
-    game.camera.setBoundsToWorld();
+    this.cameras.main.startFollow(player, true, 1, 1);
 }
 
 var previousAnim;
 function update() {
-    //  Reset the player's velocity
-    player.body.velocity.x = 0;
-    player.body.velocity.y = 0;
+    var speed = 30/scaleRatio;
+    var pointer = this.input.activePointer;
+
+    player.setVelocity(0);
 
     if (left.isDown) {
-        player.body.x -= 30/scaleRatio;
+        player.setVelocityX(-speed);
     }
     else if (right.isDown) {
-        player.body.x += 30/scaleRatio;
+        player.setVelocityX(speed);
     }
 
     if (up.isDown) {
-        player.body.y -= 30/scaleRatio;
+        player.setVelocityY(-speed);
     }else if (down.isDown) {
-        player.body.y += 30/scaleRatio;
+        player.setVelocityY(speed);
     }
 
     if(cancel.isDown){
         lastKeyPressed = "";
     }
 
-    if(game.input.mousePointer.isDown){
-        switch(lastKeyPressed){
+    if(pointer.isDown){
+        if(!player.anims.isPlaying){
+            switch(lastKeyPressed){
             case "q":
-                player.play('spell1');
-                previousAnim = "spell1";
+                player.anims.play('spell1');
                 break;
             case "r":
                 player.play('spell4');
-                previousAnim = "spell4";
                 break;
             default:
                 player.play('attack');
-                previousAnim = "attack";
                 break;
         }
+        }
     }
-    player.rotation = game.physics.arcade.angleToPointer(player) - (Math.PI / 2);
 
-    //input con tiempo de debounce .downDuration(200)
     if (spell1.isDown){
-        /*if(lastKeyPressed != "q"){
-            lastKeyPressed = "q";
-        }else{
-            lastKeyPressed = "";
-        }*/
 		lastKeyPressed = "q";
 	} else if(spell4.isDown){
-        /*if(lastKeyPressed != "r"){
-            lastKeyPressed = "r";
-        }else{
-            lastKeyPressed = "";
-        }*/
         lastKeyPressed = "r";
-    }
-
-    if(player.animations.currentAnim.isFinished){
-        player.frame = 0;
     }
 }
 
-function changeAction(){
+function changeAction(animation, frame){
     lastKeyPressed = "";
 }
 
-function render() {
-    game.debug.cameraInfo(game.camera, 32, 10);
-    game.debug.spriteCoords(player, 32, 150);
-    game.debug.bodyInfo(player, 32, 300);
-    //game.debug.body(player);
+function adjustPlayerRotation(pointer) {
+    var camera = this.cameras.main;
+    var angle = -90 + (Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(player.x, player.y, pointer.x + camera.scrollX, pointer.y + camera.scrollY));
+    player.setAngle(angle);
 }
 
 </script>
