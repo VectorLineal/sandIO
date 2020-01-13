@@ -1,6 +1,6 @@
-const Atribute = require("./Atribute");
-const Weapon = require("./Weapon");
-const Armor = require("./Armor");
+import Atribute from "./Atribute";
+import Weapon from "./Weapon";
+import Armor from "./Armor";
 
 class Character{
     constructor(name, type, race, baseStr, strGrowth, baseRes, resGrowth, baseAgi, agiGrowth, basePer, perGrowth, baseInt, intGrowth, baseDet, detGrowth, level, bodyArmor, weapon){

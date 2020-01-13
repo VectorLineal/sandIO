@@ -1,4 +1,4 @@
-const LinearFunction = require("./utilities/LinearFunction");
+import LinearFunction from "./utilities/LinearFunction";
 
 class Atribute{
     constructor(name, base, increment){
