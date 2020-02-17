@@ -1,4 +1,4 @@
-class Armor{
+export default class Armor{
     constructor(name, baseMagicArmor, baseArmor, evasion, speed, atSpeed){
         this.name = name;
         this.baseMagicArmor = baseMagicArmor;

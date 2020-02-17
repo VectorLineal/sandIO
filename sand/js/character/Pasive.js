@@ -1,10 +1,6 @@
-class Pasive{
-    constructor(name, effect, damageType, range, forEnemy){
-        this.name = name;
-        this.effect = effect;
-        this.damageType = damageType;
-        this.range = range;
-        this.forEnemy = forEnemy;
+class Pasive extends Skill{
+    constructor(name, effect, damageType, range, forEnemy, keyBinding){
+        super(name, effect, damageType, range, forEnemy, keyBinding);
     }
 
     isAura(){

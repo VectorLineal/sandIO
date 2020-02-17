@@ -13,3 +13,4 @@ class LinearFunction{
         return this.increment;
     }
 }
+export default LinearFunction;

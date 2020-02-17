@@ -1,9 +1,11 @@
 import "./phaser.js";
+import Character from "../character/Character.js";
+import Weapon from "../character/Weapon.js";
+import Armor from "../character/Armor.js";
 
 export default class SceneGame extends Phaser.Scene {
 
-    constructor ()
-    {
+    constructor () {
         super('GameScene');
         //muy importante para hacer escalado de forma correcta
         this.scaleRatio = window.devicePixelRatio*3;
@@ -11,6 +13,19 @@ export default class SceneGame extends Phaser.Scene {
         this.map;
         this.layer;
         this.player;
+        this.player1 = new Character('minotaur_warrior',
+            'warrior',
+            'minotaur',
+            24, 3.8,
+            20, 3.2,
+            15, 1,
+            12, 1.2,
+            14, 1.8,
+            22, 2.2,
+            1,
+            new Armor('bare', 0, 0, 0, 0, 0),
+            new Weapon('maul', 'stun 0.2', 126, 2, -20, -15, -60, 0, 1.3),
+            'assets/warrior_minotaur_test.png');
         //controles
         this.up;
         this.down;
@@ -31,8 +46,8 @@ export default class SceneGame extends Phaser.Scene {
 
     preload() {
 
-        //game.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur.png', 60, 76, 10);
-        this.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur_test.png', {frameWidth: 60, frameHeight: 76});
+        this.player1.preloadSprite(this, 60, 76);
+        //this.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur_test.png', {frameWidth: 60, frameHeight: 76});
         this.load.tilemapTiledJSON('duelMap', 'assets/duel_map.json');
         this.load.image('tiles', 'assets/maptiles.png');
     
@@ -52,39 +67,14 @@ export default class SceneGame extends Phaser.Scene {
         
         // The player and its settings
         //hay que asegurarse que el body quede cuadrado puesto que no se puede rotar
-        //13 y -34 representan la diferencia de pixeles que se pretende eliminar para poner el cuerpo fisico solo en el personaje, no el arma ni nada más
-        this.player = this.matter.add.sprite(480 * this.scaleRatio, 800 * this.scaleRatio, 'minotaur_warrior', null, {
-            shape: {
-                type: 'rectangle',
-                width: 46,
-                height: 41
-            },
-            render:{ sprite: { xOffset:((13+(46/2))/60) - 0.5, yOffset:-((34/2)/76)}}
-        });
-        this.player.setScale(this.scaleRatio);
+        this.player1.setSprite(this, this.scaleRatio, 46, 41, 60, 76);
     
         //animations
-        var attackSpeed=600;
+        this.player1.addAnimation(this, 'attack', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0]);
+        this.player1.addAnimation(this, 'spellq', [0, 11, 12, 13, 14, 12, 0]);
+        this.player1.addAnimation(this, 'spellr', [0, 10, 10, 10, 10, 10, 10, 0]);
     
-        this.anims.create({
-            key: 'attack',
-            frames: this.anims.generateFrameNumbers('minotaur_warrior', { frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0] }),
-            frameRate: (13*attackSpeed)/200
-        });
-    
-        this.anims.create({
-            key: 'spell1',
-            frames: this.anims.generateFrameNumbers('minotaur_warrior', { frames: [0, 11, 12, 13, 14, 12, 0] }),
-            frameRate: 10
-        });
-    
-        this.anims.create({
-            key: 'spell4',
-            frames: this.anims.generateFrameNumbers('minotaur_warrior', { frames: [0, 10, 10, 10, 10, 10, 10, 0] }),
-            frameRate: 10
-        });
-    
-        this.player.on('animationcomplete', this.changeAction, this);
+        this.player1.sprite.on('animationcomplete', this.changeAction, this);
     
         //  Our controls.
         this.up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -100,31 +90,31 @@ export default class SceneGame extends Phaser.Scene {
         this.consumable2 = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
         this.shop = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
         this.cancel = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
+
         //input
         //this.input.mouse.disableContextMenu(); se reactiva en producción
         this.input.on('pointermove', this.adjustPlayerRotation, this);
     
         //camera
-        this.cameras.main.startFollow(this.player, true, 1, 1);
+        this.cameras.main.startFollow(this.player1.sprite, true, 1, 1);
     }
     
     update() {
-        var speed = 30/this.scaleRatio;
         var pointer = this.input.activePointer;
     
-        this.player.setVelocity(0);
+        this.player1.makeIdle();
     
         if (this.left.isDown) {
-            this.player.setVelocityX(-speed);
+            this.player1.moveX(false);
         }
         else if (this.right.isDown) {
-            this.player.setVelocityX(speed);
+            this.player1.moveX(true);
         }
     
         if (this.up.isDown) {
-            this.player.setVelocityY(-speed);
+            this.player1.moveY(true);
         }else if (this.down.isDown) {
-            this.player.setVelocityY(speed);
+            this.player1.moveY(false);
         }
     
         if(this.cancel.isDown){
@@ -132,16 +122,17 @@ export default class SceneGame extends Phaser.Scene {
         }
     
         if(pointer.isDown){
-            if(!this.player.anims.isPlaying){
+            if(!this.player1.sprite.anims.isPlaying){
                 switch(this.lastKeyPressed){
                 case "q":
-                    this.player.anims.play('spell1');
+                    this.player1.sprite.play('spellq');
                     break;
                 case "r":
-                    this.player.play('spell4');
+                    this.player1.sprite.play('spellr');
                     break;
                 default:
-                    this.player.play('attack');
+                    console.log(this.player1.sprite.anims);
+                    this.player1.sprite.play('attack');
                     break;
             }
             }
@@ -149,6 +140,10 @@ export default class SceneGame extends Phaser.Scene {
     
         if (this.spell1.isDown){
             this.lastKeyPressed = "q";
+        }else if (this.spell2.isDown){
+            this.lastKeyPressed = "e";
+        } else if(this.spell3.isDown){
+            this.lastKeyPressed = "f";
         } else if(this.spell4.isDown){
             this.lastKeyPressed = "r";
         }
@@ -160,7 +155,7 @@ export default class SceneGame extends Phaser.Scene {
     
     adjustPlayerRotation(pointer) {
         var camera = this.cameras.main;
-        var angle = -90 + (Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.player.x, this.player.y, pointer.x + camera.scrollX, pointer.y + camera.scrollY));
-        this.player.setAngle(angle);
+        var angle = -90 + (Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.player1.sprite.x, this.player1.sprite.y, pointer.x + camera.scrollX, pointer.y + camera.scrollY));
+        this.player1.sprite.setAngle(angle);
     }
 }
