@@ -6,13 +6,12 @@ import Armor from "../character/Armor.js";
 export default class SceneGame extends Phaser.Scene {
 
     constructor () {
-        super('GameScene');
+        super({key: 'GameScene', active: true});
         //muy importante para hacer escalado de forma correcta
         this.scaleRatio = window.devicePixelRatio*3;
         //objetos que se renderizan
         this.map;
         this.layer;
-        this.player;
         this.player1 = new Character('minotaur_warrior',
             'warrior',
             'minotaur',
@@ -22,7 +21,7 @@ export default class SceneGame extends Phaser.Scene {
             12, 1.2,
             14, 1.8,
             22, 2.2,
-            1,
+            25,
             new Armor('bare', 0, 0, 0, 0, 0),
             new Weapon('maul', 'stun 0.2', 126, 2, -20, -15, -60, 0, 1.3),
             'assets/warrior_minotaur_test.png');
@@ -67,7 +66,7 @@ export default class SceneGame extends Phaser.Scene {
         
         // The player and its settings
         //hay que asegurarse que el body quede cuadrado puesto que no se puede rotar
-        this.player1.setSprite(this, this.scaleRatio, 46, 41, 60, 76);
+        this.player1.setSprite(this, this.scaleRatio, 46, 41, 60, 76, 480 * this.scaleRatio, 800 * this.scaleRatio);
     
         //animations
         this.player1.addAnimation(this, 'attack', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0]);
@@ -100,6 +99,7 @@ export default class SceneGame extends Phaser.Scene {
     }
     
     update() {
+        this.player1.applyHealthRegen(this);
         var pointer = this.input.activePointer;
     
         this.player1.makeIdle();
@@ -122,6 +122,8 @@ export default class SceneGame extends Phaser.Scene {
         }
     
         if(pointer.isDown){
+            this.player1.takeDamage(this, -1);
+            console.log(this.player1.curHealth, "/", this.player1.maxHealth, " + ", this.player1.healthRegen);
             if(!this.player1.sprite.anims.isPlaying){
                 switch(this.lastKeyPressed){
                 case "q":

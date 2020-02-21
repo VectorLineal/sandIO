@@ -1,5 +1,6 @@
 import "./phaser.js";
 import SceneGame from "./SceneGame.js";
+import HUDScene from "./HUDScene.js";
 
 var config = {
     type: Phaser.AUTO,
@@ -17,7 +18,7 @@ var config = {
             }
         }
     },
-    scene: [SceneGame],
+    scene: [SceneGame, HUDScene],
     title: 'sand',
     pixelArt: true
 };

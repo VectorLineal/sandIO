@@ -35,7 +35,7 @@ class Character{
         this.damage = 36 + weapon.getCurrentDamage() + this.str.getStat2();
         this.armor = this.bodyArmor.getCurrentArmor() + this.str.getStat3();
         this.maxHealth = 200 + this.res.getStat1();
-        this.curhealth = this.maxHealth;
+        this.curHealth = this.maxHealth;
         this.healthRegen = 0.1 + this.res.getStat2();
         this.speed = this.weapon.speed + this.bodyArmor.speed + 28 + this.agi.getStat1();
         this.atSpeed = this.weapon.atSpeed + this.bodyArmor.atSpeed + 100 + this.agi.getStat2();
@@ -58,8 +58,8 @@ class Character{
         scene.load.spritesheet(this.name, this.path, {frameWidth: width, frameHeight: height});
     }
 
-    setSprite(scene, scaleRatio, width, height, frameWidth, frameHeight){
-        this.sprite = scene.matter.add.sprite(480 * scaleRatio, 800 * scaleRatio, this.name, null, {
+    setSprite(scene, scaleRatio, width, height, frameWidth, frameHeight, positionX, positionY){
+        this.sprite = scene.matter.add.sprite(positionX, positionY, this.name, null, {
             shape: {
                 type: 'rectangle',
                 width: width,
@@ -113,6 +113,20 @@ class Character{
         }else{
             return 200000 / this.atSpeed;
         }
+    }
+
+    takeDamage(scene, amount){
+        this.curHealth +=  amount;
+        scene.events.emit('updateHealth');
+    }
+
+    applyHealthRegen(scene){
+        if(this.curHealth >= this.maxHealth){
+            this.curHealth = this.maxHealth
+        }else{
+            this.curHealth += (this.healthRegen / 60);
+        }
+        scene.events.emit('updateHealth');
     }
 }
 
