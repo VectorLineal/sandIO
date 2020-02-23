@@ -21,8 +21,9 @@ export default class SceneGame extends Phaser.Scene {
             12, 1.2,
             14, 1.8,
             22, 2.2,
-            25,
-            new Armor('bare', 0, 0, 0, 0, 0),
+            1,
+            100,
+            new Armor('broncePlate', 18, 104.5, -11, 1.9, 1.5),
             new Weapon('maul', 'stun 0.2', 126, 2, -20, -15, -60, 0, 1.3),
             'assets/warrior_minotaur_test.png');
         //controles
@@ -69,9 +70,9 @@ export default class SceneGame extends Phaser.Scene {
         this.player1.setSprite(this, this.scaleRatio, 46, 41, 60, 76, 480 * this.scaleRatio, 800 * this.scaleRatio);
     
         //animations
-        this.player1.addAnimation(this, 'attack', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0]);
-        this.player1.addAnimation(this, 'spellq', [0, 11, 12, 13, 14, 12, 0]);
-        this.player1.addAnimation(this, 'spellr', [0, 10, 10, 10, 10, 10, 10, 0]);
+        this.player1.addAnimation(this, 'attack_minotaur_warrior', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0]);
+        this.player1.addAnimation(this, 'spellq_minotaur_warrior', [0, 11, 12, 13, 14, 12, 0]);
+        this.player1.addAnimation(this, 'spellr_minotaur_warrior', [0, 10, 10, 10, 10, 10, 10, 0]);
     
         this.player1.sprite.on('animationcomplete', this.changeAction, this);
     
@@ -100,6 +101,7 @@ export default class SceneGame extends Phaser.Scene {
     
     update() {
         this.player1.applyHealthRegen(this);
+        this.player1.applyManaRegen(this);
         var pointer = this.input.activePointer;
     
         this.player1.makeIdle();
@@ -123,18 +125,40 @@ export default class SceneGame extends Phaser.Scene {
     
         if(pointer.isDown){
             this.player1.takeDamage(this, -1);
-            console.log(this.player1.curHealth, "/", this.player1.maxHealth, " + ", this.player1.healthRegen);
+            this.player1.gainXP(this, 1.5);
             if(!this.player1.sprite.anims.isPlaying){
                 switch(this.lastKeyPressed){
                 case "q":
-                    this.player1.sprite.play('spellq');
+                    if(this.player1.curMana >= 30 + (2 * this.player1.level)){
+                        this.player1.sprite.play('spellq_' + this.player1.name);
+                        this.player1.spendMana(this, -30 - (2 * this.player1.level));
+                    }else{
+                        this.lastKeyPressed = "";
+                    }
+                    break;
+                case "e":
+                    if(this.player1.curMana >= 45 + (7 * this.player1.level)){
+                        this.player1.spendMana(this, -45 - (7 * this.player1.level));
+                        this.lastKeyPressed = "";
+                    }else{
+                        this.lastKeyPressed = "";
+                    }
+                    break;
+                case "f":
+                    //es una pasiva, no hace nada
+                    this.lastKeyPressed = "";
                     break;
                 case "r":
-                    this.player1.sprite.play('spellr');
+                    if(this.player1.curMana >= 45 + (5 * this.player1.level)){
+                        this.player1.sprite.play('spellr_' + this.player1.name);
+                        this.player1.spendMana(this, -45 - (5 * this.player1.level));
+                    }else{
+                        this.lastKeyPressed = "";
+                    }
                     break;
                 default:
                     console.log(this.player1.sprite.anims);
-                    this.player1.sprite.play('attack');
+                    this.player1.sprite.play("attack_" + this.player1.name);
                     break;
             }
             }
