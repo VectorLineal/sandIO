@@ -1,9 +1,8 @@
 import Atribute from "./Atribute.js";
 import "../main_layer/phaser.js";
 class Character{
-    constructor(name, type, race, baseStr, strGrowth, baseRes, resGrowth, baseAgi, agiGrowth, basePer, perGrowth, baseInt, intGrowth, baseDet, detGrowth, level, xpFactor, bodyArmor, weapon, path){
+    constructor(name, type, race, baseStr, strGrowth, baseRes, resGrowth, baseAgi, agiGrowth, basePer, perGrowth, baseInt, intGrowth, baseDet, detGrowth, level, xpFactor, bodyArmor, weapon){
         this.name = name;
-        this.path = path;
         this.level = level;
         this.xpFactor = xpFactor; //en heroes se toma valor de 100, en otros representa la xp que se gana al matar a un enemigo
         this.xp = 0;
@@ -62,22 +61,6 @@ class Character{
         this.atFrames = [];
     }
 
-    preloadSprite(scene, width, height){
-        scene.load.spritesheet(this.name, this.path, {frameWidth: width, frameHeight: height});
-    }
-
-    setSprite(scene, scaleRatio, width, height, frameWidth, frameHeight, positionX, positionY){
-        this.sprite = scene.matter.add.sprite(positionX, positionY, this.name, null, {
-            shape: {
-                type: 'rectangle',
-                width: width,
-                height: height
-            },
-            render:{ sprite: { xOffset:(((frameWidth-width-1)+(width/2))/frameWidth) - 0.5, yOffset:-(((frameHeight-height-1)/2)/frameHeight)}}
-        });
-        this.sprite.setScale(scaleRatio);
-    }
-
     addAnimation(scene, animationName, frames){
         var animationSpeed = this.calculateAttackRate();
         if(animationName != "attack_" + this.name){
@@ -93,28 +76,20 @@ class Character{
         });
     }
 
-    makeIdle(){
-        this.sprite.setVelocity(0);
-    }
-
-    moveY(direction){
+    moveY(sprite, direction){
         if(direction){
-            this.sprite.setVelocityY(-this.speed);
+            sprite.setVelocityY(-this.speed/1.5);
         }else{
-            this.sprite.setVelocityY(this.speed);
+            sprite.setVelocityY(this.speed/1.5);
         }
     }
 
-    moveX(direction){
+    moveX(sprite, direction){
         if(direction){
-            this.sprite.setVelocityX(this.speed);
+            sprite.setVelocityX(this.speed/1.5);
         }else{
-            this.sprite.setVelocityX(-this.speed);
+            sprite.setVelocityX(-this.speed/1.5);
         }
-    }
-
-    playAnimation(animationName){
-        this.sprite.play(animationName);
     }
 
     //funciones no gráficas

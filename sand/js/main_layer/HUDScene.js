@@ -29,24 +29,25 @@ export default class HUDGame extends Phaser.Scene {
     
     create() {
         let { width, height } = this.sys.game.canvas;
+        let scaleRatio = width / height;
         let game = this.scene.get('GameScene');
         
         //elementos dinámincos
-        this.health = game.player1.curHealth;
-        this.maxHealth = game.player1.maxHealth;
-        this.regenH = game.player1.healthRegen;
-        this.mana = game.player1.curMana;
-        this.maxMana = game.player1.maxMana;
-        this.regenM = game.player1.manaRegen;
-        this.damage = game.player1.damage;
-        this.spellPower = game.player1.spellPower;
-        this.magicArm = game.player1.magicArmor;
-        this.arm = game.player1.armor;
-        this.vel = game.player1.speed;
-        this.atS = game.player1.atSpeed;
-        this.level = game.player1.level;
-        this.xp = game.player1.xp;
-        this.xpNext = game.player1.calculateNextLevelXp();
+        this.health = game.initialData.curHealth;
+        this.maxHealth = game.initialData.maxHealth;
+        this.regenH = game.initialData.healthRegen;
+        this.mana = game.initialData.curMana;
+        this.maxMana = game.initialData.maxMana;
+        this.regenM = game.initialData.manaRegen;
+        this.damage = game.initialData.damage;
+        this.spellPower = game.initialData.spellPower;
+        this.magicArm = game.initialData.magicArmor;
+        this.arm = game.initialData.armor;
+        this.vel = game.initialData.speed;
+        this.atS = game.initialData.atSpeed;
+        this.level = game.initialData.level;
+        this.xp = game.initialData.xp;
+        this.xpNext = game.initialData.calculateNextLevelXp();
         
         //elementos gráficos estáticos
         var UnderBar = this.add.rectangle(3 * width / 8, (height - (height / 12)), 2 * width / 3, height / 6, 0x090909);
@@ -62,8 +63,8 @@ export default class HUDGame extends Phaser.Scene {
                 stepY: (height / 39)
                 },
             setScale: { 
-                x: game.scaleRatio / 3,
-                y: game.scaleRatio / 3
+                x: scaleRatio / 3,
+                y: scaleRatio / 3
             }
         });
 
@@ -93,78 +94,78 @@ export default class HUDGame extends Phaser.Scene {
 
         //eventos de modificación de valores HUD
         game.events.on('updateLevel', function () {
-            this.level = game.player1.level;
+            this.level = game.player1.getData('backend').level;
             levelText.setText('level: ' + this.fitNumber(this.level, 0));
         }, this);
 
         game.events.on('updateXP', function () {
-            this.xp = game.player1.xp;
-            this.xpNext = game.player1.calculateNextLevelXp();
+            this.xp = game.player1.getData('backend').xp;
+            this.xpNext = game.player1.getData('backend').calculateNextLevelXp();
             xpBar.width = (this.xp / this.xpNext) * (width / 12);
         }, this);
 
         game.events.on('updateDamage', function () {
-            this.damage = game.player1.damage;
+            this.damage = game.player1.getData('backend').damage;
             statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateSpellPower', function () {
-            this.spellPower = game.player1.spellPower;
+            this.spellPower = game.player1.getData('backend').spellPower;
             statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateArmor', function () {
-            this.arm = game.player1.armor;
+            this.arm = game.player1.getData('backend').armor;
             statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateMagicArmor', function () {
-            this.magicArm = game.player1.magicArmor;
-            this.level = game.player1.level;
+            this.magicArm = game.player1.getData('backend').magicArmor;
+            this.level = game.player1.getData('backend').level;
             statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateSpeed', function () {
-            this.vel = game.player1.speed;
+            this.vel = game.player1.getData('backend').speed;
             statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateAtSpeed', function () {
-            this.atS = game.player1.atSpeed;
+            this.atS = game.player1.getData('backend').atSpeed;
             statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateHealth', function () {
-            this.health = game.player1.curHealth;
+            this.health = game.player1.getData('backend').curHealth;
             healthText.setText(this.fitNumber(this.health, 2) + '/' + this.fitNumber(this.maxHealth, 2) + ' + ' + this.fitNumber(this.regenH, 2));
             healthBar.width = (this.health/this.maxHealth) * (width / 3);
         }, this);
 
         game.events.on('updateMaxHealth', function () {
-            this.maxHealth = game.player1.maxHealth;
+            this.maxHealth = game.player1.getData('backend').maxHealth;
             healthText.setText(this.fitNumber(this.health, 2) + '/' + this.fitNumber(this.maxHealth, 2) + ' + ' + this.fitNumber(this.regenH, 2));
             healthBar.width = (this.health/this.maxHealth) * (width / 3);
         }, this);
 
         game.events.on('updateHealthRegen', function () {
-            this.regenH = game.player1.healthRegen;
+            this.regenH = game.player1.getData('backend').healthRegen;
             healthText.setText(this.fitNumber(this.health, 2) + '/' + this.fitNumber(this.maxHealth, 2) + ' + ' + this.fitNumber(this.regenH, 2));
         }, this);
 
         game.events.on('updateMana', function () {
-            this.mana = game.player1.curMana;
+            this.mana = game.player1.getData('backend').curMana;
             manaText.setText(this.fitNumber(this.mana, 2) + '/' + this.fitNumber(this.maxMana, 2) + ' + ' + this.fitNumber(this.regenM, 2));
             manaBar.width = (this.mana/this.maxMana) * (width / 3);
         }, this);
 
         game.events.on('updateMaxMana', function () {
-            this.maxMana = game.player1.maxMana;
+            this.maxMana = game.player1.getData('backend').maxMana;
             manaText.setText(this.fitNumber(this.mana, 2) + '/' + this.fitNumber(this.maxMana, 2) + ' + ' + this.fitNumber(this.regenM, 2));
             manaBar.width = (this.mana/this.maxMana) * (width / 3);
         }, this);
 
         game.events.on('updateManaRegen', function () {
-            this.regenM = game.player1.manaRegen;
+            this.regenM = game.player1.getData('backend').manaRegen;
             manaText.setText(this.fitNumber(this.mana, 2) + '/' + this.fitNumber(this.maxMana, 2) + ' + ' + this.fitNumber(this.regenM, 2));
         }, this);
 

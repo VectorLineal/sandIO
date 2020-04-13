@@ -12,7 +12,9 @@ export default class SceneGame extends Phaser.Scene {
         //objetos que se renderizan
         this.map;
         this.layer;
-        this.player1 = new Character('minotaur_warrior',
+        this.player1;
+        this.initialData =new Character(
+            'minotaur_warrior',
             'warrior',
             'minotaur',
             24, 3.8,
@@ -24,8 +26,7 @@ export default class SceneGame extends Phaser.Scene {
             1,
             100,
             new Armor('broncePlate', 18, 104.5, -11, 1.9, 1.5),
-            new Weapon('maul', 'stun 0.2', 126, 2, -20, -15, -60, 0, 1.3),
-            'assets/warrior_minotaur_test.png');
+            new Weapon('maul', 'stun 0.2', 126, 2, -20, -15, -60, 0, 1.3));
         //controles
         this.up;
         this.down;
@@ -45,15 +46,16 @@ export default class SceneGame extends Phaser.Scene {
     }
 
     preload() {
-
-        this.player1.preloadSprite(this, 60, 76);
-        //this.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur_test.png', {frameWidth: 60, frameHeight: 76});
+        //scene.load.spritesheet(name, path, {frameWidth: width, frameHeight: height});
+        this.load.spritesheet('minotaur_warrior', 'assets/warrior_minotaur_test.png', {frameWidth: 60, frameHeight: 76});
         this.load.tilemapTiledJSON('duelMap', 'assets/duel_map.json');
         this.load.image('tiles', 'assets/maptiles.png');
     
     }
     
     create() {
+        let { width, height } = this.sys.game.canvas;
+        let scaleRatio = 1.5 * width / height;
     
         //map generation
         this.map = this.make.tilemap({key: 'duelMap'});
@@ -61,20 +63,22 @@ export default class SceneGame extends Phaser.Scene {
         var tileset = this.map.addTilesetImage('maptiles', 'tiles');
     
         this.layer = this.map.createStaticLayer("duel", tileset, 0, 0);
-        this.layer.setScale(this.scaleRatio);
-        this.cameras.main.setBounds(0, 0, 960 * this.scaleRatio, 1600 * this.scaleRatio);
-        this.matter.world.setBounds(0, 0, 960 * this.scaleRatio, 1600 * this.scaleRatio);
+        this.layer.setScale(scaleRatio);
+        this.cameras.main.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
+        this.matter.world.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
         
         // The player and its settings
         //hay que asegurarse que el body quede cuadrado puesto que no se puede rotar
-        this.player1.setSprite(this, this.scaleRatio, 46, 41, 60, 76, 480 * this.scaleRatio, 800 * this.scaleRatio);
+        this.player1 = this.setSprite(46, 41, 60, 76, 480 * scaleRatio, 800 * scaleRatio, 'minotaur_warrior');
+        this.player1.setScale(scaleRatio);
+        this.player1.setData('backend', this.initialData);
     
         //animations
-        this.player1.addAnimation(this, 'attack_minotaur_warrior', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0]);
-        this.player1.addAnimation(this, 'spellq_minotaur_warrior', [0, 11, 12, 13, 14, 12, 0]);
-        this.player1.addAnimation(this, 'spellr_minotaur_warrior', [0, 10, 10, 10, 10, 10, 10, 0]);
+        this.player1.getData('backend').addAnimation(this, 'attack_minotaur_warrior', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 7, 4, 0]);
+        this.player1.getData('backend').addAnimation(this, 'spellq_minotaur_warrior', [0, 11, 12, 13, 14, 12, 0]);
+        this.player1.getData('backend').addAnimation(this, 'spellr_minotaur_warrior', [0, 10, 10, 10, 10, 10, 10, 0]);
     
-        this.player1.sprite.on('animationcomplete', this.changeAction, this);
+        this.player1.on('animationcomplete', this.changeAction, this);
     
         //  Our controls.
         this.up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -96,27 +100,27 @@ export default class SceneGame extends Phaser.Scene {
         this.input.on('pointermove', this.adjustPlayerRotation, this);
     
         //camera
-        this.cameras.main.startFollow(this.player1.sprite, true, 1, 1);
+        this.cameras.main.startFollow(this.player1, true, 1, 1);
     }
     
     update() {
-        this.player1.applyHealthRegen(this);
-        this.player1.applyManaRegen(this);
+        this.player1.getData('backend').applyHealthRegen(this);
+        this.player1.getData('backend').applyManaRegen(this);
         var pointer = this.input.activePointer;
     
-        this.player1.makeIdle();
+        this.player1.setVelocity(0);
     
         if (this.left.isDown) {
-            this.player1.moveX(false);
+            this.player1.getData('backend').moveX(this.player1, false);
         }
         else if (this.right.isDown) {
-            this.player1.moveX(true);
+            this.player1.getData('backend').moveX(this.player1, true);
         }
     
         if (this.up.isDown) {
-            this.player1.moveY(true);
+            this.player1.getData('backend').moveY(this.player1, true);
         }else if (this.down.isDown) {
-            this.player1.moveY(false);
+            this.player1.getData('backend').moveY(this.player1, false);
         }
     
         if(this.cancel.isDown){
@@ -124,21 +128,21 @@ export default class SceneGame extends Phaser.Scene {
         }
     
         if(pointer.isDown){
-            this.player1.takeDamage(this, -1);
-            this.player1.gainXP(this, 1.5);
-            if(!this.player1.sprite.anims.isPlaying){
+            this.player1.getData('backend').takeDamage(this, -1);
+            this.player1.getData('backend').gainXP(this, 1.5);
+            if(!this.player1.anims.isPlaying){
                 switch(this.lastKeyPressed){
                 case "q":
-                    if(this.player1.curMana >= 30 + (2 * this.player1.level)){
-                        this.player1.sprite.play('spellq_' + this.player1.name);
-                        this.player1.spendMana(this, -30 - (2 * this.player1.level));
+                    if(this.player1.getData('backend').curMana >= 30 + (2 * this.player1.getData('backend').level)){
+                        this.player1.play('spellq_' + this.player1.getData('backend').name);
+                        this.player1.getData('backend').spendMana(this, -30 - (2 * this.player1.getData('backend').level));
                     }else{
                         this.lastKeyPressed = "";
                     }
                     break;
                 case "e":
-                    if(this.player1.curMana >= 45 + (7 * this.player1.level)){
-                        this.player1.spendMana(this, -45 - (7 * this.player1.level));
+                    if(this.player1.getData('backend').curMana >= 45 + (7 * this.player1.getData('backend').level)){
+                        this.player1.getData('backend').spendMana(this, -45 - (7 * this.player1.getData('backend').level));
                         this.lastKeyPressed = "";
                     }else{
                         this.lastKeyPressed = "";
@@ -149,16 +153,16 @@ export default class SceneGame extends Phaser.Scene {
                     this.lastKeyPressed = "";
                     break;
                 case "r":
-                    if(this.player1.curMana >= 45 + (5 * this.player1.level)){
-                        this.player1.sprite.play('spellr_' + this.player1.name);
-                        this.player1.spendMana(this, -45 - (5 * this.player1.level));
+                    if(this.player1.getData('backend').curMana >= 45 + (5 * this.player1.getData('backend').level)){
+                        this.player1.play('spellr_' + this.player1.getData('backend').name);
+                        this.player1.getData('backend').spendMana(this, -45 - (5 * this.player1.getData('backend').level));
                     }else{
                         this.lastKeyPressed = "";
                     }
                     break;
                 default:
-                    console.log(this.player1.sprite.anims);
-                    this.player1.sprite.play("attack_" + this.player1.name);
+                    console.log(this.player1.anims);
+                    this.player1.play("attack_" + this.player1.getData('backend').name);
                     break;
             }
             }
@@ -174,6 +178,8 @@ export default class SceneGame extends Phaser.Scene {
             this.lastKeyPressed = "r";
         }
     }
+
+    //funciones no heredadas de la escena
     
     changeAction(animation, frame){
         this.lastKeyPressed = "";
@@ -181,7 +187,18 @@ export default class SceneGame extends Phaser.Scene {
     
     adjustPlayerRotation(pointer) {
         var camera = this.cameras.main;
-        var angle = -90 + (Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.player1.sprite.x, this.player1.sprite.y, pointer.x + camera.scrollX, pointer.y + camera.scrollY));
-        this.player1.sprite.setAngle(angle);
+        var angle = -90 + (Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.player1.x, this.player1.y, pointer.x + camera.scrollX, pointer.y + camera.scrollY));
+        this.player1.setAngle(angle);
+    }
+
+    setSprite(width, height, frameWidth, frameHeight, positionX, positionY, name){
+        return this.matter.add.sprite(positionX, positionY, name, null, {
+            shape: {
+                type: 'rectangle',
+                width: width,
+                height: height
+            },
+            render:{ sprite: { xOffset:(((frameWidth-width-1)+(width/2))/frameWidth) - 0.5, yOffset:-(((frameHeight-height-1)/2)/frameHeight)}}
+        });
     }
 }
