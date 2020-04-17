@@ -12,5 +12,9 @@ class LinearFunction{
     derivate(){
         return this.increment;
     }
+
+    fromString(ecuation){
+        this.base += delta;
+    }
 }
 export default LinearFunction;

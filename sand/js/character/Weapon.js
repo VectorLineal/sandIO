@@ -17,10 +17,10 @@ export default class Weapon{
     }
 
     getCurrentDamage(){
-        return (0.048*this.level + 0.3)*this.baseDamage;
+        return (0.048 * this.level + 0.3) * this.baseDamage;
     }
 
     getDamageOnCrit(){
-        return this.getCurrentDamage()*this.critMultiplier;
+        return this.getCurrentDamage() * this.critMultiplier;
     }
 }
