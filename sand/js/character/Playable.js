@@ -40,7 +40,7 @@ export default class Playable extends Character{
         this.atSpeed = this.weapon.atSpeed + this.bodyArmor.atSpeed + 100 + this.agi.getStat2();
         this.evasion = this.weapon.evasion + this.bodyArmor.evasion + this.agi.getStat3() + this.per.getStat3();
         this.crit = this.per.getStat1();
-        this.accuracy = this.weapon.accuracy + 100 + this.per.getStat2();
+        this.accuracy = this.bodyArmor.accuracy + this.weapon.accuracy + 100 + this.per.getStat2();
         this.maxMana = 75 + this.int.getStat1();
         this.curMana = this.maxMana;
         this.manaRegen = 0.1 + this.int.getStat2();

@@ -32,8 +32,8 @@ export default class SceneGame extends Phaser.Scene {
       2.2,
       1,
       100,
-      new Armor("broncePlate", 18, 104.5, -11, 1.9, 1.5),
-      new Weapon("maul", "stun 0.2", 126, 2, -20, -15, -60, 0, 1.3),
+      new Armor("broncePlate", 27, 115.2, -11, 1.9, -18.5, 20),
+      new Weapon("maul", "stun 0.2", 126, 35, -20, -11.2, -60, 0, 1.3),
       { x: 10, y: 10 }
     );
 
@@ -43,11 +43,11 @@ export default class SceneGame extends Phaser.Scene {
       "beast",
       { increment: 2, base: 14 },
       { increment: 33, base: 105 },
-      { increment: 3.9, base: 33 },
+      { increment: 5.3, base: 33 },
       { increment: 175, base: 2400 },
       { increment: 2, base: 18 },
       { increment: 0.1, base: 40 },
-      { increment: 6, base: 190 },
+      { increment: 6, base: 160 },
       { increment: 0.8, base: 10 },
       { increment: 0.6, base: 5 },
       { increment: 2, base: 125 },
@@ -55,7 +55,7 @@ export default class SceneGame extends Phaser.Scene {
       { increment: 0.8, base: 1.2 },
       { increment: 0.5, base: 0.5 },
       { increment: 1.2, base: 3 },
-      { increment: 5.2, base: 60 },
+      { increment: 9.6, base: 60 },
       { increment: 0.5, base: 0.5 },
       { x: 480 * this.scaleRatio, y: 800 * this.scaleRatio },
       "bleed 18+3x",
