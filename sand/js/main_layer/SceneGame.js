@@ -33,7 +33,7 @@ export default class SceneGame extends Phaser.Scene {
       1,
       100,
       new Armor("broncePlate", 27, 115.2, -11, 1.9, -18.5, 20),
-      new Weapon("maul", "stun 0.2", 126, 35, -20, -11.2, -60, 0, 1.3),
+      new Weapon("maul", "stun 0.2", 126, false, 35, -20, -11.2, -60, 0, 1.3),
       { x: 10, y: 10 }
     );
 
@@ -63,6 +63,7 @@ export default class SceneGame extends Phaser.Scene {
       300 * this.scaleRatio,
       2
     );
+
     //controles
     this.up;
     this.down;
@@ -88,9 +89,12 @@ export default class SceneGame extends Phaser.Scene {
       "assets/warrior_minotaur_test.png",
       { frameWidth: 60, frameHeight: 76 }
     );
+    this.load.spritesheet(
+      "chimera", "assets/chimera_sheet.png",
+      { frameWidth: 92, frameHeight: 149 }
+    );
     this.load.tilemapTiledJSON("duelMap", "assets/duel_map.json");
     this.load.image("tiles", "assets/maptiles.png");
-    this.load.image("chimera", "assets/chimera_sheet.png");
   }
 
   create() {
@@ -109,9 +113,11 @@ export default class SceneGame extends Phaser.Scene {
     this.matter.world.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
 
     //npcs
-    this.levelBoss = this.setSprite(46, 136, 64, 140, 480 * this.scaleRatio, 800 * this.scaleRatio, "chimera", true, false);
+
+    this.levelBoss = this.setSprite(46, 136, 92, 149, 480 * this.scaleRatio, 800 * this.scaleRatio, "chimera", true, false);
     this.levelBoss.setScale(scaleRatio);
     this.levelBoss.setData("backend", this.chimeraFactory.generateNPC(1));
+    this.levelBoss.setData("displayDamage", this.add.text(this.levelBoss.x, this.levelBoss.y, "", { font: '48px Arial', fill: '#eeeeee' }).setData("timer", 0));
     this.levelBoss.body.label = "chimera";
     this.chimeraFactory.spawnPoint = { x: 480 * this.scaleRatio, y: 800 * this.scaleRatio };
 
@@ -130,6 +136,7 @@ export default class SceneGame extends Phaser.Scene {
     this.initialData.spawnY = 1344 * scaleRatio;
     this.player1.setScale(scaleRatio);
     this.player1.setData("backend", this.initialData);
+    this.player1.setData("displayDamage", this.add.text(this.player1.x, this.player1.y, "", { font: '48px Arial', fill: '#eeeeee' }).setData("timer", 0));
     this.player1.body.label = "minotaur_warrior";
 
     //animations
@@ -207,7 +214,24 @@ export default class SceneGame extends Phaser.Scene {
   }
 
   update() {
-      this.levelBoss.getData("backend").noticePlayer(this.levelBoss, this.player1);
+    if(this.levelBoss.getData("displayDamage").data.values.timer>0){
+      this.levelBoss.getData("displayDamage").data.values.timer--;
+    }else{
+      this.levelBoss.getData("displayDamage").setVisible(false);
+    }
+    /*for(var index = 0; index < this.damageDisplay.children.getArray().lenght; index++){
+      this.damageDisplay.children.getArray()[index].data.values.timer--;
+    }
+
+    for(var index = 0; index < this.damageDisplay.children.getArray().lenght; index++){
+      if(this.damageDisplay.children.getArray()[index].data.values.timer <= 0){
+        //this.damageDisplay.remove(this.damageDisplay.children.getArray()[index], true, true);
+        this.damageDisplay.clear();
+        break;
+      }
+    }*/
+    
+    this.levelBoss.getData("backend").noticePlayer(this.levelBoss, this.player1);
     this.player1.getData("backend").applyHealthRegen(this);
     this.player1.getData("backend").applyManaRegen(this);
     var pointer = this.input.activePointer;
@@ -318,7 +342,7 @@ export default class SceneGame extends Phaser.Scene {
   //funciones no heredadas de la escena
 
   changeAction(animation, frame) {
-    this.player1.getData("backend").takeDamage(this, -10, 0);
+    this.player1.getData("backend").takeDamage({scene: this, amount: 10, type: 0, avoidable: false, critable: false});
     this.lastKeyPressed = "";
     if (animation.key == "attack_" + this.player1.getData("backend").name) {
       var xc = this.player1.x;
@@ -352,9 +376,27 @@ export default class SceneGame extends Phaser.Scene {
 
   dealDamage (event, bodyA, bodyB) {
       let initialHealth =this.levelBoss.getData("backend").curHealth;
+      var dealtDamage = {amount: 0, isCrit:  false};
 
         if ((bodyA.label === 'attackBox' && bodyB.label === 'chimera') || (bodyB.label === 'attackBox' && bodyA.label === 'chimera')) {
-            this.levelBoss.getData("backend").takeDamage(this.player1.getData("backend").damage, 1);
+            dealtDamage = this.levelBoss.getData("backend").takeDamage({amount: this.player1.getData("backend").damage, type: 1, accuracy: this.player1.getData("backend").accuracy, critChance: this.player1.getData("backend").crit, critMultiplier: this.player1.getData("backend").getCritMultiplier(), avoidable: true, critable: true, ranged: this.player1.getData("backend").getRanged()});
+            //mostrar texto de daño
+            var damageMessage = "";
+            var color = '#eeeeee';
+            if(dealtDamage.amount ==0){
+              damageMessage = "missed";
+            }else{
+              damageMessage = dealtDamage.amount.toString();
+            }
+            if(dealtDamage.isCrit){
+              color = '#ff0808';
+            }
+            this.levelBoss.getData("displayDamage").x=this.levelBoss.x;
+            this.levelBoss.getData("displayDamage").y=this.levelBoss.y;
+            this.levelBoss.getData("displayDamage").data.values.timer = 40;
+            this.levelBoss.getData("displayDamage").setText(damageMessage);
+            this.levelBoss.getData("displayDamage").setColor(color);
+            this.levelBoss.getData("displayDamage").setVisible(true);
         }
 
         if(bodyA.label === 'attackBox'){

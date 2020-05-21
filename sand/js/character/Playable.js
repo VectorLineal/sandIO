@@ -1,6 +1,6 @@
 import Atribute from "./Atribute.js";
 import Character from "./Character.js";
-//import "../main_layer/phaser.js";
+import {randomFloat} from "../main_layer/MathUtils.js";
 
 export default class Playable extends Character{
     constructor(name, type, race, baseStr, strGrowth, baseRes, resGrowth, baseAgi, agiGrowth, basePer, perGrowth, baseInt, intGrowth, baseDet, detGrowth, level, xpFactor, bodyArmor, weapon, spawnPoint){
@@ -51,27 +51,49 @@ export default class Playable extends Character{
     }
     
     //funciones no gráficas
-    takeDamage(scene, amount, type){
+    getOnCrit(){
+        return this.weapon.onCrit;
+    }
+
+    getCritMultiplier(){
+        return this.weapon.critMultiplier;
+    }
+
+    getRanged(){
+        return this.weapon.ranged;
+    }
+
+    takeDamage(params){ //scene, amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged
         //type 0 es puro, 1 físico y 2 mágico
-        if(type == 0){
-            this.curHealth -=  amount;
-        }else if(type == 1){
-            if(amount -this.armor >= amount * 0.15){
-                this.curHealth -=  amount -this.armor;
-            }else{
-                this.curHealth -=  amount * 0.15;
+        var rawDamage = params.amount;
+        var crit = false;
+        var finalDamage = 0;
+
+        if(!params.avoidable){
+            if(params.critable){
+                if(randomFloat(101) <= params.critChance){
+                    rawDamage *= this.critMultiplier;
+                    crit = true;
+                }
             }
-        }else if(type == 2){
-            if(amount -this.magicArmor >= amount * 0.15){
-                this.curHealth -=  amount -this.magicArmor;
-            }else{
-                this.curHealth -=  amount * 0.15;
-            }
+            finalDamage = this.dealDamage(rawDamage, params.type);
         }else{
-            console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic")
+            var hitChance = params.accuracy - this.evasion;
+            if(params.ranged){
+                hitChance += 100;
+            }
+            if(randomFloat(101) <= hitChance){
+                if(params.critable){
+                    if(randomFloat(101) <= params.critChance){
+                        rawDamage *= this.critMultiplier;
+                        crit = true;
+                    }
+                }
+                finalDamage = this.dealDamage(rawDamage, params.type);
+            }
         }
-        
-        scene.events.emit('updateHealth');
+        params.scene.events.emit('updateHealth');
+        return {amount: finalDamage, isCrit: crit};
     }
 
     applyHealthRegen(scene){

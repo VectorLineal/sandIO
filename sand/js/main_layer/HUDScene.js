@@ -106,33 +106,33 @@ export default class HUDGame extends Phaser.Scene {
 
         game.events.on('updateDamage', function () {
             this.damage = game.player1.getData('backend').damage;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateSpellPower', function () {
             this.spellPower = game.player1.getData('backend').spellPower;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateArmor', function () {
             this.arm = game.player1.getData('backend').armor;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateMagicArmor', function () {
             this.magicArm = game.player1.getData('backend').magicArmor;
             this.level = game.player1.getData('backend').level;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateSpeed', function () {
             this.vel = game.player1.getData('backend').speed;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateAtSpeed', function () {
             this.atS = game.player1.getData('backend').atSpeed;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
         }, this);
 
         game.events.on('updateHealth', function () {

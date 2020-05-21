@@ -22,7 +22,7 @@ export default class NPCFactory {
     will,
     magicArmor,
     concentration,
-    spawnPoint, onCrit, critMultiplier, detectionRange, behavour
+    spawnPoint, onCrit, critMultiplier, ranged, detectionRange, behavour
   ) {
     this.name = name;
     this.xpFactor = xpFactor;
@@ -30,6 +30,7 @@ export default class NPCFactory {
     this.spawnPoint = spawnPoint;
     this.onCrit = onCrit;
     this.critMultiplier = critMultiplier;
+    this.ranged = ranged;
     this.detectionRange = detectionRange;
     this.behavour = behavour
     this.fortitude = new LinearFunction(fortitude.increment, fortitude.base);
@@ -77,7 +78,7 @@ export default class NPCFactory {
       this.spellPower.calculate(level),
       this.will.calculate(level),
       this.magicArmor.calculate(level),
-      this.concentration.calculate(level), this.spawnPoint, this.onCrit, this.critMultiplier, this.detectionRange, this.behavour
+      this.concentration.calculate(level), this.spawnPoint, this.onCrit, this.critMultiplier, this.ranged, this.detectionRange, this.behavour
     );
   }
 }

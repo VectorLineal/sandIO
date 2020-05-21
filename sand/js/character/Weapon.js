@@ -1,8 +1,9 @@
 export default class Weapon{
-    constructor(name, onCrit, baseDamage, range, evasion, speed, atSpeed, accuracy, critMultiplier){
+    constructor(name, onCrit, baseDamage, ranged, range, evasion, speed, atSpeed, accuracy, critMultiplier){
         this.name = name;
         this.onCrit = onCrit;
         this.baseDamage = baseDamage;
+        this.ranged = ranged
         this.range = range;
         this.evasion = evasion;
         this.speed = speed;

@@ -56,17 +56,17 @@ export default class Character{
 
     moveY(sprite, direction, scale){
         if(direction){
-            sprite.setVelocityY(-this.speed / scale);
+            sprite.setVelocityY(-this.speed * scale / 6);
         }else{
-            sprite.setVelocityY(this.speed / scale);
+            sprite.setVelocityY(this.speed * scale / 6);
         }
     }
 
     moveX(sprite, direction, scale){
         if(direction){
-            sprite.setVelocityX(this.speed / scale);
+            sprite.setVelocityX(this.speed * scale / 6);
         }else{
-            sprite.setVelocityX(-this.speed / scale);
+            sprite.setVelocityX(-this.speed * scale / 6);
         }
     }
 
@@ -109,6 +109,31 @@ export default class Character{
             return this.xpFactor;
         }else{
             return 13 * this.xpFactor;
+        }
+    }
+
+    dealDamage(amount, type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
+        if(type == 0){
+            this.curHealth -=  amount;
+            return amount;
+        }else if(type == 1){
+            if(amount - this.armor >= amount * 0.15){
+                this.curHealth -=  amount -this.armor;
+                return amount -this.armor;
+            }else{
+                this.curHealth -=  amount * 0.15;
+                return amount * 0.15;
+            }
+        }else if(type == 2){
+            if(amount - this.magicArmor >= amount * 0.15){
+                this.curHealth -=  amount -this.magicArmor;
+                return amount -this.magicArmor;
+            }else{
+                this.curHealth -=  amount * 0.15;
+                return amount * 0.15;
+            }
+        }else{
+            console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic")
         }
     }
 }
