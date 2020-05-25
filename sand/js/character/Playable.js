@@ -59,6 +59,11 @@ export default class Playable extends Character{
         return this.weapon.critMultiplier;
     }
 
+    getRange(){
+        return this.weapon.range;
+    }
+
+
     getRanged(){
         return this.weapon.ranged;
     }

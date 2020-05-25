@@ -2,8 +2,8 @@ import Character from "./Character.js";
 import {randomFloat} from "../main_layer/MathUtils.js";
 
 export default class NonPlayable extends Character{
-    constructor(name, level, xpFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, onCrit, critMultiplier, ranged, detectionRange, behavour){
-        super(name, level, xpFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint);
+    constructor(name, level, xpFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, onCrit, critMultiplier, ranged, range, detectionRange, behavour){
+        super(name, level, xpFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, ranged, range);
         this.onCrit = onCrit;
         this.critMultiplier = critMultiplier;
         this.ranged = ranged;
@@ -19,10 +19,6 @@ export default class NonPlayable extends Character{
 
     getCritMultiplier(){
         return this.critMultiplier;
-    }
-
-    getRanged(){
-        return this.ranged;
     }
 
     takeDamage(params){ //amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged
