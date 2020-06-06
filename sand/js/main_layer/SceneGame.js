@@ -1,6 +1,7 @@
 import "./phaser.js";
 import Playable from "../character/Playable.js";
 import NPCFactory from "../character/NPCFactory.js";
+import EnviromentalFactory from "../character/EnviromentalFactory.js";
 import Weapon from "../character/Weapon.js";
 import Armor from "../character/Armor.js";
 
@@ -12,8 +13,11 @@ export default class SceneGame extends Phaser.Scene {
     //objetos que se renderizan
     this.map;
     this.layer;
+
+    this.forestManager = new EnviromentalFactory("tree", 100, 500, 50, [], 48, 48);
     this.levelBoss;
     this.player1;
+    this.forest;
     this.initialData = new Playable(
       "minotaur_warrior",
       "warrior",
@@ -93,6 +97,10 @@ export default class SceneGame extends Phaser.Scene {
       "chimera", "assets/chimera_sheet.png",
       { frameWidth: 92, frameHeight: 149 }
     );
+    this.load.spritesheet(
+      "tree1", "assets/tree_sheet_1.png",
+      { frameWidth: 48, frameHeight: 48 }
+    );
     this.load.tilemapTiledJSON("duelMap", "assets/duel_map.json");
     this.load.image("tiles", "assets/maptiles.png");
   }
@@ -101,6 +109,7 @@ export default class SceneGame extends Phaser.Scene {
     let { width, height } = this.sys.game.canvas;
     let scaleRatio = (1.5 * width) / height;
     this.scaleRatio = scaleRatio;
+    this.forestManager.spawnPoints=[{x: 64*scaleRatio, y: 1552 * scaleRatio}, {x: 160 * scaleRatio, y: 1392 * scaleRatio}, {x: 80 * scaleRatio, y: 1280 * scaleRatio}];
 
     //map generation
     this.map = this.make.tilemap({ key: "duelMap" });
@@ -111,6 +120,10 @@ export default class SceneGame extends Phaser.Scene {
     this.layer.setScale(scaleRatio);
     this.cameras.main.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
     this.matter.world.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
+
+    //enviromental elements
+    this.forest = this.add.group();
+    this.forestManager.generateInitialSet(this, this.forest, "tree1", this.scaleRatio);
 
     //npcs
 
@@ -237,6 +250,8 @@ export default class SceneGame extends Phaser.Scene {
     var pointer = this.input.activePointer;
 
     this.player1.setVelocity(0);
+
+    this.forestManager.onUpdate(this, this.forest, this.scaleRatio);
 
     if (this.left.isDown) {
       this.player1
@@ -375,44 +390,73 @@ export default class SceneGame extends Phaser.Scene {
   }
 
   dealDamage (event, bodyA, bodyB) {
-      let initialHealth =this.levelBoss.getData("backend").curHealth;
       var dealtDamage = {amount: 0, isCrit:  false};
 
-        if ((bodyA.label === 'attackBox' && bodyB.label === 'chimera') || (bodyB.label === 'attackBox' && bodyA.label === 'chimera')) {
-            dealtDamage = this.levelBoss.getData("backend").takeDamage({amount: this.player1.getData("backend").damage, type: 1, accuracy: this.player1.getData("backend").accuracy, critChance: this.player1.getData("backend").crit, critMultiplier: this.player1.getData("backend").getCritMultiplier(), avoidable: true, critable: true, ranged: this.player1.getData("backend").getRanged()});
-            //mostrar texto de daño
-            var damageMessage = "";
-            var color = '#eeeeee';
-            if(dealtDamage.amount ==0){
-              damageMessage = "missed";
-            }else{
-              damageMessage = dealtDamage.amount.toString();
+        if ((bodyA.label === 'attackBox' && (bodyB.label === 'chimera' || bodyB.label === 'tree'))) {
+          let initialHealth = bodyB.gameObject.getData("backend").curHealth;
+          dealtDamage = bodyB.gameObject.getData("backend").takeDamage({amount: this.player1.getData("backend").damage, type: 1, accuracy: this.player1.getData("backend").accuracy, critChance: this.player1.getData("backend").crit, critMultiplier: this.player1.getData("backend").getCritMultiplier(), avoidable: true, critable: true, ranged: this.player1.getData("backend").getRanged()});
+          //mostrar texto de daño
+          var damageMessage = "";
+          var color = '#eeeeee';
+          if(dealtDamage.amount ==0){
+            damageMessage = "missed";
+          }else{
+            damageMessage = dealtDamage.amount.toString();
+          }
+          if(dealtDamage.isCrit){
+            color = '#ff0808';
+          }
+          bodyB.gameObject.getData("displayDamage").x=bodyB.gameObject.x;
+          bodyB.gameObject.getData("displayDamage").y=bodyB.gameObject.y;
+          bodyB.gameObject.getData("displayDamage").data.values.timer = 40;
+          bodyB.gameObject.getData("displayDamage").setText(damageMessage);
+          bodyB.gameObject.getData("displayDamage").setColor(color);
+          bodyB.gameObject.getData("displayDamage").setVisible(true);
+
+          this.matter.world.remove(bodyA);
+          if(bodyA.label !== 'chimera'){
+            if(initialHealth > 0 && bodyA.gameObject.getData("backend").curHealth <= 0){
+              this.player1.getData("backend").gainXP(this, bodyA.gameObject.getData("backend").calculateNextLevelXp());
+              bodyA.gameObject.getData("backend").onDeath({world: this.matter.world, sprite: bodyA.gameObject});
             }
-            if(dealtDamage.isCrit){
-              color = '#ff0808';
+          }
+        }else if((bodyB.label === 'attackBox' && (bodyA.label === 'chimera' || bodyA.label === 'tree'))){
+          let initialHealth = bodyA.gameObject.getData("backend").curHealth;
+          dealtDamage = bodyA.gameObject.getData("backend").takeDamage({amount: this.player1.getData("backend").damage, type: 1, accuracy: this.player1.getData("backend").accuracy, critChance: this.player1.getData("backend").crit, critMultiplier: this.player1.getData("backend").getCritMultiplier(), avoidable: true, critable: true, ranged: this.player1.getData("backend").getRanged()});
+          //mostrar texto de daño
+          var damageMessage = "";
+          var color = '#eeeeee';
+          if(dealtDamage.amount ==0){
+            damageMessage = "missed";
+          }else{
+            damageMessage = dealtDamage.amount.toString();
+          }
+          if(dealtDamage.isCrit){
+            color = '#ff0808';
+          }
+          bodyA.gameObject.getData("displayDamage").x=bodyA.gameObject.x;
+          bodyA.gameObject.getData("displayDamage").y=bodyA.gameObject.y;
+          bodyA.gameObject.getData("displayDamage").data.values.timer = 40;
+          bodyA.gameObject.getData("displayDamage").setText(damageMessage);
+          bodyA.gameObject.getData("displayDamage").setColor(color);
+          bodyA.gameObject.getData("displayDamage").setVisible(true);
+
+          this.matter.world.remove(bodyB);
+          if(bodyA.label !== 'chimera'){
+            if(initialHealth > 0 && bodyA.gameObject.getData("backend").curHealth <= 0){
+              this.player1.getData("backend").gainXP(this, bodyA.gameObject.getData("backend").calculateNextLevelXp());
+              bodyA.gameObject.getData("backend").onDeath({world: this.matter.world, sprite: bodyA.gameObject});
             }
-            this.levelBoss.getData("displayDamage").x=this.levelBoss.x;
-            this.levelBoss.getData("displayDamage").y=this.levelBoss.y;
-            this.levelBoss.getData("displayDamage").data.values.timer = 40;
-            this.levelBoss.getData("displayDamage").setText(damageMessage);
-            this.levelBoss.getData("displayDamage").setColor(color);
-            this.levelBoss.getData("displayDamage").setVisible(true);
+          }
         }
 
-        if(bodyA.label === 'attackBox'){
-            this.matter.world.remove(bodyA);
-        }
-
-        if(bodyB.label === 'attackBox'){
-            this.matter.world.remove(bodyB);
-        }
-
+        let initialHealth = this.levelBoss.getData("backend").curHealth;
         console.log("chimera health:", this.levelBoss.getData("backend").curHealth);
         if(initialHealth > 0 && this.levelBoss.getData("backend").curHealth <= 0){
-            console.log("hice algo", this.levelBoss.getData("backend").calculateNextLevelXp());
-            this.player1.getData("backend").gainXP(this, this.levelBoss.getData("backend").calculateNextLevelXp());
+          this.player1.getData("backend").gainXP(this, this.levelBoss.getData("backend").calculateNextLevelXp());
+          this.matter.world.remove(this.levelBoss.body);
         }
-        console.log("A:", bodyA.label, "B:", bodyB.label);
+        console.log("body A:", bodyA.label, ", body B:", bodyB.label);
 }
 
   degToRad(angle) {

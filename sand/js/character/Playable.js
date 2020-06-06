@@ -77,7 +77,7 @@ export default class Playable extends Character{
         if(!params.avoidable){
             if(params.critable){
                 if(randomFloat(101) <= params.critChance){
-                    rawDamage *= this.critMultiplier;
+                    rawDamage *= params.critMultiplier;
                     crit = true;
                 }
             }
