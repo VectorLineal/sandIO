@@ -37,7 +37,7 @@ export default class SceneGame extends Phaser.Scene {
       1,
       100,
       new Armor("broncePlate", 27, 115.2, -11, 1.9, -18.5, 20),
-      new Weapon("maul", "stun 0.2", 126, false, 35, -20, -11.2, -60, 0, 1.3),
+      new Weapon("maul", "stun 0.2", 126, false, 35, -15, -11.2, -60, 10, 1.3),
       { x: 10, y: 10 }
     );
 
