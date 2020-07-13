@@ -1,7 +1,7 @@
 import Building from "./Building.js";
 
 export default class EnviromentalFactory {
-    constructor(name, armor, maxHealth, magicArmor, spawnPoints, entityWidth, entityHeight) {
+    constructor(name, armor, maxHealth, magicArmor, spawnPoints, entityWidth, entityHeight, group, mask) {
       this.name = name;
       this.spawnPoints = spawnPoints;
       this.maxHealth = maxHealth;
@@ -9,6 +9,8 @@ export default class EnviromentalFactory {
       this.magicArmor = magicArmor;
       this.entityWidth = entityWidth;
       this.entityHeight = entityHeight;
+      this.group = group;
+      this.mask = mask;
     }
   
     generateEnviromentalElement(level) {
@@ -23,6 +25,8 @@ export default class EnviromentalFactory {
       let width = this.entityWidth;
       let height = this.entityHeight;
       let label = this.name;
+      let cGroup = this.group;
+      let mask = this.mask;
 
       group.children.each(function(entity){
         if(entity.getData("respawnTimer").time > 0){
@@ -40,6 +44,8 @@ export default class EnviromentalFactory {
             body.gameObject = entity;
             entity.body = body;
             entity.getData("backend").curHealth = entity.getData("backend").maxHealth;
+            entity.setCollisionGroup(cGroup);
+            entity.setCollidesWith(mask);
           }
         }
 
@@ -66,6 +72,8 @@ export default class EnviromentalFactory {
         sprite.setData("respawnTimer", {time: 0});
         sprite.setData("displayDamage", scene.add.text(this.spawnPoints[index].x, this.spawnPoints[index].y, "", { font: '48px Arial', fill: '#eeeeee' }).setData("timer", 0));
         sprite.body.label = this.name;
+        sprite.setCollisionGroup(this.group);
+        sprite.setCollidesWith(this.mask);
         group.add(sprite);
       }
     }

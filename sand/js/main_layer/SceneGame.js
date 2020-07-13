@@ -10,11 +10,14 @@ export default class SceneGame extends Phaser.Scene {
     super({ key: "GameScene", active: true });
     //muy importante para hacer escalado de forma correcta
     this.scaleRatio = 3;
+    //categorias y grupos de colisión
+    this.groups = [];
+    this.categories = [];
     //objetos que se renderizan
     this.map;
     this.layer;
 
-    this.forestManager = new EnviromentalFactory("tree", 100, 500, 50, [], 48, 48);
+    this.forestManager = new EnviromentalFactory("tree", 100, 500, 50, [], 24, 24, 3, 4294967295);
     this.levelBoss;
     this.player1;
     this.forest;
@@ -36,7 +39,7 @@ export default class SceneGame extends Phaser.Scene {
       2.2,
       1,
       100,
-      new Armor("broncePlate", 27, 115.2, -11, 1.9, -18.5, 20),
+      new Armor("broncePlate", 27, 115.1, -11, 1.9, -18.5, 20),
       new Weapon("maul", "stun 0.2", 126, false, 35, -15, -11.2, -60, 10, 1.3),
       { x: 10, y: 10 }
     );
@@ -121,17 +124,23 @@ export default class SceneGame extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
     this.matter.world.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
 
-    //enviromental elements
-    this.forest = this.add.group();
-    this.forestManager.generateInitialSet(this, this.forest, "tree1", this.scaleRatio);
+    //categories and groups
+    for(var index = 0; index < 3; index++){
+      this.groups.push(this.matter.world.nextGroup());
+    }
+
+    for(var index = 0; index < 6; index++){
+      this.categories.push(this.matter.world.nextCategory());
+    }
 
     //npcs
-
     this.levelBoss = this.setSprite(46, 136, 92, 149, 480 * this.scaleRatio, 800 * this.scaleRatio, "chimera", true, false);
     this.levelBoss.setScale(scaleRatio);
     this.levelBoss.setData("backend", this.chimeraFactory.generateNPC(1));
     this.levelBoss.setData("displayDamage", this.add.text(this.levelBoss.x, this.levelBoss.y, "", { font: '48px Arial', fill: '#eeeeee' }).setData("timer", 0));
     this.levelBoss.body.label = "chimera";
+    this.levelBoss.setCollisionGroup(this.groups[1]);
+    this.levelBoss.setCollidesWith(this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1);
     this.chimeraFactory.spawnPoint = { x: 480 * this.scaleRatio, y: 800 * this.scaleRatio };
 
     // The player and its settings
@@ -151,6 +160,8 @@ export default class SceneGame extends Phaser.Scene {
     this.player1.setData("backend", this.initialData);
     this.player1.setData("displayDamage", this.add.text(this.player1.x, this.player1.y, "", { font: '48px Arial', fill: '#eeeeee' }).setData("timer", 0));
     this.player1.body.label = "minotaur_warrior";
+    this.player1.setCollisionGroup(this.groups[0]);
+    this.player1.setCollidesWith(this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1);
 
     //animations
     this.player1
@@ -196,6 +207,12 @@ export default class SceneGame extends Phaser.Scene {
 
     this.player1.on("animationcomplete", this.changeAction, this);
 
+    //enviromental elements
+    this.forest = this.add.group();
+    this.forestManager.group = this.groups[2];
+    this.forestManager.mask = this.categories[0] ^ this.categories[2] ^ this.categories[5] ^ 1;
+    this.forestManager.generateInitialSet(this, this.forest, "tree1", this.scaleRatio);
+    console.log("group:", this.forestManager.group, "mask:", this.forestManager.mask);
     //  Our controls.
     this.up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
     this.down = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
@@ -352,6 +369,15 @@ export default class SceneGame extends Phaser.Scene {
     } else if (this.spell4.isDown) {
       this.lastKeyPressed = "r";
     }
+
+    //se limpian los collision box inutiles
+
+    for(var index = 0; index < this.matter.world.getAllBodies().length; index++){
+      if(this.matter.world.getAllBodies()[index].label === 'attackBox'){
+        console.log("index:", index);
+        this.matter.world.remove(this.matter.world.getAllBodies()[index]);
+      }
+    }
   }
 
   //funciones no heredadas de la escena
@@ -385,8 +411,9 @@ export default class SceneGame extends Phaser.Scene {
         }
       );
       attackBox.label = "attackBox";
-      //this.matter.world.remove(attackBox);
+      attackBox.collisionFilter.category = this.categories[0];
     }
+    console.log("bodies in world:", this.matter.world.getAllBodies());
   }
 
   dealDamage (event, bodyA, bodyB) {
@@ -414,10 +441,10 @@ export default class SceneGame extends Phaser.Scene {
           bodyB.gameObject.getData("displayDamage").setVisible(true);
 
           this.matter.world.remove(bodyA);
-          if(bodyA.label !== 'chimera'){
-            if(initialHealth > 0 && bodyA.gameObject.getData("backend").curHealth <= 0){
+          if(bodyB.label !== 'chimera'){
+            if(initialHealth > 0 && bodyB.gameObject.getData("backend").curHealth <= 0){
               this.player1.getData("backend").gainXP(this, bodyA.gameObject.getData("backend").calculateNextLevelXp());
-              bodyA.gameObject.getData("backend").onDeath({world: this.matter.world, sprite: bodyA.gameObject});
+              bodyB.gameObject.getData("backend").onDeath({world: this.matter.world, sprite: bodyA.gameObject});
             }
           }
         }else if((bodyB.label === 'attackBox' && (bodyA.label === 'chimera' || bodyA.label === 'tree'))){

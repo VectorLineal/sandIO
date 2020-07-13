@@ -39,7 +39,7 @@ class Atribute{
         switch(this.name){
             case "stregth":
                 //daño
-                return 4 * this.current;
+                return 2 * this.current;
             case "resistance":
                 //regen_salud
                 return 0.2 * this.current;
