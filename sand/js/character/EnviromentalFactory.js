@@ -17,10 +17,6 @@ export default class EnviromentalFactory {
       return new Building(this.name, level, 10, 1, this.armor, this.maxHealth, 0, 0, 0, this.magicArmor, false, 0, 0);
     }
 
-    setRespawn(time, position){
-      this.spawnPoints[position].time = time;
-    }
-
     onUpdate(scene, group, scaleRatio){
       let width = this.entityWidth;
       let height = this.entityHeight;
@@ -46,6 +42,7 @@ export default class EnviromentalFactory {
             entity.getData("backend").curHealth = entity.getData("backend").maxHealth;
             entity.setCollisionGroup(cGroup);
             entity.setCollidesWith(mask);
+            entity.setDepth(0.8);
           }
         }
 
@@ -59,7 +56,7 @@ export default class EnviromentalFactory {
 
     generateInitialSet(scene, group, spriteKey, scaleRatio){
       for(var index = 0; index < this.spawnPoints.length; index++){
-        var sprite = scene.matter.add.sprite(this.spawnPoints[index].x, this.spawnPoints[index].y, spriteKey, null, {
+        var sprite = scene.matter.add.sprite(this.spawnPoints[index].x * scaleRatio, this.spawnPoints[index].y * scaleRatio, spriteKey, null, {
           isStatic: true,
           shape: {
             type: "rectangle",
@@ -70,10 +67,11 @@ export default class EnviromentalFactory {
         sprite.setScale(scaleRatio);
         sprite.setData("backend", this.generateEnviromentalElement(1));
         sprite.setData("respawnTimer", {time: 0});
-        sprite.setData("displayDamage", scene.add.text(this.spawnPoints[index].x, this.spawnPoints[index].y, "", { font: '48px Arial', fill: '#eeeeee' }).setData("timer", 0));
+        sprite.setData("displayDamage", scene.add.text(this.spawnPoints[index].x * scaleRatio, this.spawnPoints[index].y * scaleRatio, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0));
         sprite.body.label = this.name;
         sprite.setCollisionGroup(this.group);
         sprite.setCollidesWith(this.mask);
+        sprite.setDepth(0.8);
         group.add(sprite);
       }
     }

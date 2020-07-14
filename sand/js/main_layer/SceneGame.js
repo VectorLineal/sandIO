@@ -105,6 +105,7 @@ export default class SceneGame extends Phaser.Scene {
       { frameWidth: 48, frameHeight: 48 }
     );
     this.load.tilemapTiledJSON("duelMap", "assets/duel_map.json");
+    this.load.json('mapEnvironment', "assets/duel_map_environment.json");
     this.load.image("tiles", "assets/maptiles.png");
   }
 
@@ -112,8 +113,10 @@ export default class SceneGame extends Phaser.Scene {
     let { width, height } = this.sys.game.canvas;
     let scaleRatio = (1.5 * width) / height;
     this.scaleRatio = scaleRatio;
-    this.forestManager.spawnPoints=[{x: 64*scaleRatio, y: 1552 * scaleRatio}, {x: 160 * scaleRatio, y: 1392 * scaleRatio}, {x: 80 * scaleRatio, y: 1280 * scaleRatio}];
+    this.forestManager.spawnPoints = this.cache.json.get('mapEnvironment').neutral.trees;
 
+    let test = this.cache.json.get('mapEnvironment').neutral.trees;
+    console.log("test version:", test);
     //map generation
     this.map = this.make.tilemap({ key: "duelMap" });
 
@@ -134,14 +137,15 @@ export default class SceneGame extends Phaser.Scene {
     }
 
     //npcs
-    this.levelBoss = this.setSprite(46, 136, 92, 149, 480 * this.scaleRatio, 800 * this.scaleRatio, "chimera", true, false);
+    this.levelBoss = this.setSprite(46, 136, 92, 149, this.cache.json.get('mapEnvironment').neutral.spawnPoints[0].x * this.scaleRatio, this.cache.json.get('mapEnvironment').neutral.spawnPoints[0].y * this.scaleRatio, "chimera", true, false);
     this.levelBoss.setScale(scaleRatio);
     this.levelBoss.setData("backend", this.chimeraFactory.generateNPC(1));
-    this.levelBoss.setData("displayDamage", this.add.text(this.levelBoss.x, this.levelBoss.y, "", { font: '48px Arial', fill: '#eeeeee' }).setData("timer", 0));
+    this.levelBoss.setData("displayDamage", this.add.text(this.levelBoss.x, this.levelBoss.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0));
     this.levelBoss.body.label = "chimera";
     this.levelBoss.setCollisionGroup(this.groups[1]);
     this.levelBoss.setCollidesWith(this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1);
-    this.chimeraFactory.spawnPoint = { x: 480 * this.scaleRatio, y: 800 * this.scaleRatio };
+    this.levelBoss.setDepth(0.5);
+    this.chimeraFactory.spawnPoints = this.cache.json.get('mapEnvironment').neutral.spawnPoints[0];
 
     // The player and its settings
     //hay que asegurarse que el body quede cuadrado puesto que no se puede rotar
@@ -150,18 +154,19 @@ export default class SceneGame extends Phaser.Scene {
       41,
       60,
       76,
-      480 * scaleRatio,
-      1344 * scaleRatio,
+      this.cache.json.get('mapEnvironment').team1.spawnPoints[0].x * scaleRatio,
+      this.cache.json.get('mapEnvironment').team1.spawnPoints[0].y * scaleRatio,
       "minotaur_warrior", false, false
     );
-    this.initialData.spawnX = 480 * scaleRatio;
-    this.initialData.spawnY = 1344 * scaleRatio;
+    this.initialData.spawnX = this.cache.json.get('mapEnvironment').team1.spawnPoints[0].x * scaleRatio;
+    this.initialData.spawnY = this.cache.json.get('mapEnvironment').team1.spawnPoints[0].y * scaleRatio;
     this.player1.setScale(scaleRatio);
     this.player1.setData("backend", this.initialData);
-    this.player1.setData("displayDamage", this.add.text(this.player1.x, this.player1.y, "", { font: '48px Arial', fill: '#eeeeee' }).setData("timer", 0));
+    this.player1.setData("displayDamage", this.add.text(this.player1.x, this.player1.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0));
     this.player1.body.label = "minotaur_warrior";
     this.player1.setCollisionGroup(this.groups[0]);
     this.player1.setCollidesWith(this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1);
+    this.player1.setDepth(0.5);
 
     //animations
     this.player1

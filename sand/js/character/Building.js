@@ -9,7 +9,8 @@ export default class Building extends Entity{
             case 0:
                 this.onDeath = function(params){
                     params.sprite.setFrame(1);
-                    params.sprite.getData("respawnTimer").time = randomInt(7200);
+                    params.sprite.setDepth(0.2);
+                    params.sprite.getData("respawnTimer").time = 1800 + randomInt(5400);
                     params.world.remove(params.sprite.body);
                     return this.calculateNextLevelXp();
                 }

@@ -22,12 +22,12 @@ export default class NPCFactory {
     will,
     magicArmor,
     concentration,
-    spawnPoint, onCrit, critMultiplier, ranged, detectionRange, behavour
+    spawnPoints, onCrit, critMultiplier, ranged, detectionRange, behavour
   ) {
     this.name = name;
     this.xpFactor = xpFactor;
     this.race = race;
-    this.spawnPoint = spawnPoint;
+    this.spawnPoints = spawnPoints;
     this.onCrit = onCrit;
     this.critMultiplier = critMultiplier;
     this.ranged = ranged;
