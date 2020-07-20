@@ -4,10 +4,12 @@ import NPCFactory from "../character/NPCFactory.js";
 import EnviromentalFactory from "../character/EnviromentalFactory.js";
 import Weapon from "../character/Weapon.js";
 import Armor from "../character/Armor.js";
+import LinearFunction from "../character/LinearFunction.js";
 
 export default class SceneGame extends Phaser.Scene {
   constructor() {
     super({ key: "GameScene", active: true });
+    this.clock = 0;
     //muy importante para hacer escalado de forma correcta
     this.scaleRatio = 3;
     //categorias y grupos de colisión
@@ -17,13 +19,28 @@ export default class SceneGame extends Phaser.Scene {
     this.map;
     this.layer;
 
-    this.forestManager = new EnviromentalFactory("tree", 100, 500, 50, [], 24, 24, 3, 4294967295);
-    this.levelBoss;
+    this.jungleFactory;
+    this.forestManager = new EnviromentalFactory(
+      "tree",
+      100,
+      500,
+      50,
+      [],
+      24,
+      24,
+      3,
+      4294967295
+    );
     this.player1;
-    this.forest;
+
+    this.enviromentSprites;
+    this.neutralSprites;
+    this.teamASprites;
+    this.teamBSprites;
     this.initialData = new Playable(
       "minotaur_warrior",
       "warrior",
+      30,
       "minotaur",
       24,
       3.8,
@@ -42,33 +59,6 @@ export default class SceneGame extends Phaser.Scene {
       new Armor("broncePlate", 27, 115.1, -11, 1.9, -18.5, 20),
       new Weapon("maul", "stun 0.2", 126, false, 35, -15, -11.2, -60, 10, 1.3),
       { x: 10, y: 10 }
-    );
-
-    this.chimeraFactory = new NPCFactory(
-      "chimera",
-      80,
-      "beast",
-      { increment: 2, base: 14 },
-      { increment: 33, base: 105 },
-      { increment: 5.3, base: 33 },
-      { increment: 175, base: 2400 },
-      { increment: 2, base: 18 },
-      { increment: 0.1, base: 40 },
-      { increment: 6, base: 160 },
-      { increment: 0.8, base: 10 },
-      { increment: 0.6, base: 5 },
-      { increment: 2, base: 125 },
-      { increment: 14, base: 300 },
-      { increment: 0.8, base: 1.2 },
-      { increment: 0.5, base: 0.5 },
-      { increment: 1.2, base: 3 },
-      { increment: 9.6, base: 60 },
-      { increment: 0.5, base: 0.5 },
-      { x: 480 * this.scaleRatio, y: 800 * this.scaleRatio },
-      "bleed 18+3x",
-      1.65,
-      300 * this.scaleRatio,
-      2
     );
 
     //controles
@@ -96,16 +86,16 @@ export default class SceneGame extends Phaser.Scene {
       "assets/warrior_minotaur_test.png",
       { frameWidth: 60, frameHeight: 76 }
     );
-    this.load.spritesheet(
-      "chimera", "assets/chimera_sheet.png",
-      { frameWidth: 92, frameHeight: 149 }
-    );
-    this.load.spritesheet(
-      "tree1", "assets/tree_sheet_1.png",
-      { frameWidth: 48, frameHeight: 48 }
-    );
+    this.load.spritesheet("chimera", "assets/chimera_sheet.png", {
+      frameWidth: 92,
+      frameHeight: 149,
+    });
+    this.load.spritesheet("tree1", "assets/tree_sheet_1.png", {
+      frameWidth: 48,
+      frameHeight: 48,
+    });
     this.load.tilemapTiledJSON("duelMap", "assets/duel_map.json");
-    this.load.json('mapEnvironment', "assets/duel_map_environment.json");
+    this.load.json("mapEnvironment", "assets/duel_map_environment.json");
     this.load.image("tiles", "assets/maptiles.png");
   }
 
@@ -113,9 +103,11 @@ export default class SceneGame extends Phaser.Scene {
     let { width, height } = this.sys.game.canvas;
     let scaleRatio = (1.5 * width) / height;
     this.scaleRatio = scaleRatio;
-    this.forestManager.spawnPoints = this.cache.json.get('mapEnvironment').neutral.trees;
+    this.forestManager.spawnPoints = this.cache.json.get(
+      "mapEnvironment"
+    ).neutral.trees;
 
-    let test = this.cache.json.get('mapEnvironment').neutral.trees;
+    let test = this.cache.json.get("mapEnvironment").neutral.spawnPoints[0];
     console.log("test version:", test);
     //map generation
     this.map = this.make.tilemap({ key: "duelMap" });
@@ -127,25 +119,70 @@ export default class SceneGame extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
     this.matter.world.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
 
+    //sprite groups
+    this.enviromentSprites = this.add.group();
+    this.neutralSprites = this.add.group();
+
     //categories and groups
-    for(var index = 0; index < 3; index++){
+    for (var index = 0; index < 4; index++) {
       this.groups.push(this.matter.world.nextGroup());
     }
 
-    for(var index = 0; index < 6; index++){
+    for (var index = 0; index < 6; index++) {
       this.categories.push(this.matter.world.nextCategory());
     }
 
     //npcs
-    this.levelBoss = this.setSprite(46, 136, 92, 149, this.cache.json.get('mapEnvironment').neutral.spawnPoints[0].x * this.scaleRatio, this.cache.json.get('mapEnvironment').neutral.spawnPoints[0].y * this.scaleRatio, "chimera", true, false);
-    this.levelBoss.setScale(scaleRatio);
-    this.levelBoss.setData("backend", this.chimeraFactory.generateNPC(1));
-    this.levelBoss.setData("displayDamage", this.add.text(this.levelBoss.x, this.levelBoss.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0));
-    this.levelBoss.body.label = "chimera";
-    this.levelBoss.setCollisionGroup(this.groups[1]);
-    this.levelBoss.setCollidesWith(this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1);
-    this.levelBoss.setDepth(0.5);
-    this.chimeraFactory.spawnPoints = this.cache.json.get('mapEnvironment').neutral.spawnPoints[0];
+    this.jungleFactory = new NPCFactory(
+      [
+        {
+          name: "chimera",
+          width: 46,
+          height: 136,
+          frameWidth: 92,
+          frameHeight: 149,
+          centerX: true,
+          centerY: false,
+          character: {
+            xpFactor: 80,
+            bountyFactor: 30,
+            race: "beast",
+            fortitude: new LinearFunction(2, 14),
+            damage: new LinearFunction(33, 105),
+            armor: new LinearFunction(5.3, 33),
+            maxHealth: new LinearFunction(175, 2400),
+            healthRegen: new LinearFunction(2, 18),
+            speed: new LinearFunction(0.1, 40),
+            atSpeed: new LinearFunction(6, 160),
+            evasion: new LinearFunction(0.8, 10),
+            crit: new LinearFunction(0.6, 5),
+            accuracy: new LinearFunction(2, 125),
+            maxMana: new LinearFunction(14, 300),
+            manaRegen: new LinearFunction(0.8, 1.2),
+            spellPower: new LinearFunction(0.5, 0.5),
+            will: new LinearFunction(1.2, 3),
+            magicArmor: new LinearFunction(9.6, 60),
+            concentration: new LinearFunction(0.5, 0.5),
+            onCrit: "bleed 18+3x",
+            critMultiplier: 1.65,
+            ranged: false,
+            range: 15,
+            detectionRange: 300,
+            behavour: 2 
+          }
+        }
+      ],
+      [
+        {
+          x: this.cache.json.get("mapEnvironment").neutral.spawnPoints[0].x,
+          y: this.cache.json.get("mapEnvironment").neutral.spawnPoints[0].y,
+          spawns: [0],
+        },
+      ],
+      this.groups[2],
+      this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1
+    );
+    this.jungleFactory.generateInitialSet(this, this.neutralSprites, scaleRatio);
 
     // The player and its settings
     //hay que asegurarse que el body quede cuadrado puesto que no se puede rotar
@@ -154,18 +191,34 @@ export default class SceneGame extends Phaser.Scene {
       41,
       60,
       76,
-      this.cache.json.get('mapEnvironment').team1.spawnPoints[0].x * scaleRatio,
-      this.cache.json.get('mapEnvironment').team1.spawnPoints[0].y * scaleRatio,
-      "minotaur_warrior", false, false
+      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x * scaleRatio,
+      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y * scaleRatio,
+      "minotaur_warrior",
+      false,
+      false
     );
-    this.initialData.spawnX = this.cache.json.get('mapEnvironment').team1.spawnPoints[0].x * scaleRatio;
-    this.initialData.spawnY = this.cache.json.get('mapEnvironment').team1.spawnPoints[0].y * scaleRatio;
+    this.initialData.spawnX =
+      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x * scaleRatio;
+    this.initialData.spawnY =
+      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y * scaleRatio;
     this.player1.setScale(scaleRatio);
     this.player1.setData("backend", this.initialData);
-    this.player1.setData("displayDamage", this.add.text(this.player1.x, this.player1.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0));
+    this.player1.setData("respawnTimer", { time: 0 });
+    this.player1.setData(
+      "displayDamage",
+      this.add
+        .text(this.player1.x, this.player1.y, "", {
+          font: "48px Arial",
+          fill: "#eeeeee",
+        })
+        .setDepth(1)
+        .setData("timer", 0)
+    );
     this.player1.body.label = "minotaur_warrior";
     this.player1.setCollisionGroup(this.groups[0]);
-    this.player1.setCollidesWith(this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1);
+    this.player1.setCollidesWith(
+      this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1
+    );
     this.player1.setDepth(0.5);
 
     //animations
@@ -213,11 +266,21 @@ export default class SceneGame extends Phaser.Scene {
     this.player1.on("animationcomplete", this.changeAction, this);
 
     //enviromental elements
-    this.forest = this.add.group();
-    this.forestManager.group = this.groups[2];
-    this.forestManager.mask = this.categories[0] ^ this.categories[2] ^ this.categories[5] ^ 1;
-    this.forestManager.generateInitialSet(this, this.forest, "tree1", this.scaleRatio);
-    console.log("group:", this.forestManager.group, "mask:", this.forestManager.mask);
+    this.forestManager.group = this.groups[3];
+    this.forestManager.mask =
+      this.categories[0] ^ this.categories[2] ^ this.categories[5] ^ 1;
+    this.forestManager.generateInitialSet(
+      this,
+      this.enviromentSprites,
+      "tree1",
+      this.scaleRatio
+    );
+    console.log(
+      "group:",
+      this.forestManager.group,
+      "mask:",
+      this.forestManager.mask
+    );
     //  Our controls.
     this.up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
     this.down = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
@@ -244,16 +307,10 @@ export default class SceneGame extends Phaser.Scene {
     //camera
     this.cameras.main.startFollow(this.player1, true, 1, 1);
     this.cameras.main.roundPixels = true;
-    console.log("chimera label", this.levelBoss.body.label, "hero label", this.player1.body.label);
-    this.matter.world.on('collisionstart', this.dealDamage, this);
+    this.matter.world.on("collisionstart", this.dealDamage, this);
   }
 
   update() {
-    if(this.levelBoss.getData("displayDamage").data.values.timer>0){
-      this.levelBoss.getData("displayDamage").data.values.timer--;
-    }else{
-      this.levelBoss.getData("displayDamage").setVisible(false);
-    }
     /*for(var index = 0; index < this.damageDisplay.children.getArray().lenght; index++){
       this.damageDisplay.children.getArray()[index].data.values.timer--;
     }
@@ -265,15 +322,15 @@ export default class SceneGame extends Phaser.Scene {
         break;
       }
     }*/
-    
-    this.levelBoss.getData("backend").noticePlayer(this.levelBoss, this.player1);
+
     this.player1.getData("backend").applyHealthRegen(this);
     this.player1.getData("backend").applyManaRegen(this);
     var pointer = this.input.activePointer;
 
     this.player1.setVelocity(0);
 
-    this.forestManager.onUpdate(this, this.forest, this.scaleRatio);
+    this.forestManager.onUpdate(this, this.enviromentSprites, this.scaleRatio);
+    this.jungleFactory.onUpdate(this, this.neutralSprites, this.scaleRatio, this.clock);
 
     if (this.left.isDown) {
       this.player1
@@ -376,19 +433,33 @@ export default class SceneGame extends Phaser.Scene {
     }
 
     //se limpian los collision box inutiles
-
-    for(var index = 0; index < this.matter.world.getAllBodies().length; index++){
-      if(this.matter.world.getAllBodies()[index].label === 'attackBox'){
+    for (
+      var index = 0;
+      index < this.matter.world.getAllBodies().length;
+      index++
+    ) {
+      if (this.matter.world.getAllBodies()[index].label === "attackBox") {
         console.log("index:", index);
         this.matter.world.remove(this.matter.world.getAllBodies()[index]);
       }
     }
+
+    //se actualza el tiempo transcurrido del juego
+    this.clock++;
   }
 
   //funciones no heredadas de la escena
 
   changeAction(animation, frame) {
-    this.player1.getData("backend").takeDamage({scene: this, amount: 10, type: 0, avoidable: false, critable: false});
+    this.player1
+      .getData("backend")
+      .takeDamage({
+        scene: this,
+        amount: 10,
+        type: 0,
+        avoidable: false,
+        critable: false,
+      });
     this.lastKeyPressed = "";
     if (animation.key == "attack_" + this.player1.getData("backend").name) {
       var xc = this.player1.x;
@@ -416,80 +487,145 @@ export default class SceneGame extends Phaser.Scene {
         }
       );
       attackBox.label = "attackBox";
-      attackBox.collisionFilter.category = this.categories[0];
+      if (this.player1.body.collisionFilter.group == this.groups[0]) {
+        attackBox.collisionFilter.category = this.categories[0];
+      } else if (this.player1.body.collisionFilter.group == this.groups[1]) {
+        attackBox.collisionFilter.category = this.categories[2];
+      }
     }
     console.log("bodies in world:", this.matter.world.getAllBodies());
   }
 
-  dealDamage (event, bodyA, bodyB) {
-      var dealtDamage = {amount: 0, isCrit:  false};
+  dealDamage(event, bodyA, bodyB) {
+    var dealtDamage = { amount: 0, isCrit: false };
+    let initialHealth = 0;
 
-        if ((bodyA.label === 'attackBox' && (bodyB.label === 'chimera' || bodyB.label === 'tree'))) {
-          let initialHealth = bodyB.gameObject.getData("backend").curHealth;
-          dealtDamage = bodyB.gameObject.getData("backend").takeDamage({amount: this.player1.getData("backend").damage, type: 1, accuracy: this.player1.getData("backend").accuracy, critChance: this.player1.getData("backend").crit, critMultiplier: this.player1.getData("backend").getCritMultiplier(), avoidable: true, critable: true, ranged: this.player1.getData("backend").getRanged()});
-          //mostrar texto de daño
-          var damageMessage = "";
-          var color = '#eeeeee';
-          if(dealtDamage.amount ==0){
-            damageMessage = "missed";
-          }else{
-            damageMessage = dealtDamage.amount.toString();
-          }
-          if(dealtDamage.isCrit){
-            color = '#ff0808';
-          }
-          bodyB.gameObject.getData("displayDamage").x=bodyB.gameObject.x;
-          bodyB.gameObject.getData("displayDamage").y=bodyB.gameObject.y;
-          bodyB.gameObject.getData("displayDamage").data.values.timer = 40;
-          bodyB.gameObject.getData("displayDamage").setText(damageMessage);
-          bodyB.gameObject.getData("displayDamage").setColor(color);
-          bodyB.gameObject.getData("displayDamage").setVisible(true);
+    if (bodyA.label === "attackBox" && bodyB.label !== "attackBox") {
+      initialHealth = bodyB.gameObject.getData("backend").curHealth;
+      dealtDamage = bodyB.gameObject
+        .getData("backend")
+        .takeDamage({
+          amount: this.player1.getData("backend").damage,
+          type: 1,
+          accuracy: this.player1.getData("backend").accuracy,
+          critChance: this.player1.getData("backend").crit,
+          critMultiplier: this.player1.getData("backend").getCritMultiplier(),
+          avoidable: true,
+          critable: true,
+          ranged: this.player1.getData("backend").getRanged(),
+        });
+      //mostrar texto de daño
+      var damageMessage = "";
+      var color = "#eeeeee";
+      if (dealtDamage.amount == 0) {
+        damageMessage = "missed";
+      } else {
+        damageMessage = dealtDamage.amount.toString();
+      }
+      if (dealtDamage.isCrit) {
+        color = "#ff0808";
+      }
+      bodyB.gameObject.getData("displayDamage").x = bodyB.gameObject.x;
+      bodyB.gameObject.getData("displayDamage").y = bodyB.gameObject.y;
+      bodyB.gameObject.getData("displayDamage").data.values.timer = 40;
+      bodyB.gameObject.getData("displayDamage").setText(damageMessage);
+      bodyB.gameObject.getData("displayDamage").setColor(color);
+      bodyB.gameObject.getData("displayDamage").setVisible(true);
 
-          this.matter.world.remove(bodyA);
-          if(bodyB.label !== 'chimera'){
-            if(initialHealth > 0 && bodyB.gameObject.getData("backend").curHealth <= 0){
-              this.player1.getData("backend").gainXP(this, bodyA.gameObject.getData("backend").calculateNextLevelXp());
-              bodyB.gameObject.getData("backend").onDeath({world: this.matter.world, sprite: bodyA.gameObject});
-            }
-          }
-        }else if((bodyB.label === 'attackBox' && (bodyA.label === 'chimera' || bodyA.label === 'tree'))){
-          let initialHealth = bodyA.gameObject.getData("backend").curHealth;
-          dealtDamage = bodyA.gameObject.getData("backend").takeDamage({amount: this.player1.getData("backend").damage, type: 1, accuracy: this.player1.getData("backend").accuracy, critChance: this.player1.getData("backend").crit, critMultiplier: this.player1.getData("backend").getCritMultiplier(), avoidable: true, critable: true, ranged: this.player1.getData("backend").getRanged()});
-          //mostrar texto de daño
-          var damageMessage = "";
-          var color = '#eeeeee';
-          if(dealtDamage.amount ==0){
-            damageMessage = "missed";
-          }else{
-            damageMessage = dealtDamage.amount.toString();
-          }
-          if(dealtDamage.isCrit){
-            color = '#ff0808';
-          }
-          bodyA.gameObject.getData("displayDamage").x=bodyA.gameObject.x;
-          bodyA.gameObject.getData("displayDamage").y=bodyA.gameObject.y;
-          bodyA.gameObject.getData("displayDamage").data.values.timer = 40;
-          bodyA.gameObject.getData("displayDamage").setText(damageMessage);
-          bodyA.gameObject.getData("displayDamage").setColor(color);
-          bodyA.gameObject.getData("displayDamage").setVisible(true);
+      this.matter.world.remove(bodyA);
 
-          this.matter.world.remove(bodyB);
-          if(bodyA.label !== 'chimera'){
-            if(initialHealth > 0 && bodyA.gameObject.getData("backend").curHealth <= 0){
-              this.player1.getData("backend").gainXP(this, bodyA.gameObject.getData("backend").calculateNextLevelXp());
-              bodyA.gameObject.getData("backend").onDeath({world: this.matter.world, sprite: bodyA.gameObject});
-            }
-          }
+      if (initialHealth > 0 && bodyB.gameObject.getData("backend").curHealth <= 0) {
+        switch(bodyB.collisionFilter.group){
+          case this.groups[0]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamASprites, factory: this.jungleFactory})
+            );
+            break;
+          case this.groups[1]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamBSprites, factory: this.jungleFactory})
+            );
+            break;
+          case this.groups[2]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.neutralSprites, factory: this.jungleFactory})
+            );
+            break;
+          case this.groups[3]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.enviromentSprites, factory: this.jungleFactory})
+            );
+            break;
         }
+      }
+    } else if (bodyB.label === "attackBox" && bodyA.label !== "attackBox") {
+      initialHealth = bodyA.gameObject.getData("backend").curHealth;
+      dealtDamage = bodyA.gameObject
+        .getData("backend")
+        .takeDamage({
+          amount: this.player1.getData("backend").damage,
+          type: 1,
+          accuracy: this.player1.getData("backend").accuracy,
+          critChance: this.player1.getData("backend").crit,
+          critMultiplier: this.player1.getData("backend").getCritMultiplier(),
+          avoidable: true,
+          critable: true,
+          ranged: this.player1.getData("backend").getRanged(),
+        });
+      //mostrar texto de daño
+      var damageMessage = "";
+      var color = "#eeeeee";
+      if (dealtDamage.amount == 0) {
+        damageMessage = "missed";
+      } else {
+        damageMessage = dealtDamage.amount.toString();
+      }
+      if (dealtDamage.isCrit) {
+        color = "#ff0808";
+      }
+      bodyA.gameObject.getData("displayDamage").x = bodyA.gameObject.x;
+      bodyA.gameObject.getData("displayDamage").y = bodyA.gameObject.y;
+      bodyA.gameObject.getData("displayDamage").data.values.timer = 40;
+      bodyA.gameObject.getData("displayDamage").setText(damageMessage);
+      bodyA.gameObject.getData("displayDamage").setColor(color);
+      bodyA.gameObject.getData("displayDamage").setVisible(true);
 
-        let initialHealth = this.levelBoss.getData("backend").curHealth;
-        console.log("chimera health:", this.levelBoss.getData("backend").curHealth);
-        if(initialHealth > 0 && this.levelBoss.getData("backend").curHealth <= 0){
-          this.player1.getData("backend").gainXP(this, this.levelBoss.getData("backend").calculateNextLevelXp());
-          this.matter.world.remove(this.levelBoss.body);
+      this.matter.world.remove(bodyB);
+      if (initialHealth > 0 && bodyA.gameObject.getData("backend").curHealth <= 0) {
+        switch(bodyA.collisionFilter.group){
+          case this.groups[0]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamASprites, factory: this.jungleFactory})
+            );
+            break;
+          case this.groups[1]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamBSprites, factory: this.jungleFactory})
+            );
+            break;
+          case this.groups[2]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.neutralSprites, factory: this.jungleFactory})
+            );
+            break;
+          case this.groups[3]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.enviromentSprites, factory: this.jungleFactory})
+            );
+            break;
         }
-        console.log("body A:", bodyA.label, ", body B:", bodyB.label);
-}
+      }
+    }
+    console.log("body A:", bodyA.label, ", body B:", bodyB.label);
+  }
 
   degToRad(angle) {
     return (angle * Math.PI) / 180;
@@ -541,56 +677,58 @@ export default class SceneGame extends Phaser.Scene {
     frameHeight,
     positionX,
     positionY,
-    name, centerX, centerY
+    name,
+    centerX,
+    centerY
   ) {
-      if(!centerX && !centerY){
-        return this.matter.add.sprite(positionX, positionY, name, null, {
-            shape: {
-              type: "rectangle",
-              width: width,
-              height: height,
-            },
-            render: {
-              sprite: {
-                xOffset: (frameWidth - width - 1 + width / 2) / frameWidth - 0.5,
-                yOffset: -((frameHeight - height - 1) / 2 / frameHeight),
-              },
-            },
-          });
-      }else if(centerX && !centerY){
-        return this.matter.add.sprite(positionX, positionY, name, null, {
-            shape: {
-              type: "rectangle",
-              width: width,
-              height: height,
-            },
-            render: {
-              sprite: {
-                yOffset: -((frameHeight - height - 1) / 2 / frameHeight),
-              },
-            },
-          });
-      }else if(!centerX && centerY){
-        return this.matter.add.sprite(positionX, positionY, name, null, {
-            shape: {
-              type: "rectangle",
-              width: width,
-              height: height,
-            },
-            render: {
-              sprite: {
-                xOffset: (frameWidth - width - 1 + width / 2) / frameWidth - 0.5
-              },
-            },
-          });
-      }else{
-        return this.matter.add.sprite(positionX, positionY, name, null, {
-            shape: {
-              type: "rectangle",
-              width: width,
-              height: height,
-            },
-          });
-      }
+    if (!centerX && !centerY) {
+      return this.matter.add.sprite(positionX, positionY, name, null, {
+        shape: {
+          type: "rectangle",
+          width: width,
+          height: height,
+        },
+        render: {
+          sprite: {
+            xOffset: (frameWidth - width - 1 + width / 2) / frameWidth - 0.5,
+            yOffset: -((frameHeight - height - 1) / 2 / frameHeight),
+          },
+        },
+      });
+    } else if (centerX && !centerY) {
+      return this.matter.add.sprite(positionX, positionY, name, null, {
+        shape: {
+          type: "rectangle",
+          width: width,
+          height: height,
+        },
+        render: {
+          sprite: {
+            yOffset: -((frameHeight - height - 1) / 2 / frameHeight),
+          },
+        },
+      });
+    } else if (!centerX && centerY) {
+      return this.matter.add.sprite(positionX, positionY, name, null, {
+        shape: {
+          type: "rectangle",
+          width: width,
+          height: height,
+        },
+        render: {
+          sprite: {
+            xOffset: (frameWidth - width - 1 + width / 2) / frameWidth - 0.5,
+          },
+        },
+      });
+    } else {
+      return this.matter.add.sprite(positionX, positionY, name, null, {
+        shape: {
+          type: "rectangle",
+          width: width,
+          height: height,
+        },
+      });
+    }
   }
 }

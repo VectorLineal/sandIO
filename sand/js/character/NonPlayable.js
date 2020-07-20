@@ -2,15 +2,14 @@ import Character from "./Character.js";
 import {randomFloat} from "../main_layer/MathUtils.js";
 
 export default class NonPlayable extends Character{
-    constructor(name, level, xpFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, onCrit, critMultiplier, ranged, range, detectionRange, behavour){
-        super(name, level, xpFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, ranged, range);
+    constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, onCrit, critMultiplier, ranged, range, detectionRange, behavour){
+        super(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, ranged, range);
         this.onCrit = onCrit;
         this.critMultiplier = critMultiplier;
         this.ranged = ranged;
         this.detectionRange = detectionRange;
         this.behavour = behavour;
         this.isChasing = false;
-        this.spawnPoint = this.spawnPoint;
     }
 
     getOnCrit(){
@@ -83,5 +82,15 @@ export default class NonPlayable extends Character{
           playerSprite.y
         );
         sprite.setAngle(angle);
+    }
+
+    //funciones sobre eventos
+
+    onDeath(params){
+        console.log("spawnPoint", {x: this.spawnX, y: this.spawnY});
+        params.factory.killNPC({x: this.spawnX, y: this.spawnY}, 2400, 1200);
+        params.sprite.getData("displayDamage").destroy();
+        params.group.remove(params.sprite, true, true);
+        return this.calculateNextLevelXp();
     }
 }

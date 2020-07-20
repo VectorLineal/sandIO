@@ -1,8 +1,9 @@
 export default class Entity{
-    constructor(name, level, xpFactor, damage, armor, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
+    constructor(name, level, xpFactor, bountyFactor, damage, armor, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
         this.name = name;
         this.level = level;
         this.xpFactor = xpFactor; //en heroes se toma valor de 100, en otros representa la xp que se gana al matar a un enemigo
+        this.bountyFactor = bountyFactor;
 
         //referente a poderes, buffs y debuffs
         this.pasives = {};

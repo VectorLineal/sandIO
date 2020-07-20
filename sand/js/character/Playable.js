@@ -3,8 +3,8 @@ import Character from "./Character.js";
 import {randomFloat} from "../main_layer/MathUtils.js";
 
 export default class Playable extends Character{
-    constructor(name, type, race, baseStr, strGrowth, baseRes, resGrowth, baseAgi, agiGrowth, basePer, perGrowth, baseInt, intGrowth, baseDet, detGrowth, level, xpFactor, bodyArmor, weapon, spawnPoint){
-        super(name, level, xpFactor, race, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, spawnPoint);
+    constructor(name, type, bountyFactor, race, baseStr, strGrowth, baseRes, resGrowth, baseAgi, agiGrowth, basePer, perGrowth, baseInt, intGrowth, baseDet, detGrowth, level, xpFactor, bodyArmor, weapon, spawnPoint){
+        super(name, level, xpFactor, bountyFactor, race, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, spawnPoint);
         this.type = type;
         this.xp = 0;
         if(this.level >= 25){
@@ -129,7 +129,7 @@ export default class Playable extends Character{
             this.level ++;
             scene.events.emit('updateLevel');
             this.fortitude += 0.3 * (this.str.change.derivate() + this.res.change.derivate());
-            this.damage += 4 * this.str.change.derivate();
+            this.damage += 2 * this.str.change.derivate();
             scene.events.emit('updateDamage');
 
             this.armor += 0.6 * this.str.change.derivate();
@@ -147,8 +147,9 @@ export default class Playable extends Character{
             this.speed += 0.1 * this.agi.change.derivate();
             scene.events.emit('updateSpeed');
 
-            this.atSpeed += 8 * this.agi.change.derivate();
+            this.atSpeed += 4 * this.agi.change.derivate();
             scene.events.emit('updateAtSpeed');
+            //se tiene que actualizar la animación para que vaya acorde a la velocidad de ataque
             scene.anims.remove("attack_" + this.name);
             scene.anims.create({
                 key: "attack_" + this.name,
@@ -188,7 +189,7 @@ export default class Playable extends Character{
                 overflow = this.calculateNextLevelXp() - this.xp;
                 this.levelUp(scene);
                 if(this.level <= 24){
-                    this.xp = overflow;
+                    this.xp = - overflow;
                 }else{
                     this.xp = 13 * this.xpFactor;
                 }

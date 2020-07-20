@@ -14,7 +14,7 @@ export default class EnviromentalFactory {
     }
   
     generateEnviromentalElement(level) {
-      return new Building(this.name, level, 10, 1, this.armor, this.maxHealth, 0, 0, 0, this.magicArmor, false, 0, 0);
+      return new Building(this.name, level, 10, 0, 1, this.armor, this.maxHealth, 0, 0, 0, this.magicArmor, false, 0, 0);
     }
 
     onUpdate(scene, group, scaleRatio){
@@ -27,7 +27,7 @@ export default class EnviromentalFactory {
       group.children.each(function(entity){
         if(entity.getData("respawnTimer").time > 0){
           entity.getData("respawnTimer").time--;
-        }else{
+        }else if(entity.getData("respawnTimer").time == 0){
           entity.setFrame(0);
           if(!scene.matter.world.has(entity.body)){
             var body = scene.matter.add.rectangle(entity.x, entity.y, width * scaleRatio, height * scaleRatio,
@@ -44,6 +44,7 @@ export default class EnviromentalFactory {
             entity.setCollidesWith(mask);
             entity.setDepth(0.8);
           }
+          entity.getData("respawnTimer").time = -1;
         }
 
         if(entity.getData("displayDamage").data.values.timer > 0){
