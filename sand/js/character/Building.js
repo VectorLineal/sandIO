@@ -17,18 +17,25 @@ export default class Building extends Entity{
                 break;
             case 1, 2:
                 this.onDeath = function(params){
+                    params.sprite.getData("displayDamage").destroy();
+                    params.group.remove(params.sprite, true, true);
                     return this.calculateNextLevelXp();
                 }
                 break;
             case 3:
                 this.onDeath = function(params){
+                    params.sprite.setFrame(1);
+                    params.sprite.setDepth(0.2);
+                    params.world.remove(params.sprite.body);
                     //end game somehow
-                    return this.calculateNextLevelXp();
+                    return 0;
                 }
                 break;
             default:
                 console.log(type, " is not a valid type, 0: envirometal elemnts, 1: static structures, 2: static interactable structures, 3: game objective");
                 this.onDeath = function(params){
+                    params.sprite.getData("displayDamage").destroy();
+                    params.group.remove(params.sprite, true, true);
                     return this.calculateNextLevelXp();
                 }
                 break;

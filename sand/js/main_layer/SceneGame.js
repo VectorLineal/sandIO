@@ -1,5 +1,6 @@
 import "./phaser.js";
 import Playable from "../character/Playable.js";
+import Building from "../character/Building.js";
 import NPCFactory from "../character/NPCFactory.js";
 import EnviromentalFactory from "../character/EnviromentalFactory.js";
 import Weapon from "../character/Weapon.js";
@@ -32,11 +33,14 @@ export default class SceneGame extends Phaser.Scene {
       4294967295
     );
     this.player1;
-
+    
+    //gameObject groups
     this.enviromentSprites;
+    this.buildingSprites;
     this.neutralSprites;
     this.teamASprites;
     this.teamBSprites;
+
     this.initialData = new Playable(
       "minotaur_warrior",
       "warrior",
@@ -94,6 +98,10 @@ export default class SceneGame extends Phaser.Scene {
       frameWidth: 48,
       frameHeight: 48,
     });
+    this.load.image("wall", "assets/walls.png");
+    this.load.image("gate", "assets/gate.png");
+    this.load.image("tower", "assets/tower.png");
+    this.load.image("fort", "assets/fort.png");
     this.load.tilemapTiledJSON("duelMap", "assets/duel_map.json");
     this.load.json("mapEnvironment", "assets/duel_map_environment.json");
     this.load.image("tiles", "assets/maptiles.png");
@@ -103,9 +111,7 @@ export default class SceneGame extends Phaser.Scene {
     let { width, height } = this.sys.game.canvas;
     let scaleRatio = (1.5 * width) / height;
     this.scaleRatio = scaleRatio;
-    this.forestManager.spawnPoints = this.cache.json.get(
-      "mapEnvironment"
-    ).neutral.trees;
+    this.forestManager.spawnPoints = this.cache.json.get("mapEnvironment").neutral.trees;
 
     let test = this.cache.json.get("mapEnvironment").neutral.spawnPoints[0];
     console.log("test version:", test);
@@ -122,9 +128,10 @@ export default class SceneGame extends Phaser.Scene {
     //sprite groups
     this.enviromentSprites = this.add.group();
     this.neutralSprites = this.add.group();
+    this.buildingSprites = this.add.group();
 
     //categories and groups
-    for (var index = 0; index < 4; index++) {
+    for (var index = 0; index < 5; index++) {
       this.groups.push(this.matter.world.nextGroup());
     }
 
@@ -185,7 +192,6 @@ export default class SceneGame extends Phaser.Scene {
     this.jungleFactory.generateInitialSet(this, this.neutralSprites, scaleRatio);
 
     // The player and its settings
-    //hay que asegurarse que el body quede cuadrado puesto que no se puede rotar
     this.player1 = this.setSprite(
       46,
       41,
@@ -281,6 +287,45 @@ export default class SceneGame extends Phaser.Scene {
       "mask:",
       this.forestManager.mask
     );
+
+    //buildings and alike
+    //team 1
+    let wallsCoords = this.cache.json.get("mapEnvironment").team1.walls;
+    let gatesCoords = this.cache.json.get("mapEnvironment").team1.gates;
+    let towersCoords = this.cache.json.get("mapEnvironment").team1.towers;
+    let fortsCoords = this.cache.json.get("mapEnvironment").team1.forts;
+    let objectiveCoords = this.cache.json.get("mapEnvironment").team1.objective;
+    for(var index = 0; index < wallsCoords.length; index++){
+      this.setBuildingSprite("wall", 80, 32, this.groups[4], 1, this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, wallsCoords[index], 300, 300, 1, 50, 10000, 0, 1, 100, 50, false, 0);
+    }
+    for(var index = 0; index < gatesCoords.length; index++){
+      this.setBuildingSprite("gate", 112, 32, this.groups[4], this.categories[0], this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, gatesCoords[index], 200, 200, 1, 70, 7000, 0, 1, 100, 70, false, 0);
+    }
+    for(var index = 0; index < towersCoords.length; index++){
+      this.setBuildingSprite("tower", 48, 48, this.groups[4], 1, this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, towersCoords[index], 400, 400, 160, 100, 6500, 0, 450, 130, 120, true, 128);
+    }
+    for(var index = 0; index < fortsCoords.length; index++){
+      this.setBuildingSprite("fort", 96, 96, this.groups[4], 1, this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, fortsCoords[index], 900, 900, 550, 180, 13000, 0, 500, 150, 200, true, 160);
+    }
+    //team 2
+    wallsCoords = this.cache.json.get("mapEnvironment").team2.walls;
+    gatesCoords = this.cache.json.get("mapEnvironment").team2.gates;
+    towersCoords = this.cache.json.get("mapEnvironment").team2.towers;
+    fortsCoords = this.cache.json.get("mapEnvironment").team2.forts;
+    objectiveCoords = this.cache.json.get("mapEnvironment").team2.objective;
+    for(var index = 0; index < wallsCoords.length; index++){
+      this.setBuildingSprite("wall", 80, 32, this.groups[4], 1, this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, wallsCoords[index], 300, 300, 1, 50, 10000, 0, 1, 100, 50, false, 0);
+    }
+    for(var index = 0; index < gatesCoords.length; index++){
+      this.setBuildingSprite("gate", 112, 32, this.groups[4], this.categories[2], this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, gatesCoords[index], 200, 200, 1, 70, 700.0, 0, 1, 100, 70, false, 0);
+    }
+    for(var index = 0; index < towersCoords.length; index++){
+      this.setBuildingSprite("tower", 48, 48, this.groups[4], 1, this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, towersCoords[index], 400, 400, 160, 100, 6500, 0, 450, 130, 120, true, 128);
+    }
+    for(var index = 0; index < fortsCoords.length; index++){
+      this.setBuildingSprite("fort", 96, 96, this.groups[4], 1, this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, fortsCoords[index], 900, 900, 550, 180, 13000, 0, 500, 150, 200, true, 160);
+    }
+
     //  Our controls.
     this.up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
     this.down = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
@@ -311,18 +356,6 @@ export default class SceneGame extends Phaser.Scene {
   }
 
   update() {
-    /*for(var index = 0; index < this.damageDisplay.children.getArray().lenght; index++){
-      this.damageDisplay.children.getArray()[index].data.values.timer--;
-    }
-
-    for(var index = 0; index < this.damageDisplay.children.getArray().lenght; index++){
-      if(this.damageDisplay.children.getArray()[index].data.values.timer <= 0){
-        //this.damageDisplay.remove(this.damageDisplay.children.getArray()[index], true, true);
-        this.damageDisplay.clear();
-        break;
-      }
-    }*/
-
     this.player1.getData("backend").applyHealthRegen(this);
     this.player1.getData("backend").applyManaRegen(this);
     var pointer = this.input.activePointer;
@@ -331,6 +364,7 @@ export default class SceneGame extends Phaser.Scene {
 
     this.forestManager.onUpdate(this, this.enviromentSprites, this.scaleRatio);
     this.jungleFactory.onUpdate(this, this.neutralSprites, this.scaleRatio, this.clock);
+    this.onBuildingsUpdate();
 
     if (this.left.isDown) {
       this.player1
@@ -545,19 +579,25 @@ export default class SceneGame extends Phaser.Scene {
           case this.groups[1]:
             this.player1.getData("backend").gainXP(
               this,
-              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamBSprites, factory: this.jungleFactory})
+              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamBSprites})
             );
             break;
           case this.groups[2]:
             this.player1.getData("backend").gainXP(
               this,
-              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.neutralSprites, factory: this.jungleFactory})
+              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.neutralSprites})
             );
             break;
           case this.groups[3]:
             this.player1.getData("backend").gainXP(
               this,
               bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.enviromentSprites, factory: this.jungleFactory})
+            );
+            break;
+          case this.groups[4]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyB.gameObject.getData("backend").onDeath({sprite: bodyB.gameObject, group: this.buildingSprites})
             );
             break;
         }
@@ -600,13 +640,13 @@ export default class SceneGame extends Phaser.Scene {
           case this.groups[0]:
             this.player1.getData("backend").gainXP(
               this,
-              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamASprites, factory: this.jungleFactory})
+              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamASprites})
             );
             break;
           case this.groups[1]:
             this.player1.getData("backend").gainXP(
               this,
-              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamBSprites, factory: this.jungleFactory})
+              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamBSprites})
             );
             break;
           case this.groups[2]:
@@ -618,7 +658,13 @@ export default class SceneGame extends Phaser.Scene {
           case this.groups[3]:
             this.player1.getData("backend").gainXP(
               this,
-              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.enviromentSprites, factory: this.jungleFactory})
+              bodyA.gameObject.getData("backend").onDeath({ sprite: bodyA.gameObject, group: this.enviromentSprites})
+            );
+            break;
+          case this.groups[4]:
+            this.player1.getData("backend").gainXP(
+              this,
+              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.buildingSprites, factory: this.jungleFactory})
             );
             break;
         }
@@ -668,6 +714,37 @@ export default class SceneGame extends Phaser.Scene {
           pointer.y + camera.scrollY
         );
     this.player1.setAngle(angle);
+  }
+
+  setBuildingSprite(name, width, heigth, group, category, mask, coords, xpFactor, bountyFactor, damage, armor, health, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
+    var sprite = this.matter.add.sprite(coords.x * this.scaleRatio, coords.y * this.scaleRatio, name, null, {
+      isStatic: true,
+      shape: {
+        type: "rectangle",
+        width: width,
+        height: heigth,
+      },
+    });
+    sprite.setScale(this.scaleRatio);
+    sprite.setData("backend", new Building(name, 1, xpFactor, bountyFactor, damage, armor, health, healthRegen, atSpeed, accuracy, magicArmor, ranged, range, 1));
+    sprite.setData("displayDamage", this.add.text(coords.x * this.scaleRatio, coords.y * this.scaleRatio, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0));
+    sprite.body.label = "building";
+    sprite.setCollisionGroup(group);
+    sprite.setCollisionCategory(category);
+    sprite.setCollidesWith(mask);
+    sprite.setDepth(0.8);
+    sprite.setAngle(coords.rotation);
+    this.buildingSprites.add(sprite);
+  }
+
+  onBuildingsUpdate(){
+    this.buildingSprites.children.each(function(entity){
+      if(entity.getData("displayDamage").data.values.timer > 0){
+        entity.getData("displayDamage").data.values.timer--;
+      }else{
+        entity.getData("displayDamage").setVisible(false);
+      }
+    });
   }
 
   setSprite(
