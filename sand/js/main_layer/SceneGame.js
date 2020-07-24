@@ -317,7 +317,7 @@ export default class SceneGame extends Phaser.Scene {
       this.setBuildingSprite("wall", 80, 32, this.groups[4], 1, this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, wallsCoords[index], 300, 300, 1, 50, 10000, 0, 1, 100, 50, false, 0);
     }
     for(var index = 0; index < gatesCoords.length; index++){
-      this.setBuildingSprite("gate", 112, 32, this.groups[4], this.categories[2], this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, gatesCoords[index], 200, 200, 1, 70, 700.0, 0, 1, 100, 70, false, 0);
+      this.setBuildingSprite("gate", 112, 32, this.groups[4], this.categories[2], this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, gatesCoords[index], 200, 200, 1, 70, 7000, 0, 1, 100, 70, false, 0);
     }
     for(var index = 0; index < towersCoords.length; index++){
       this.setBuildingSprite("tower", 48, 48, this.groups[4], 1, this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, towersCoords[index], 400, 400, 160, 100, 6500, 0, 450, 130, 120, true, 128);
@@ -480,6 +480,7 @@ export default class SceneGame extends Phaser.Scene {
 
     //se actualza el tiempo transcurrido del juego
     this.clock++;
+    this.events.emit('updateClock');
   }
 
   //funciones no heredadas de la escena
@@ -569,38 +570,27 @@ export default class SceneGame extends Phaser.Scene {
       this.matter.world.remove(bodyA);
 
       if (initialHealth > 0 && bodyB.gameObject.getData("backend").curHealth <= 0) {
+        let pay = [0, 0];
         switch(bodyB.collisionFilter.group){
           case this.groups[0]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamASprites, factory: this.jungleFactory})
-            );
+            pay = bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamASprites});
             break;
           case this.groups[1]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamBSprites})
-            );
+            pay =bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamBSprites});
             break;
           case this.groups[2]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.neutralSprites})
-            );
+            pay = bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.neutralSprites, factory: this.jungleFactory});
             break;
           case this.groups[3]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.enviromentSprites, factory: this.jungleFactory})
-            );
+            pay =bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.enviromentSprites, factory: this.forestManager});
             break;
           case this.groups[4]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyB.gameObject.getData("backend").onDeath({sprite: bodyB.gameObject, group: this.buildingSprites})
-            );
+            pay = bodyB.gameObject.getData("backend").onDeath({sprite: bodyB.gameObject, group: this.buildingSprites});
             break;
         }
+
+        this.player1.getData("backend").gainXP(this, pay[0]);
+        this.player1.getData("backend").earnGold(this, pay[1]);
       }
     } else if (bodyB.label === "attackBox" && bodyA.label !== "attackBox") {
       initialHealth = bodyA.gameObject.getData("backend").curHealth;
@@ -636,38 +626,27 @@ export default class SceneGame extends Phaser.Scene {
 
       this.matter.world.remove(bodyB);
       if (initialHealth > 0 && bodyA.gameObject.getData("backend").curHealth <= 0) {
+        let pay = [0, 0];
         switch(bodyA.collisionFilter.group){
           case this.groups[0]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamASprites})
-            );
+            pay = bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamASprites});
             break;
           case this.groups[1]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamBSprites})
-            );
+            pay =bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamBSprites});
             break;
           case this.groups[2]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.neutralSprites, factory: this.jungleFactory})
-            );
+            pay = bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.neutralSprites, factory: this.jungleFactory});
             break;
           case this.groups[3]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyA.gameObject.getData("backend").onDeath({ sprite: bodyA.gameObject, group: this.enviromentSprites})
-            );
+            pay =bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.enviromentSprites, factory: this.forestManager});
             break;
           case this.groups[4]:
-            this.player1.getData("backend").gainXP(
-              this,
-              bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.buildingSprites, factory: this.jungleFactory})
-            );
+            pay = bodyA.gameObject.getData("backend").onDeath({sprite: bodyA.gameObject, group: this.buildingSprites});
             break;
         }
+
+        this.player1.getData("backend").gainXP(this, pay[0]);
+        this.player1.getData("backend").earnGold(this, pay[1]);
       }
     }
     console.log("body A:", bodyA.label, ", body B:", bodyB.label);

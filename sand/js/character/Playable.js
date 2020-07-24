@@ -11,6 +11,7 @@ export default class Playable extends Character{
             this.xp = 13 * xpFactor;
             this.level = 25;
         }
+        this.gold = 0;
         //referente a atributos del personaje
         this.str = new Atribute("stregth", baseStr, strGrowth);
         this.res = new Atribute("resistance", baseRes, resGrowth);
@@ -196,5 +197,10 @@ export default class Playable extends Character{
                 scene.events.emit('updateXP');
             }
         }
+    }
+
+    earnGold(scene, amount){
+        this.gold += amount;
+        scene.events.emit('updateGold');
     }
 }

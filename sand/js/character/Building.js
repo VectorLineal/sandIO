@@ -12,14 +12,14 @@ export default class Building extends Entity{
                     params.sprite.setDepth(0.2);
                     params.sprite.getData("respawnTimer").time = 1800 + randomInt(5400);
                     params.world.remove(params.sprite.body);
-                    return this.calculateNextLevelXp();
+                    return [this.calculateNextLevelXp(), this.calculateBounty()];
                 }
                 break;
             case 1, 2:
                 this.onDeath = function(params){
                     params.sprite.getData("displayDamage").destroy();
                     params.group.remove(params.sprite, true, true);
-                    return this.calculateNextLevelXp();
+                    return [this.calculateNextLevelXp(), this.calculateBounty()];
                 }
                 break;
             case 3:
@@ -28,7 +28,7 @@ export default class Building extends Entity{
                     params.sprite.setDepth(0.2);
                     params.world.remove(params.sprite.body);
                     //end game somehow
-                    return 0;
+                    return [0, 0];
                 }
                 break;
             default:
@@ -36,7 +36,7 @@ export default class Building extends Entity{
                 this.onDeath = function(params){
                     params.sprite.getData("displayDamage").destroy();
                     params.group.remove(params.sprite, true, true);
-                    return this.calculateNextLevelXp();
+                    return [this.calculateNextLevelXp(), this.calculateBounty()];
                 }
                 break;
         }

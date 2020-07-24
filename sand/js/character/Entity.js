@@ -70,6 +70,16 @@ export default class Entity{
         }
     }
 
+    calculateBounty(){
+        if(this.level >= 1 && this.level <= 24){
+            return (1 + (this.level * 0.5)) * this.bountyFactor;
+        }else if(this.level < 1){
+            return this.bountyFactor
+        }else{
+            return 13 * this.bountyFactor;
+        }
+    }
+
     dealDamage(amount, type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
         if(type == 0){
             this.curHealth -=  amount;

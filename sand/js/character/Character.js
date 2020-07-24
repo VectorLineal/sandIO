@@ -42,7 +42,7 @@ export default class Character extends Entity{
         }
     }
 
-    moveDirection(sprite, direction, alteredSpeed){
+    moveDirection(sprite, direction, alteredSpeed, scale){
         //ángulo debe venir en radianes
         var deltaX = 0;
         var deltaY = 0;
@@ -61,7 +61,7 @@ export default class Character extends Entity{
             deltaY = this.speed * Math.sin(direction);
         }
 
-        sprite.setAngle(direction);
-        sprite.setVelocity(deltaX, deltaY);
+        sprite.setAngle(direction * 180 / Math.PI);
+        sprite.setVelocity(deltaX * scale / 6, deltaY * scale / 6);
     }
 }
