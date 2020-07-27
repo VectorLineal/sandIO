@@ -1,9 +1,9 @@
 import Entity from "./Entity.js";
-import {randomInt, randomFloat} from "../main_layer/MathUtils.js";
+import {randomInt} from "../main_layer/MathUtils.js";
 
 export default class Building extends Entity{
     constructor(name, level, xpFactor, bountyFactor, damage, armor, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range, type){
-        super(name, level, xpFactor, bountyFactor, damage, armor, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range);
+        super(name, level, xpFactor, bountyFactor, damage, armor, 0, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range);
         this.type = type; //0: enviromental element (árboles, piedras, etc), renovable, 1: torres o demás edificios no renovables, 2: puerta, elemento no renovable e interactivo, 3: objetivo del juego
         switch(type){
             case 0:
@@ -40,20 +40,5 @@ export default class Building extends Entity{
                 }
                 break;
         }
-    }
-
-    takeDamage(params){ //amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged
-        //type 0 es puro, 1 físico y 2 mágico
-        var rawDamage = params.amount;
-        var crit = false;
-        var finalDamage = 0;
-        if(params.critable){
-            if(randomFloat(101) <= params.critChance){
-                rawDamage *= params.critMultiplier;
-                crit = true;
-            }
-        }
-        finalDamage = this.dealDamage(rawDamage, params.type);
-        return {amount: finalDamage, isCrit: crit};
     }
 }

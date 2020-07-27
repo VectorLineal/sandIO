@@ -1,9 +1,12 @@
+import {randomFloat} from "../main_layer/MathUtils.js";
+
 export default class Entity{
-    constructor(name, level, xpFactor, bountyFactor, damage, armor, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
+    constructor(name, level, xpFactor, bountyFactor, damage, armor, evasion, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
         this.name = name;
         this.level = level;
         this.xpFactor = xpFactor; //en heroes se toma valor de 100, en otros representa la xp que se gana al matar a un enemigo
         this.bountyFactor = bountyFactor;
+        this.lastHitBy = "none"; //sirve para referenciar a la última entidad que ha atacado para calcular la entrega de xp y oro
 
         //referente a poderes, buffs y debuffs
         this.pasives = {};
@@ -14,6 +17,7 @@ export default class Entity{
         //stats del personaje como tal
         this.damage = damage;
         this.armor = armor;
+        this.evasion = evasion;
         this.maxHealth = maxHealth;
         this.curHealth = this.maxHealth;
         this.healthRegen = healthRegen;
@@ -102,6 +106,59 @@ export default class Entity{
             }
         }else{
             console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic")
+        }
+    }
+
+    takeDamage(params){ //scene, amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged
+        //type 0 es puro, 1 físico y 2 mágico
+        var rawDamage = params.amount;
+        var crit = false;
+        var finalDamage = 0;
+
+        if(!params.avoidable){
+            if(params.critable){
+                if(randomFloat(101) <= params.critChance){
+                    rawDamage *= params.critMultiplier;
+                    crit = true;
+                }
+            }
+            this.lastHitBy = params.attacker;
+            finalDamage = this.dealDamage(rawDamage, params.type);
+        }else{
+            var hitChance = params.accuracy - this.evasion;
+            if(params.ranged){
+                hitChance += 100;
+            }
+            if(randomFloat(101) <= hitChance){
+                if(params.critable){
+                    if(randomFloat(101) <= params.critChance){
+                        rawDamage *= this.critMultiplier;
+                        crit = true;
+                    }
+                }
+                this.lastHitBy = params.attacker;
+                finalDamage = this.dealDamage(rawDamage, params.type);
+            }
+        }
+        return {amount: finalDamage, isCrit: crit};
+    }
+
+    applyHealthRegen(params){
+        if(this.curHealth >= this.maxHealth){
+            this.curHealth = this.maxHealth;
+        }else{
+            this.curHealth += (this.healthRegen / 60);
+        }
+    }
+    spendMana(params){
+        this.curMana += params.amount;
+    }
+
+    applyManaRegen(params){
+        if(this.curMana >= this.maxMana){
+            this.curMana = this.maxMana;
+        }else{
+            this.curMana += (this.manaRegen / 60);
         }
     }
 }

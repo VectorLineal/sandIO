@@ -157,7 +157,7 @@ export default class SceneGame extends Phaser.Scene {
             fortitude: new LinearFunction(2, 14),
             damage: new LinearFunction(33, 105),
             armor: new LinearFunction(5.3, 33),
-            maxHealth: new LinearFunction(175, 2400),
+            maxHealth: new LinearFunction(17.5, 240.0),
             healthRegen: new LinearFunction(2, 18),
             speed: new LinearFunction(0.1, 40),
             atSpeed: new LinearFunction(6, 160),
@@ -346,7 +346,7 @@ export default class SceneGame extends Phaser.Scene {
     this.cancel = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
 
     //input
-    //this.input.mouse.disableContextMenu(); se reactiva en producción
+    this.input.mouse.disableContextMenu(); //se reactiva en producción
     this.input.on("pointermove", this.adjustPlayerRotation, this);
 
     //camera
@@ -356,8 +356,8 @@ export default class SceneGame extends Phaser.Scene {
   }
 
   update() {
-    this.player1.getData("backend").applyHealthRegen(this);
-    this.player1.getData("backend").applyManaRegen(this);
+    this.player1.getData("backend").applyHealthRegen({scene: this});
+    this.player1.getData("backend").applyManaRegen({scene: this});
     var pointer = this.input.activePointer;
 
     this.player1.setVelocity(0);
@@ -403,9 +403,10 @@ export default class SceneGame extends Phaser.Scene {
               );
               this.player1
                 .getData("backend")
-                .spendMana(
-                  this,
-                  -30 - 2 * this.player1.getData("backend").level
+                .spendMana({
+                  scene: this,
+                  amount: -30 - 2 * this.player1.getData("backend").level
+                }
                 );
             } else {
               this.lastKeyPressed = "";
@@ -418,9 +419,10 @@ export default class SceneGame extends Phaser.Scene {
             ) {
               this.player1
                 .getData("backend")
-                .spendMana(
-                  this,
-                  -45 - 7 * this.player1.getData("backend").level
+                .spendMana({
+                  scene: this,
+                  amount: -45 - 7 * this.player1.getData("backend").level
+                }
                 );
               this.lastKeyPressed = "";
             } else {
@@ -441,9 +443,10 @@ export default class SceneGame extends Phaser.Scene {
               );
               this.player1
                 .getData("backend")
-                .spendMana(
-                  this,
-                  -45 - 5 * this.player1.getData("backend").level
+                .spendMana({
+                  scene: this,
+                  amount: -45 - 5 * this.player1.getData("backend").level
+                }
                 );
             } else {
               this.lastKeyPressed = "";
@@ -472,8 +475,8 @@ export default class SceneGame extends Phaser.Scene {
       index < this.matter.world.getAllBodies().length;
       index++
     ) {
-      if (this.matter.world.getAllBodies()[index].label === "attackBox") {
-        console.log("index:", index);
+      let labelReader = RegExp(/^(attack|projectile|aoe)Box\.\w+$/);
+      if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
         this.matter.world.remove(this.matter.world.getAllBodies()[index]);
       }
     }
@@ -521,7 +524,7 @@ export default class SceneGame extends Phaser.Scene {
           render: { visible: true, lineColor: 0x00ff00 },
         }
       );
-      attackBox.label = "attackBox";
+      attackBox.label = "attackBox." + this.player1.getData("backend").name;
       if (this.player1.body.collisionFilter.group == this.groups[0]) {
         attackBox.collisionFilter.category = this.categories[0];
       } else if (this.player1.body.collisionFilter.group == this.groups[1]) {
@@ -534,8 +537,9 @@ export default class SceneGame extends Phaser.Scene {
   dealDamage(event, bodyA, bodyB) {
     var dealtDamage = { amount: 0, isCrit: false };
     let initialHealth = 0;
+    let labelReader = RegExp(/^(attack|projectile|aoe)Box\.\w+$/);
 
-    if (bodyA.label === "attackBox" && bodyB.label !== "attackBox") {
+    if (labelReader.test(bodyA.label) && ! labelReader.test(bodyB.label)){
       initialHealth = bodyB.gameObject.getData("backend").curHealth;
       dealtDamage = bodyB.gameObject
         .getData("backend")
@@ -548,6 +552,7 @@ export default class SceneGame extends Phaser.Scene {
           avoidable: true,
           critable: true,
           ranged: this.player1.getData("backend").getRanged(),
+          attacker: bodyA.label.split(".")[1]
         });
       //mostrar texto de daño
       var damageMessage = "";
@@ -589,10 +594,11 @@ export default class SceneGame extends Phaser.Scene {
             break;
         }
 
-        this.player1.getData("backend").gainXP(this, pay[0]);
-        this.player1.getData("backend").earnGold(this, pay[1]);
+        this.player1.getData("backend").gainXP({scene: this, amount: pay[0]});
+        this.player1.getData("backend").earnGold({scene: this, amount: pay[1]});
       }
-    } else if (bodyB.label === "attackBox" && bodyA.label !== "attackBox") {
+    } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label)) {
+      console.log("encaja con body B");
       initialHealth = bodyA.gameObject.getData("backend").curHealth;
       dealtDamage = bodyA.gameObject
         .getData("backend")
@@ -605,6 +611,7 @@ export default class SceneGame extends Phaser.Scene {
           avoidable: true,
           critable: true,
           ranged: this.player1.getData("backend").getRanged(),
+          attacker: bodyB.label.split(".")[1]
         });
       //mostrar texto de daño
       var damageMessage = "";
@@ -623,6 +630,7 @@ export default class SceneGame extends Phaser.Scene {
       bodyA.gameObject.getData("displayDamage").setText(damageMessage);
       bodyA.gameObject.getData("displayDamage").setColor(color);
       bodyA.gameObject.getData("displayDamage").setVisible(true);
+      console.log(bodyA.gameObject.getData("backend").name, "got hit by", bodyA.gameObject.getData("backend").lastHitBy);
 
       this.matter.world.remove(bodyB);
       if (initialHealth > 0 && bodyA.gameObject.getData("backend").curHealth <= 0) {
@@ -645,8 +653,8 @@ export default class SceneGame extends Phaser.Scene {
             break;
         }
 
-        this.player1.getData("backend").gainXP(this, pay[0]);
-        this.player1.getData("backend").earnGold(this, pay[1]);
+        this.player1.getData("backend").gainXP({scene: this, amount: pay[0]});
+        this.player1.getData("backend").earnGold({scene: this, amount: pay[1]});
       }
     }
     console.log("body A:", bodyA.label, ", body B:", bodyB.label);

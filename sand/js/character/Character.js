@@ -1,7 +1,7 @@
 import Entity from "./Entity.js";
 export default class Character extends Entity{
     constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, ranged, range){
-        super(name, level, xpFactor, bountyFactor, damage, armor, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range);
+        super(name, level, xpFactor, bountyFactor, damage, armor, evasion, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range);
         this.race = race;
 
         //referente a poderes, buffs y debuffs
@@ -11,7 +11,6 @@ export default class Character extends Entity{
         //stats del personaje como tal
         this.fortitude = fortitude;
         this.speed = speed;
-        this.evasion = evasion;
         this.crit = crit;
         this.maxMana = maxMana;
         this.curMana = this.maxMana;
