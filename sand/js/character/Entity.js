@@ -34,10 +34,12 @@ export default class Entity{
     //funciones sobre sprites
     addAnimation(scene, animationName, frames){
         var animationSpeed = this.calculateAttackRate();
-        if(animationName != "attack_" + this.name){
+        if(animationName != "attack_" + this.name && animationName != "attack_" + this.name + "_end"){
             animationSpeed = 500/*this.skills[animationName].castPoint*/;
-        }else{
-            this.atFrames = frames;
+        }else if(animationName == "attack_" + this.name){
+            this.atFrames[0] = frames;
+        }else if(animationName == "attack_" + this.name + "_end"){
+            this.atFrames[1] = frames;
         }
 
         scene.anims.create({
@@ -45,6 +47,23 @@ export default class Entity{
             frames: scene.anims.generateFrameNumbers(this.name, { frames: frames }),
             duration: animationSpeed
         });
+    }
+
+    rebalanceAttackAnimations(scene){
+        let totalFrames = this.atFrames[0].length +  this.atFrames[1].length;
+            scene.anims.remove("attack_" + this.name);
+            scene.anims.create({
+                key: "attack_" + this.name,
+                frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames[0] }),
+                duration: this.calculateAttackRate() * this.atFrames[0].length / totalFrames
+            });
+
+            scene.anims.remove("attack_" + this.name + "_end");
+            scene.anims.create({
+                key: "attack_" + this.name + "_end",
+                frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames[1] }),
+                duration: this.calculateAttackRate() * this.atFrames[1].length / totalFrames
+            });
     }
 
     //funciones no gráficas
@@ -132,7 +151,7 @@ export default class Entity{
             if(randomFloat(101) <= hitChance){
                 if(params.critable){
                     if(randomFloat(101) <= params.critChance){
-                        rawDamage *= this.critMultiplier;
+                        rawDamage *= params.critMultiplier;
                         crit = true;
                     }
                 }

@@ -87,7 +87,7 @@ export default class NonPlayable extends Character{
     //funciones sobre eventos
 
     onDeath(params){
-        params.factory.killNPC({x: this.spawnX, y: this.spawnY}, 2400, 1200);
+        params.factory.kill({x: this.spawnX, y: this.spawnY}, 2400, 1200);
         params.sprite.getData("displayDamage").destroy();
         params.group.remove(params.sprite, true, true);
         return [this.calculateNextLevelXp(), this.calculateBounty()];

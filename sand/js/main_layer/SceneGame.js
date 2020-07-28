@@ -3,8 +3,6 @@ import Playable from "../character/Playable.js";
 import Building from "../character/Building.js";
 import NPCFactory from "../character/NPCFactory.js";
 import EnviromentalFactory from "../character/EnviromentalFactory.js";
-import Weapon from "../character/Weapon.js";
-import Armor from "../character/Armor.js";
 import LinearFunction from "../character/LinearFunction.js";
 
 export default class SceneGame extends Phaser.Scene {
@@ -60,8 +58,8 @@ export default class SceneGame extends Phaser.Scene {
       2.2,
       1,
       100,
-      new Armor("broncePlate", 27, 115.1, -11, 1.9, -18.5, 20),
-      new Weapon("maul", "stun 0.2", 126, false, 35, -15, -11.2, -60, 10, 1.3),
+      {name: "broncePlate", baseMagicArmor: 27, baseArmor: 115.1, evasion: -11, speed: 1.9, atSpeed: -18.5, accuracy: 20},
+      {name: "maul", onCrit: "stun 0.2", baseDamage: 126, ranged: false, range: 35, evasion: -15, speed: -11.2, atSpeed: -60, accuracy: 10, critMultiplier: 1.3},
       { x: 10, y: 10 }
     );
 
@@ -240,7 +238,11 @@ export default class SceneGame extends Phaser.Scene {
         6,
         7,
         8,
-        9,
+        9
+      ]);
+    this.player1
+      .getData("backend")
+      .addAnimation(this, "attack_minotaur_warrior_end", [
         7,
         4,
         0,
@@ -270,6 +272,9 @@ export default class SceneGame extends Phaser.Scene {
       ]);
 
     this.player1.on("animationcomplete", this.changeAction, this);
+    console.log("frame", this.player1.getData("backend").atFrames);
+    this.player1.getData("backend").rebalanceAttackAnimations(this);
+    console.log("multiplicador", this.player1.getData("backend").getCritMultiplier());
 
     //enviromental elements
     this.forestManager.group = this.groups[3];
@@ -530,6 +535,7 @@ export default class SceneGame extends Phaser.Scene {
       } else if (this.player1.body.collisionFilter.group == this.groups[1]) {
         attackBox.collisionFilter.category = this.categories[2];
       }
+      this.player1.play("attack_" + this.player1.getData("backend").name + "_end");
     }
     console.log("bodies in world:", this.matter.world.getAllBodies());
   }

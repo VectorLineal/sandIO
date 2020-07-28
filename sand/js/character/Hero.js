@@ -1,5 +1,7 @@
 import Atribute from "./Atribute.js";
 import Character from "./Character.js";
+import Armor from "./Armor.js";
+import Weapon from "./Weapon.js";
 
 export default class Hero extends Character{
     constructor(name, type, bountyFactor, race, baseStr, strGrowth, baseRes, resGrowth, baseAgi, agiGrowth, basePer, perGrowth, baseInt, intGrowth, baseDet, detGrowth, level, xpFactor, bodyArmor, weapon, spawnPoint){
@@ -26,12 +28,12 @@ export default class Hero extends Character{
         this.det.update(level);
 
         //equipamento del personaje
-        this.weapon = weapon;
-        this.bodyArmor = bodyArmor;
+        this.weapon = new Weapon(weapon.name, weapon.onCrit, weapon.baseDamage, weapon.ranged, weapon.range, weapon.evasion, weapon.speed, weapon.atSpeed, weapon.accuracy, weapon.critMultiplier);
+        this.bodyArmor = new Armor(bodyArmor.name, bodyArmor.baseMagicArmor, bodyArmor.baseArmor, bodyArmor.evasion, bodyArmor.speed, bodyArmor.atSpeed, bodyArmor.accuracy);
         
         //stats del personaje como tal
         this.fortitude = this.str.getStat1() + this.res.getStat3();
-        this.damage = 36 + weapon.getCurrentDamage() + this.str.getStat2();
+        this.damage = 36 + this.weapon.getCurrentDamage() + this.str.getStat2();
         this.armor = this.bodyArmor.getCurrentArmor() + this.str.getStat3();
         this.maxHealth = 200 + this.res.getStat1();
         this.curHealth = this.maxHealth;
@@ -81,12 +83,7 @@ export default class Hero extends Character{
             this.atSpeed += 4 * this.agi.change.derivate();
 
             //se tiene que actualizar la animación para que vaya acorde a la velocidad de ataque
-            scene.anims.remove("attack_" + this.name);
-            scene.anims.create({
-                key: "attack_" + this.name,
-                frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames }),
-                duration: this.calculateAttackRate()
-            });
+            this.rebalanceAttackAnimations(scene);
 
             this.evasion += 0.3 * (this.agi.change.derivate() + this.per.change.derivate());
             this.crit += 0.3 * this.per.change.derivate();
