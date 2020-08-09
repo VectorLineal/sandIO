@@ -112,16 +112,16 @@ export default class SceneGame extends Phaser.Scene {
     this.forestManager.spawnPoints = this.cache.json.get("mapEnvironment").neutral.trees;
 
     let test = this.cache.json.get("mapEnvironment").neutral.spawnPoints[0];
-    console.log("test version:", test);
+    console.log("current scale:", this.scaleRatio, "tranformation value", (this.scaleRatio * this.scaleRatio));
     //map generation
     this.map = this.make.tilemap({ key: "duelMap" });
 
     var tileset = this.map.addTilesetImage("maptiles", "tiles");
 
     this.layer = this.map.createStaticLayer("duel", tileset, 0, 0);
-    this.layer.setScale(scaleRatio);
-    this.cameras.main.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
-    this.matter.world.setBounds(0, 0, 960 * scaleRatio, 1600 * scaleRatio);
+    this.layer.setScale((9.84 / this.scaleRatio));
+    this.cameras.main.setBounds(0, 0, 960 * (9.84 / scaleRatio), 1600 * (9.84 / scaleRatio));
+    this.matter.world.setBounds(0, 0, 960 * (9.84 / scaleRatio), 1600 * (9.84 / scaleRatio));
 
     //sprite groups
     this.enviromentSprites = this.add.group();
@@ -187,7 +187,7 @@ export default class SceneGame extends Phaser.Scene {
       this.groups[2],
       this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1
     );
-    this.jungleFactory.generateInitialSet(this, this.neutralSprites, scaleRatio);
+    this.jungleFactory.generateInitialSet(this, this.neutralSprites, (9.84 / scaleRatio));
 
     // The player and its settings
     this.player1 = this.setSprite(
@@ -195,17 +195,17 @@ export default class SceneGame extends Phaser.Scene {
       41,
       60,
       76,
-      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x * scaleRatio,
-      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y * scaleRatio,
+      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x * (9.84 / scaleRatio),
+      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y * (9.84 / scaleRatio),
       "minotaur_warrior",
       false,
       false
     );
     this.initialData.spawnX =
-      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x * scaleRatio;
+      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x * (9.84 / scaleRatio);
     this.initialData.spawnY =
-      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y * scaleRatio;
-    this.player1.setScale(scaleRatio);
+      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y * (9.84 / scaleRatio);
+    this.player1.setScale((9.84 / scaleRatio));
     this.player1.setData("backend", this.initialData);
     this.player1.setData("respawnTimer", { time: 0 });
     this.player1.setData(
@@ -216,7 +216,7 @@ export default class SceneGame extends Phaser.Scene {
           fill: "#eeeeee",
         })
         .setDepth(1)
-        .setData("timer", 0)
+        .setData("timer", 0).setScale(0.2 * (9.84 / this.scaleRatio))
     );
     this.player1.body.label = "minotaur_warrior";
     this.player1.setCollisionGroup(this.groups[0]);
@@ -284,7 +284,7 @@ export default class SceneGame extends Phaser.Scene {
       this,
       this.enviromentSprites,
       "tree1",
-      this.scaleRatio
+      (9.84 / this.scaleRatio)
     );
     console.log(
       "group:",
@@ -367,28 +367,28 @@ export default class SceneGame extends Phaser.Scene {
 
     this.player1.setVelocity(0);
 
-    this.forestManager.onUpdate(this, this.enviromentSprites, this.scaleRatio);
-    this.jungleFactory.onUpdate(this, this.neutralSprites, this.scaleRatio, this.clock);
+    this.forestManager.onUpdate(this, this.enviromentSprites, (9.84 / this.scaleRatio));
+    this.jungleFactory.onUpdate(this, this.neutralSprites, (9.84 / this.scaleRatio), this.clock);
     this.onBuildingsUpdate();
 
     if (this.left.isDown) {
       this.player1
         .getData("backend")
-        .moveX(this.player1, false, this.scaleRatio);
+        .moveX(this.player1, false, (9.84 / this.scaleRatio));
     } else if (this.right.isDown) {
       this.player1
         .getData("backend")
-        .moveX(this.player1, true, this.scaleRatio);
+        .moveX(this.player1, true, (9.84 / this.scaleRatio));
     }
 
     if (this.up.isDown) {
       this.player1
         .getData("backend")
-        .moveY(this.player1, true, this.scaleRatio);
+        .moveY(this.player1, true, (9.84 / this.scaleRatio));
     } else if (this.down.isDown) {
       this.player1
         .getData("backend")
-        .moveY(this.player1, false, this.scaleRatio);
+        .moveY(this.player1, false, (9.84 / this.scaleRatio));
     }
 
     if (this.cancel.isDown) {
@@ -521,8 +521,8 @@ export default class SceneGame extends Phaser.Scene {
             Math.sin(
               this.getRotation(xr, yr) + this.degToRad(this.player1.angle)
             ),
-        35 * this.scaleRatio,
-        36 * this.scaleRatio,
+        35 * (9.84 / this.scaleRatio),
+        36 * (9.84 / this.scaleRatio),
         {
           isSensor: true,
           angle: this.degToRad(this.player1.angle),
@@ -710,7 +710,7 @@ export default class SceneGame extends Phaser.Scene {
   }
 
   setBuildingSprite(name, width, heigth, group, category, mask, coords, xpFactor, bountyFactor, damage, armor, health, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
-    var sprite = this.matter.add.sprite(coords.x * this.scaleRatio, coords.y * this.scaleRatio, name, null, {
+    var sprite = this.matter.add.sprite(coords.x * (9.84 / this.scaleRatio), coords.y * (9.84 / this.scaleRatio), name, null, {
       isStatic: true,
       shape: {
         type: "rectangle",
@@ -718,9 +718,9 @@ export default class SceneGame extends Phaser.Scene {
         height: heigth,
       },
     });
-    sprite.setScale(this.scaleRatio);
+    sprite.setScale((9.84 / this.scaleRatio));
     sprite.setData("backend", new Building(name, 1, xpFactor, bountyFactor, damage, armor, health, healthRegen, atSpeed, accuracy, magicArmor, ranged, range, 1));
-    sprite.setData("displayDamage", this.add.text(coords.x * this.scaleRatio, coords.y * this.scaleRatio, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0));
+    sprite.setData("displayDamage", this.add.text(coords.x * (9.84 / this.scaleRatio), coords.y * (9.84 / this.scaleRatio), "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * (9.84 / this.scaleRatio)));
     sprite.body.label = "building";
     sprite.setCollisionGroup(group);
     sprite.setCollisionCategory(category);

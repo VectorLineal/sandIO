@@ -1,4 +1,5 @@
 import "./phaser.js";
+import {fitNumber, clockFormat} from "./MathUtils.js";
 
 export default class HUDGame extends Phaser.Scene {
 
@@ -31,7 +32,7 @@ export default class HUDGame extends Phaser.Scene {
     
     create() {
         let { width, height } = this.sys.game.canvas;
-        let scaleRatio = width / height;
+        let scaleRatio = (1.5 * width) / height;
         let game = this.scene.get('GameScene');
         
         //elementos dinámincos
@@ -67,8 +68,8 @@ export default class HUDGame extends Phaser.Scene {
                 stepY: (height / 39)
                 },
             setScale: { 
-                x: scaleRatio / 3,
-                y: scaleRatio / 3
+                x: 3.28 / scaleRatio,
+                y: 3.28 / scaleRatio
             }
         });
 
@@ -81,8 +82,8 @@ export default class HUDGame extends Phaser.Scene {
                 stepY: (height / 39)
                 },
             setScale: { 
-                x: scaleRatio / 3,
-                y: scaleRatio / 3
+                x: 3.28 / scaleRatio,
+                y: 3.28 / scaleRatio
             }
         });
 
@@ -98,16 +99,16 @@ export default class HUDGame extends Phaser.Scene {
         var levelText = this.add.text(width / 7, (height - (67 * height / 420)), 'level: 1', { font: '48px Arial', fill: '#eeeeee' });
         var envinromentText = this.add.text(width / 6.5, (height - (height / 7.8)), '0\n00:00', { font: '48px Arial', fill: '#eeeeee' });
 
-        healthText.setText(this.fitNumber(this.health, 2) + '/' + this.fitNumber(this.maxHealth, 2) + ' + ' + this.fitNumber(this.regenH, 2));
-        manaText.setText(this.fitNumber(this.mana, 2) + '/' + this.fitNumber(this.maxMana, 2) + ' + ' + this.fitNumber(this.regenM, 2));
-        statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower / 100, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
-        envinromentText.setText(this.fitNumber(this.gold, 0) + '\n' + this.clockFormat(this.clock));
+        healthText.setText(fitNumber(this.health, 2) + '/' + fitNumber(this.maxHealth, 2) + ' + ' + fitNumber(this.regenH, 2));
+        manaText.setText(fitNumber(this.mana, 2) + '/' + fitNumber(this.maxMana, 2) + ' + ' + fitNumber(this.regenM, 2));
+        statsText.setText(fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower / 100, 2) + '%\n' + fitNumber(this.arm, 0) + '\n' + fitNumber(this.magicArm, 0) + '\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0));
+        envinromentText.setText(fitNumber(this.gold, 0) + '\n' + clockFormat(this.clock));
         
-        healthText.setScale(1.8 / game.scaleRatio);
-        manaText.setScale(1.8 / game.scaleRatio);
-        statsText.setScale(1.35 / game.scaleRatio);
-        levelText.setScale(1.8 / game.scaleRatio);
-        envinromentText.setScale(1.35 / game.scaleRatio);
+        healthText.setScale(1.8 / scaleRatio);
+        manaText.setScale(1.8 / scaleRatio);
+        statsText.setScale(1.35 / scaleRatio);
+        levelText.setScale(1.8 / scaleRatio);
+        envinromentText.setScale(1.35 / scaleRatio);
 
         healthText.setScrollFactor(1);
         statsText.setScrollFactor(1);
@@ -117,7 +118,7 @@ export default class HUDGame extends Phaser.Scene {
         //eventos de modificación de valores HUD
         game.events.on('updateLevel', function () {
             this.level = game.player1.getData('backend').level;
-            levelText.setText('level: ' + this.fitNumber(this.level, 0));
+            levelText.setText('level: ' + fitNumber(this.level, 0));
         }, this);
 
         game.events.on('updateXP', function () {
@@ -128,109 +129,94 @@ export default class HUDGame extends Phaser.Scene {
 
         game.events.on('updateDamage', function () {
             this.damage = game.player1.getData('backend').damage;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateSpellPower', function () {
             this.spellPower = game.player1.getData('backend').spellPower;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateArmor', function () {
             this.arm = game.player1.getData('backend').armor;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateMagicArmor', function () {
             this.magicArm = game.player1.getData('backend').magicArmor;
-            this.level = game.player1.getData('backend').level;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateSpeed', function () {
             this.vel = game.player1.getData('backend').speed;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateAtSpeed', function () {
             this.atS = game.player1.getData('backend').atSpeed;
-            statsText.setText(this.fitNumber(this.damage, 2) + '\n' + this.fitNumber(this.spellPower, 2) + '%\n' + this.fitNumber(this.arm, 0) + '\n' + this.fitNumber(this.magicArm, 0) + '\n' + this.fitNumber(this.vel, 0) + '\n' + this.fitNumber(this.atS, 0));
+            statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateHealth', function () {
             this.health = game.player1.getData('backend').curHealth;
-            healthText.setText(this.fitNumber(this.health, 2) + '/' + this.fitNumber(this.maxHealth, 2) + ' + ' + this.fitNumber(this.regenH, 2));
+            healthText.setText(this.healthFormatedText());
             healthBar.width = (this.health/this.maxHealth) * (width / 3);
         }, this);
 
         game.events.on('updateMaxHealth', function () {
             this.maxHealth = game.player1.getData('backend').maxHealth;
-            healthText.setText(this.fitNumber(this.health, 2) + '/' + this.fitNumber(this.maxHealth, 2) + ' + ' + this.fitNumber(this.regenH, 2));
+            healthText.setText(this.healthFormatedText());
             healthBar.width = (this.health/this.maxHealth) * (width / 3);
         }, this);
 
         game.events.on('updateHealthRegen', function () {
             this.regenH = game.player1.getData('backend').healthRegen;
-            healthText.setText(this.fitNumber(this.health, 2) + '/' + this.fitNumber(this.maxHealth, 2) + ' + ' + this.fitNumber(this.regenH, 2));
+            healthText.setText(this.healthFormatedText());
         }, this);
 
         game.events.on('updateMana', function () {
             this.mana = game.player1.getData('backend').curMana;
-            manaText.setText(this.fitNumber(this.mana, 2) + '/' + this.fitNumber(this.maxMana, 2) + ' + ' + this.fitNumber(this.regenM, 2));
+            manaText.setText(this.manaFormatedText());
             manaBar.width = (this.mana/this.maxMana) * (width / 3);
         }, this);
 
         game.events.on('updateMaxMana', function () {
             this.maxMana = game.player1.getData('backend').maxMana;
-            manaText.setText(this.fitNumber(this.mana, 2) + '/' + this.fitNumber(this.maxMana, 2) + ' + ' + this.fitNumber(this.regenM, 2));
+            manaText.setText(this.manaFormatedText());
             manaBar.width = (this.mana/this.maxMana) * (width / 3);
         }, this);
 
         game.events.on('updateManaRegen', function () {
             this.regenM = game.player1.getData('backend').manaRegen;
-            manaText.setText(this.fitNumber(this.mana, 2) + '/' + this.fitNumber(this.maxMana, 2) + ' + ' + this.fitNumber(this.regenM, 2));
+            manaText.setText(this.manaFormatedText());
         }, this);
 
         game.events.on('updateGold', function () {
             this.gold = game.player1.getData('backend').gold;
-            envinromentText.setText(this.fitNumber(this.gold, 0) + '\n' + this.clockFormat(this.clock));
+            envinromentText.setText(this.clockText());
         }, this);
 
         game.events.on('updateClock', function () {
             this.clock = game.clock;
-            envinromentText.setText(this.fitNumber(this.gold, 0) + '\n' + this.clockFormat(this.clock));
+            envinromentText.setText(this.clockText());
         }, this);
 
         this.scene.bringToTop('HUDScene');
     }
+
+    statsFormatedText(){
+        return fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower, 2) + '%\n' + fitNumber(this.arm, 0) + '\n' + fitNumber(this.magicArm, 0) + '\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0);
+    };
+    healthFormatedText(){
+        return fitNumber(this.health, 2) + '/' + fitNumber(this.maxHealth, 2) + ' + ' + fitNumber(this.regenH, 2)
+    };
+    manaFormatedText(){
+        return fitNumber(this.mana, 2) + '/' + fitNumber(this.maxMana, 2) + ' + ' + fitNumber(this.regenM, 2)
+    };
+    clockText(){
+        return fitNumber(this.gold, 0) + '\n' + clockFormat(this.clock);
+    };
     
     update() {
-    }
-
-    fitNumber(num, decimals){
-        let scalefactor = Math.pow(10, decimals);
-        return (Math.round(num * scalefactor) / scalefactor).toFixed(decimals);
-    }
-
-    clockFormat(num){
-        var minutes = Math.floor(num / 60);
-        var hours = Math.floor(minutes / 60);
-        var time = "";
-
-        minutes %= 60;
-
-        if(hours < 10){
-            time += "0" + hours;
-        }else{
-            time += hours;
-        }
-
-        if(minutes < 10){
-            time += ":0" + minutes;
-        }else{
-            time += ":" + minutes;
-        }
-
-        return time;
     }
 }

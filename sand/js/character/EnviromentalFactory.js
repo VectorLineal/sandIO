@@ -68,7 +68,7 @@ export default class EnviromentalFactory {
         sprite.setScale(scaleRatio);
         sprite.setData("backend", this.generateEnviromentalElement(1));
         sprite.setData("respawnTimer", {time: 0});
-        sprite.setData("displayDamage", scene.add.text(this.spawnPoints[index].x * scaleRatio, this.spawnPoints[index].y * scaleRatio, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0));
+        sprite.setData("displayDamage", scene.add.text(this.spawnPoints[index].x * scaleRatio, this.spawnPoints[index].y * scaleRatio, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * scaleRatio));
         sprite.body.label = this.name;
         sprite.setCollisionGroup(this.group);
         sprite.setCollidesWith(this.mask);
