@@ -5,6 +5,23 @@ export default class Playable extends Hero{
         super(name, type, bountyFactor, race, baseStr, strGrowth, baseRes, resGrowth, baseAgi, agiGrowth, basePer, perGrowth, baseInt, intGrowth, baseDet, detGrowth, level, xpFactor, bodyArmor, weapon, spawnPoint);
     }
 
+    initialUpdate(scene){
+        scene.events.emit('updateLevel');
+        scene.events.emit('updateDamage');
+        scene.events.emit('updateArmor');
+        scene.events.emit('updateMaxHealth');
+        scene.events.emit('updateHealth');
+        scene.events.emit('updateHealthRegen');
+        scene.events.emit('updateSpeed');
+        scene.events.emit('updateAtSpeed');
+        scene.events.emit('updateMaxMana');
+        scene.events.emit('updateMana');
+        scene.events.emit('updateManaRegen');
+        scene.events.emit('updateSpellPower');
+        scene.events.emit('updateMagicArmor');
+        scene.events.emit('updateXP');
+    }
+
     takeDamage(params){ //scene, amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged
         let result = super.takeDamage(params);
         params.scene.events.emit('updateHealth');

@@ -9,7 +9,7 @@ export default class Herofactory extends CharacterFactory {
   }
 
   setPlayerIndex(group){
-      for(var index; index < group.children.entries.length; index++){
+      for(var index = 0; index < group.children.entries.length; index++){
         if(group.children.entries[index].getData('backend').constructor.name == Playable.name){
             this.playerIndex = index;
             break;
@@ -21,15 +21,15 @@ export default class Herofactory extends CharacterFactory {
     if(this.playerIndex > -1){
         return group.children.entries[this.playerIndex];
     }else{
-        console.log("this is not player's Hero group");
+        console.log("this is not the player's Hero group");
         return {};
     }
   }
 
   generateLogic(propertie, spawnPoint) {
-      if(this.spriteProperties[index].player){
+      if(propertie.player){
         return new Playable(
-            propertie.character.name,
+            propertie.name,
             propertie.character.type,
             propertie.character.bountyFactor,
             propertie.character.race,
@@ -45,7 +45,7 @@ export default class Herofactory extends CharacterFactory {
             propertie.character.intGrowth,
             propertie.character.baseDet,
             propertie.character.detGrowth,
-            0,
+            1,
             propertie.character.xpFactor,
             propertie.character.bodyArmor,
             propertie.character.weapon,
@@ -53,7 +53,7 @@ export default class Herofactory extends CharacterFactory {
           );
       }else{
         return new Hero(
-            propertie.character.name,
+            propertie.name,
             propertie.character.type,
             propertie.character.bountyFactor,
             propertie.character.race,
@@ -69,7 +69,7 @@ export default class Herofactory extends CharacterFactory {
             propertie.character.intGrowth,
             propertie.character.baseDet,
             propertie.character.detGrowth,
-            0,
+            1,
             propertie.character.xpFactor,
             propertie.character.bodyArmor,
             propertie.character.weapon,
@@ -78,11 +78,32 @@ export default class Herofactory extends CharacterFactory {
       }
   }
 
+  generateInitialSet(scene, group, scaleRatio){
+    super.generateInitialSet(scene, group, scaleRatio);
+    this.setPlayerIndex(group);
+    this.getPlayer(group).getData('backend').initialUpdate(scene);
+  }
+
     respawn(params, index){
         let creatureIndex = this.spawnProperties[index].spawns[0];
+        let propertie = this.spriteProperties[creatureIndex];
         for(var i = 0; i < params.group.children.entries.length; i++){
             if(params.group.children.entries[i].getData('backend').name == this.spawnProperties[index].name){
+              params.group.children.entries[i].x = this.spawnProperties[index].spawnX;
+              params.group.children.entries[i].y = this.spawnProperties[index].spawnY;
                 params.group.children.entries[i].setVisible(true);
+
+                if(!params.scene.matter.world.has(params.group.children.entries[i].body)){
+                  var body = params.scene.matter.add.rectangle(params.group.children.entries[i].x, params.group.children.entries[i].y, super.generateHitBox(propertie).shape.width * params.scaleRatio, super.generateHitBox(propertie).shape.height * params.scaleRatio,
+                    {
+                      label: params.group.children.entries[i].getData('backend').name,
+                      render: super.generateHitBox(propertie).render,
+                    }
+                  )
+                  body.gameObject = params.group.children.entries[i];
+                  params.group.children.entries[i].body = body;
+                  params.group.children.entries[i].getData("backend").curHealth = params.group.children.entries[i].getData("backend").maxHealth;
+                }
             }
         }
         this.spawnProperties[index].timer = -1;

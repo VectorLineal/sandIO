@@ -27,7 +27,7 @@ export default class EnviromentalFactory {
       group.children.each(function(entity){
         if(entity.getData("respawnTimer").time > 0){
           entity.getData("respawnTimer").time--;
-        }else if(entity.getData("respawnTimer").time == 0){
+        }else if(entity.getData("respawnTimer").time == 0){ //aqui se hace respawn
           entity.setFrame(0);
           if(!scene.matter.world.has(entity.body)){
             var body = scene.matter.add.rectangle(entity.x, entity.y, width * scaleRatio, height * scaleRatio,

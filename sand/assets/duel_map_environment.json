@@ -62,7 +62,10 @@
     },
     "team1" : {
         "spawnPoints" : [
-            {"x": 480, "y": 1344}
+            {"x": 464, "y": 1344}
+        ],
+        "minions" :[
+
         ],
         "walls" : [
             {"x": 216, "y": 1560, "rotation": 90},
@@ -95,7 +98,10 @@
     },
     "team2" : {
         "spawnPoints" : [
-            
+            {"x": 464, "y": 240}
+        ],
+        "minions" :[
+
         ],
         "walls" : [
             {"x": 216, "y": 40, "rotation": 90},

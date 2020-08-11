@@ -2,6 +2,7 @@ import "./phaser.js";
 import Playable from "../character/Playable.js";
 import Building from "../character/Building.js";
 import NPCFactory from "../character/NPCFactory.js";
+import HeroFactory from "../character/HeroFactory.js";
 import EnviromentalFactory from "../character/EnviromentalFactory.js";
 import LinearFunction from "../character/LinearFunction.js";
 
@@ -18,6 +19,7 @@ export default class SceneGame extends Phaser.Scene {
     this.map;
     this.layer;
 
+    //factories y managers de entidades del juego
     this.jungleFactory;
     this.forestManager = new EnviromentalFactory(
       "tree",
@@ -30,38 +32,17 @@ export default class SceneGame extends Phaser.Scene {
       3,
       4294967295
     );
-    this.player1;
-    
+    this.teamAHeroManager;
+    this.teamANPCManager;
+    this.teamBHeroManager;
+    this.teamBNPCManager;
+
     //gameObject groups
     this.enviromentSprites;
     this.buildingSprites;
     this.neutralSprites;
     this.teamASprites;
     this.teamBSprites;
-
-    this.initialData = new Playable(
-      "minotaur_warrior",
-      "warrior",
-      30,
-      "minotaur",
-      24,
-      3.8,
-      20,
-      3.2,
-      15,
-      1,
-      12,
-      1.2,
-      14,
-      1.8,
-      22,
-      2.2,
-      1,
-      100,
-      {name: "broncePlate", baseMagicArmor: 27, baseArmor: 115.1, evasion: -11, speed: 1.9, atSpeed: -18.5, accuracy: 20},
-      {name: "maul", onCrit: "stun 0.2", baseDamage: 126, ranged: false, range: 35, evasion: -15, speed: -11.2, atSpeed: -60, accuracy: 10, critMultiplier: 1.3},
-      { x: 10, y: 10 }
-    );
 
     //controles
     this.up;
@@ -109,24 +90,43 @@ export default class SceneGame extends Phaser.Scene {
     let { width, height } = this.sys.game.canvas;
     let scaleRatio = (1.5 * width) / height;
     this.scaleRatio = scaleRatio;
-    this.forestManager.spawnPoints = this.cache.json.get("mapEnvironment").neutral.trees;
+    this.forestManager.spawnPoints = this.cache.json.get(
+      "mapEnvironment"
+    ).neutral.trees;
 
     let test = this.cache.json.get("mapEnvironment").neutral.spawnPoints[0];
-    console.log("current scale:", this.scaleRatio, "tranformation value", (this.scaleRatio * this.scaleRatio));
+    console.log(
+      "current scale:",
+      this.scaleRatio,
+      "tranformation value",
+      this.scaleRatio * this.scaleRatio
+    );
     //map generation
     this.map = this.make.tilemap({ key: "duelMap" });
 
     var tileset = this.map.addTilesetImage("maptiles", "tiles");
 
     this.layer = this.map.createStaticLayer("duel", tileset, 0, 0);
-    this.layer.setScale((9.84 / this.scaleRatio));
-    this.cameras.main.setBounds(0, 0, 960 * (9.84 / scaleRatio), 1600 * (9.84 / scaleRatio));
-    this.matter.world.setBounds(0, 0, 960 * (9.84 / scaleRatio), 1600 * (9.84 / scaleRatio));
+    this.layer.setScale(9.84 / this.scaleRatio);
+    this.cameras.main.setBounds(
+      0,
+      0,
+      960 * (9.84 / scaleRatio),
+      1600 * (9.84 / scaleRatio)
+    );
+    this.matter.world.setBounds(
+      0,
+      0,
+      960 * (9.84 / scaleRatio),
+      1600 * (9.84 / scaleRatio)
+    );
 
     //sprite groups
     this.enviromentSprites = this.add.group();
     this.neutralSprites = this.add.group();
     this.buildingSprites = this.add.group();
+    this.teamASprites = this.add.group();
+    this.teamBSprites = this.add.group();
 
     //categories and groups
     for (var index = 0; index < 5; index++) {
@@ -173,9 +173,15 @@ export default class SceneGame extends Phaser.Scene {
             ranged: false,
             range: 15,
             detectionRange: 300,
-            behavour: 2 
-          }
-        }
+            behavour: 2,
+          },
+          animations: {
+            attack: [0, 1, 2, 3, 4, 5, 6, 7],
+            attackEnd: [5, 3, 1, 0],
+            q: [0, 8, 9, 0],
+            e: [0, 10, 11, 12, 13, 14, 0],
+          },
+        },
       ],
       [
         {
@@ -185,96 +191,77 @@ export default class SceneGame extends Phaser.Scene {
         },
       ],
       this.groups[2],
-      this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1
+      this.categories[0] ^ this.categories[2] ^ this.categories[5] ^ 1
     );
-    this.jungleFactory.generateInitialSet(this, this.neutralSprites, (9.84 / scaleRatio));
+    this.jungleFactory.generateInitialSet(
+      this,
+      this.neutralSprites,
+      9.84 / scaleRatio
+    );
 
     // The player and its settings
-    this.player1 = this.setSprite(
-      46,
-      41,
-      60,
-      76,
-      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x * (9.84 / scaleRatio),
-      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y * (9.84 / scaleRatio),
-      "minotaur_warrior",
-      false,
-      false
-    );
-    this.initialData.spawnX =
-      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x * (9.84 / scaleRatio);
-    this.initialData.spawnY =
-      this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y * (9.84 / scaleRatio);
-    this.player1.setScale((9.84 / scaleRatio));
-    this.player1.setData("backend", this.initialData);
-    this.player1.setData("respawnTimer", { time: 0 });
-    this.player1.setData(
-      "displayDamage",
-      this.add
-        .text(this.player1.x, this.player1.y, "", {
-          font: "48px Arial",
-          fill: "#eeeeee",
-        })
-        .setDepth(1)
-        .setData("timer", 0).setScale(0.2 * (9.84 / this.scaleRatio))
-    );
-    this.player1.body.label = "minotaur_warrior";
-    this.player1.setCollisionGroup(this.groups[0]);
-    this.player1.setCollidesWith(
+    this.teamAHeroManager = new HeroFactory(
+      [
+        {
+          name: "minotaur_warrior",
+          width: 46,
+          height: 41,
+          frameWidth: 60,
+          frameHeight: 76,
+          centerX: false,
+          centerY: false,
+          character: {
+            type: "warrior",
+            bountyFactor: 30,
+            race: "minotaur",
+            baseStr: 24,
+            strGrowth: 3.8,
+            baseRes: 20,
+            resGrowth: 3.2,
+            baseAgi: 15,
+            agiGrowth: 1,
+            basePer: 12,
+            perGrowth: 1.2,
+            baseInt: 14,
+            intGrowth: 1.8,
+            baseDet: 22,
+            detGrowth: 2.2,
+            xpFactor: 100,
+            bodyArmor:{
+              name: "bronce plate",
+              baseMagicArmor: 27,
+              baseArmor: 115,
+              evasion: -11,
+              speed: 1.9,
+              atSpeed: -18.5,
+              accuracy: 20
+            },
+            weapon: {
+              name: "maul",
+              onCrit: "stun 0.2",
+              baseDamage: 126,
+              ranged: false,
+              range: 35,
+              evasion: -20,
+              speed: -11.2,
+              atSpeed: -60,
+              accuracy: 0,
+              critMultiplier: 1.3
+            }
+          },
+          animations: {attack: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], attackEnd: [7, 5, 3, 0], q: [0, 11, 12, 13, 14, 12, 0], r: [0, 10, 10, 10, 10, 0]},
+          player: true,
+        },
+      ],
+      [{ x: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x, y: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y, spawns: [0] }],
+      this.groups[0],
       this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1
     );
-    this.player1.setDepth(0.5);
-
-    //animations
-    this.player1
-      .getData("backend")
-      .addAnimation(this, "attack_minotaur_warrior", [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9
-      ]);
-    this.player1
-      .getData("backend")
-      .addAnimation(this, "attack_minotaur_warrior_end", [
-        7,
-        4,
-        0,
-      ]);
-    this.player1
-      .getData("backend")
-      .addAnimation(this, "spellq_minotaur_warrior", [
-        0,
-        11,
-        12,
-        13,
-        14,
-        12,
-        0,
-      ]);
-    this.player1
-      .getData("backend")
-      .addAnimation(this, "spellr_minotaur_warrior", [
-        0,
-        10,
-        10,
-        10,
-        10,
-        10,
-        10,
-        0,
-      ]);
-
-    this.player1.on("animationcomplete", this.changeAction, this);
-    console.log("frame", this.player1.getData("backend").atFrames);
-    this.player1.getData("backend").rebalanceAttackAnimations(this);
-    console.log("multiplicador", this.player1.getData("backend").getCritMultiplier());
+    this.teamAHeroManager.generateInitialSet(
+      this,
+      this.teamASprites,
+      9.84 / scaleRatio
+    );
 
     //enviromental elements
     this.forestManager.group = this.groups[3];
@@ -284,7 +271,7 @@ export default class SceneGame extends Phaser.Scene {
       this,
       this.enviromentSprites,
       "tree1",
-      (9.84 / this.scaleRatio)
+      9.84 / this.scaleRatio
     );
     console.log(
       "group:",
@@ -300,17 +287,93 @@ export default class SceneGame extends Phaser.Scene {
     let towersCoords = this.cache.json.get("mapEnvironment").team1.towers;
     let fortsCoords = this.cache.json.get("mapEnvironment").team1.forts;
     let objectiveCoords = this.cache.json.get("mapEnvironment").team1.objective;
-    for(var index = 0; index < wallsCoords.length; index++){
-      this.setBuildingSprite("wall", 80, 32, this.groups[4], 1, this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, wallsCoords[index], 300, 300, 1, 50, 10000, 0, 1, 100, 50, false, 0);
+    for (var index = 0; index < wallsCoords.length; index++) {
+      this.setBuildingSprite(
+        "wall",
+        80,
+        32,
+        this.groups[4],
+        1,
+        this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1,
+        wallsCoords[index],
+        300,
+        300,
+        1,
+        50,
+        10000,
+        0,
+        1,
+        100,
+        50,
+        false,
+        0
+      );
     }
-    for(var index = 0; index < gatesCoords.length; index++){
-      this.setBuildingSprite("gate", 112, 32, this.groups[4], this.categories[0], this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, gatesCoords[index], 200, 200, 1, 70, 7000, 0, 1, 100, 70, false, 0);
+    for (var index = 0; index < gatesCoords.length; index++) {
+      this.setBuildingSprite(
+        "gate",
+        112,
+        32,
+        this.groups[4],
+        this.categories[0],
+        this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1,
+        gatesCoords[index],
+        200,
+        200,
+        1,
+        70,
+        7000,
+        0,
+        1,
+        100,
+        70,
+        false,
+        0
+      );
     }
-    for(var index = 0; index < towersCoords.length; index++){
-      this.setBuildingSprite("tower", 48, 48, this.groups[4], 1, this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, towersCoords[index], 400, 400, 160, 100, 6500, 0, 450, 130, 120, true, 128);
+    for (var index = 0; index < towersCoords.length; index++) {
+      this.setBuildingSprite(
+        "tower",
+        48,
+        48,
+        this.groups[4],
+        1,
+        this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1,
+        towersCoords[index],
+        400,
+        400,
+        160,
+        100,
+        6500,
+        0,
+        450,
+        130,
+        120,
+        true,
+        128
+      );
     }
-    for(var index = 0; index < fortsCoords.length; index++){
-      this.setBuildingSprite("fort", 96, 96, this.groups[4], 1, this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, fortsCoords[index], 900, 900, 550, 180, 13000, 0, 500, 150, 200, true, 160);
+    for (var index = 0; index < fortsCoords.length; index++) {
+      this.setBuildingSprite(
+        "fort",
+        96,
+        96,
+        this.groups[4],
+        1,
+        this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1,
+        fortsCoords[index],
+        900,
+        900,
+        550,
+        180,
+        13000,
+        0,
+        500,
+        150,
+        200,
+        true,
+        160
+      );
     }
     //team 2
     wallsCoords = this.cache.json.get("mapEnvironment").team2.walls;
@@ -318,17 +381,93 @@ export default class SceneGame extends Phaser.Scene {
     towersCoords = this.cache.json.get("mapEnvironment").team2.towers;
     fortsCoords = this.cache.json.get("mapEnvironment").team2.forts;
     objectiveCoords = this.cache.json.get("mapEnvironment").team2.objective;
-    for(var index = 0; index < wallsCoords.length; index++){
-      this.setBuildingSprite("wall", 80, 32, this.groups[4], 1, this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, wallsCoords[index], 300, 300, 1, 50, 10000, 0, 1, 100, 50, false, 0);
+    for (var index = 0; index < wallsCoords.length; index++) {
+      this.setBuildingSprite(
+        "wall",
+        80,
+        32,
+        this.groups[4],
+        1,
+        this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1,
+        wallsCoords[index],
+        300,
+        300,
+        1,
+        50,
+        10000,
+        0,
+        1,
+        100,
+        50,
+        false,
+        0
+      );
     }
-    for(var index = 0; index < gatesCoords.length; index++){
-      this.setBuildingSprite("gate", 112, 32, this.groups[4], this.categories[2], this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, gatesCoords[index], 200, 200, 1, 70, 7000, 0, 1, 100, 70, false, 0);
+    for (var index = 0; index < gatesCoords.length; index++) {
+      this.setBuildingSprite(
+        "gate",
+        112,
+        32,
+        this.groups[4],
+        this.categories[2],
+        this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1,
+        gatesCoords[index],
+        200,
+        200,
+        1,
+        70,
+        7000,
+        0,
+        1,
+        100,
+        70,
+        false,
+        0
+      );
     }
-    for(var index = 0; index < towersCoords.length; index++){
-      this.setBuildingSprite("tower", 48, 48, this.groups[4], 1, this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, towersCoords[index], 400, 400, 160, 100, 6500, 0, 450, 130, 120, true, 128);
+    for (var index = 0; index < towersCoords.length; index++) {
+      this.setBuildingSprite(
+        "tower",
+        48,
+        48,
+        this.groups[4],
+        1,
+        this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1,
+        towersCoords[index],
+        400,
+        400,
+        160,
+        100,
+        6500,
+        0,
+        450,
+        130,
+        120,
+        true,
+        128
+      );
     }
-    for(var index = 0; index < fortsCoords.length; index++){
-      this.setBuildingSprite("fort", 96, 96, this.groups[4], 1, this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, fortsCoords[index], 900, 900, 550, 180, 13000, 0, 500, 150, 200, true, 160);
+    for (var index = 0; index < fortsCoords.length; index++) {
+      this.setBuildingSprite(
+        "fort",
+        96,
+        96,
+        this.groups[4],
+        1,
+        this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1,
+        fortsCoords[index],
+        900,
+        900,
+        550,
+        180,
+        13000,
+        0,
+        500,
+        150,
+        200,
+        true,
+        160
+      );
     }
 
     //  Our controls.
@@ -355,40 +494,44 @@ export default class SceneGame extends Phaser.Scene {
     this.input.on("pointermove", this.adjustPlayerRotation, this);
 
     //camera
-    this.cameras.main.startFollow(this.player1, true, 1, 1);
+    this.cameras.main.startFollow(this.teamAHeroManager.getPlayer(this.teamASprites), true, 1, 1);
     this.cameras.main.roundPixels = true;
     this.matter.world.on("collisionstart", this.dealDamage, this);
   }
 
   update() {
-    this.player1.getData("backend").applyHealthRegen({scene: this});
-    this.player1.getData("backend").applyManaRegen({scene: this});
     var pointer = this.input.activePointer;
 
-    this.player1.setVelocity(0);
-
-    this.forestManager.onUpdate(this, this.enviromentSprites, (9.84 / this.scaleRatio));
-    this.jungleFactory.onUpdate(this, this.neutralSprites, (9.84 / this.scaleRatio), this.clock);
+    //se actualizan todas las entidades
+    this.teamAHeroManager.onUpdate(this, this.teamASprites, 9.84 / this.scaleRatio);
+    this.forestManager.onUpdate(
+      this,
+      this.enviromentSprites,
+      9.84 / this.scaleRatio
+    );
+    this.jungleFactory.onUpdate(
+      this,
+      this.neutralSprites,
+      9.84 / this.scaleRatio,
+      this.clock
+    );
     this.onBuildingsUpdate();
 
     if (this.left.isDown) {
-      this.player1
-        .getData("backend")
-        .moveX(this.player1, false, (9.84 / this.scaleRatio));
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend")
+        .moveX(this.teamAHeroManager.getPlayer(this.teamASprites), false, 9.84 / this.scaleRatio);
     } else if (this.right.isDown) {
-      this.player1
-        .getData("backend")
-        .moveX(this.player1, true, (9.84 / this.scaleRatio));
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend")
+        .moveX(this.teamAHeroManager.getPlayer(this.teamASprites), true, 9.84 / this.scaleRatio);
     }
 
     if (this.up.isDown) {
-      this.player1
-        .getData("backend")
-        .moveY(this.player1, true, (9.84 / this.scaleRatio));
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend")
+        .moveY(this.teamAHeroManager.getPlayer(this.teamASprites), true, 9.84 / this.scaleRatio);
     } else if (this.down.isDown) {
-      this.player1
+      this.teamAHeroManager.getPlayer(this.teamASprites)
         .getData("backend")
-        .moveY(this.player1, false, (9.84 / this.scaleRatio));
+        .moveY(this.teamAHeroManager.getPlayer(this.teamASprites), false, 9.84 / this.scaleRatio);
     }
 
     if (this.cancel.isDown) {
@@ -396,39 +539,33 @@ export default class SceneGame extends Phaser.Scene {
     }
 
     if (pointer.isDown) {
-      if (!this.player1.anims.isPlaying) {
+      if (!this.teamAHeroManager.getPlayer(this.teamASprites).anims.isPlaying) {
         switch (this.lastKeyPressed) {
           case "q":
             if (
-              this.player1.getData("backend").curMana >=
-              30 + 2 * this.player1.getData("backend").level
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
+              30 + 2 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
             ) {
-              this.player1.play(
-                "spellq_" + this.player1.getData("backend").name
+              this.teamAHeroManager.getPlayer(this.teamASprites).play(
+                "spellq_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name
               );
-              this.player1
-                .getData("backend")
-                .spendMana({
-                  scene: this,
-                  amount: -30 - 2 * this.player1.getData("backend").level
-                }
-                );
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
+                scene: this,
+                amount: -30 - 2 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
+              });
             } else {
               this.lastKeyPressed = "";
             }
             break;
           case "e":
             if (
-              this.player1.getData("backend").curMana >=
-              45 + 7 * this.player1.getData("backend").level
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
+              45 + 7 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
             ) {
-              this.player1
-                .getData("backend")
-                .spendMana({
-                  scene: this,
-                  amount: -45 - 7 * this.player1.getData("backend").level
-                }
-                );
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
+                scene: this,
+                amount: -45 - 7 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
+              });
               this.lastKeyPressed = "";
             } else {
               this.lastKeyPressed = "";
@@ -440,25 +577,22 @@ export default class SceneGame extends Phaser.Scene {
             break;
           case "r":
             if (
-              this.player1.getData("backend").curMana >=
-              45 + 5 * this.player1.getData("backend").level
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
+              45 + 5 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
             ) {
-              this.player1.play(
-                "spellr_" + this.player1.getData("backend").name
+              this.teamAHeroManager.getPlayer(this.teamASprites).play(
+                "spellr_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name
               );
-              this.player1
-                .getData("backend")
-                .spendMana({
-                  scene: this,
-                  amount: -45 - 5 * this.player1.getData("backend").level
-                }
-                );
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
+                scene: this,
+                amount: -45 - 5 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
+              });
             } else {
               this.lastKeyPressed = "";
             }
             break;
           default:
-            this.player1.play("attack_" + this.player1.getData("backend").name);
+            this.teamAHeroManager.getPlayer(this.teamASprites).play("attack_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name);
             break;
         }
       }
@@ -488,56 +622,29 @@ export default class SceneGame extends Phaser.Scene {
 
     //se actualza el tiempo transcurrido del juego
     this.clock++;
-    this.events.emit('updateClock');
+    this.events.emit("updateClock");
   }
 
   //funciones no heredadas de la escena
 
-  changeAction(animation, frame) {
-    this.player1
-      .getData("backend")
-      .takeDamage({
-        scene: this,
-        amount: 10,
-        type: 0,
-        avoidable: false,
-        critable: false,
-      });
-    this.lastKeyPressed = "";
-    if (animation.key == "attack_" + this.player1.getData("backend").name) {
-      var xc = this.player1.x;
-      var yc = this.player1.y;
-      var xr = -this.player1.displayWidth / 4;
-      var yr = this.player1.displayHeight / 2;
-      let magnitude = Math.sqrt(xr * xr + yr * yr);
-      var attackBox = this.matter.add.rectangle(
-        xc +
-          magnitude *
-            Math.cos(
-              this.getRotation(xr, yr) + this.degToRad(this.player1.angle)
-            ),
-        yc +
-          magnitude *
-            Math.sin(
-              this.getRotation(xr, yr) + this.degToRad(this.player1.angle)
-            ),
-        35 * (9.84 / this.scaleRatio),
-        36 * (9.84 / this.scaleRatio),
-        {
-          isSensor: true,
-          angle: this.degToRad(this.player1.angle),
-          render: { visible: true, lineColor: 0x00ff00 },
-        }
-      );
-      attackBox.label = "attackBox." + this.player1.getData("backend").name;
-      if (this.player1.body.collisionFilter.group == this.groups[0]) {
-        attackBox.collisionFilter.category = this.categories[0];
-      } else if (this.player1.body.collisionFilter.group == this.groups[1]) {
-        attackBox.collisionFilter.category = this.categories[2];
-      }
-      this.player1.play("attack_" + this.player1.getData("backend").name + "_end");
+  initialData(){
+    return {curHealth: 200,
+      maxHealth: 200,
+      healthRegen: 0.2,
+      curMana: 75,
+      maxMana: 75, 
+      manaRegen: 0.1,
+      damage: 36,
+      spellPower: 0,
+      magicArmor: 0,
+      armor: 0,
+      speed: 28,
+      atSpeed: 100,
+      level: 0,
+      xp: 0,
+      xpNext: 100,
+      gold: 0
     }
-    console.log("bodies in world:", this.matter.world.getAllBodies());
   }
 
   dealDamage(event, bodyA, bodyB) {
@@ -545,21 +652,19 @@ export default class SceneGame extends Phaser.Scene {
     let initialHealth = 0;
     let labelReader = RegExp(/^(attack|projectile|aoe)Box\.\w+$/);
 
-    if (labelReader.test(bodyA.label) && ! labelReader.test(bodyB.label)){
+    if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label)) {
       initialHealth = bodyB.gameObject.getData("backend").curHealth;
-      dealtDamage = bodyB.gameObject
-        .getData("backend")
-        .takeDamage({
-          amount: this.player1.getData("backend").damage,
-          type: 1,
-          accuracy: this.player1.getData("backend").accuracy,
-          critChance: this.player1.getData("backend").crit,
-          critMultiplier: this.player1.getData("backend").getCritMultiplier(),
-          avoidable: true,
-          critable: true,
-          ranged: this.player1.getData("backend").getRanged(),
-          attacker: bodyA.label.split(".")[1]
-        });
+      dealtDamage = bodyB.gameObject.getData("backend").takeDamage({
+        amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
+        type: 1,
+        accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
+        critChance: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").crit,
+        critMultiplier: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCritMultiplier(),
+        avoidable: true,
+        critable: true,
+        ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
+        attacker: bodyA.label.split(".")[1],
+      });
       //mostrar texto de daño
       var damageMessage = "";
       var color = "#eeeeee";
@@ -579,46 +684,82 @@ export default class SceneGame extends Phaser.Scene {
       bodyB.gameObject.getData("displayDamage").setVisible(true);
 
       this.matter.world.remove(bodyA);
-
-      if (initialHealth > 0 && bodyB.gameObject.getData("backend").curHealth <= 0) {
+      //es necesario mover el onDeath directamente a la función update
+      if (
+        initialHealth > 0 &&
+        bodyB.gameObject.getData("backend").curHealth <= 0
+      ) {
         let pay = [0, 0];
-        switch(bodyB.collisionFilter.group){
+        switch (bodyB.collisionFilter.group) {
           case this.groups[0]:
-            pay = bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamASprites});
+            pay = bodyB.gameObject
+              .getData("backend")
+              .onDeath({
+                world: this.matter.world,
+                sprite: bodyB.gameObject,
+                group: this.teamASprites,
+              });
             break;
           case this.groups[1]:
-            pay =bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.teamBSprites});
+            pay = bodyB.gameObject
+              .getData("backend")
+              .onDeath({
+                world: this.matter.world,
+                sprite: bodyB.gameObject,
+                group: this.teamBSprites,
+              });
             break;
           case this.groups[2]:
-            pay = bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.neutralSprites, factory: this.jungleFactory});
+            pay = bodyB.gameObject
+              .getData("backend")
+              .onDeath({
+                world: this.matter.world,
+                sprite: bodyB.gameObject,
+                group: this.neutralSprites,
+                factory: this.jungleFactory,
+              });
             break;
           case this.groups[3]:
-            pay =bodyB.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyB.gameObject, group: this.enviromentSprites, factory: this.forestManager});
+            pay = bodyB.gameObject
+              .getData("backend")
+              .onDeath({
+                world: this.matter.world,
+                sprite: bodyB.gameObject,
+                group: this.enviromentSprites,
+                factory: this.forestManager,
+              });
             break;
           case this.groups[4]:
-            pay = bodyB.gameObject.getData("backend").onDeath({sprite: bodyB.gameObject, group: this.buildingSprites});
+            pay = bodyB.gameObject
+              .getData("backend")
+              .onDeath({
+                sprite: bodyB.gameObject,
+                group: this.buildingSprites,
+              });
             break;
         }
 
-        this.player1.getData("backend").gainXP({scene: this, amount: pay[0]});
-        this.player1.getData("backend").earnGold({scene: this, amount: pay[1]});
+        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").gainXP({ scene: this, amount: pay[0] });
+        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend")
+          .earnGold({ scene: this, amount: pay[1] });
       }
-    } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label)) {
+    } else if (
+      labelReader.test(bodyB.label) &&
+      !labelReader.test(bodyA.label)
+    ) {
       console.log("encaja con body B");
       initialHealth = bodyA.gameObject.getData("backend").curHealth;
-      dealtDamage = bodyA.gameObject
-        .getData("backend")
-        .takeDamage({
-          amount: this.player1.getData("backend").damage,
-          type: 1,
-          accuracy: this.player1.getData("backend").accuracy,
-          critChance: this.player1.getData("backend").crit,
-          critMultiplier: this.player1.getData("backend").getCritMultiplier(),
-          avoidable: true,
-          critable: true,
-          ranged: this.player1.getData("backend").getRanged(),
-          attacker: bodyB.label.split(".")[1]
-        });
+      dealtDamage = bodyA.gameObject.getData("backend").takeDamage({
+        amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
+        type: 1,
+        accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
+        critChance: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").crit,
+        critMultiplier: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCritMultiplier(),
+        avoidable: true,
+        critable: true,
+        ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
+        attacker: bodyB.label.split(".")[1],
+      });
       //mostrar texto de daño
       var damageMessage = "";
       var color = "#eeeeee";
@@ -636,63 +777,73 @@ export default class SceneGame extends Phaser.Scene {
       bodyA.gameObject.getData("displayDamage").setText(damageMessage);
       bodyA.gameObject.getData("displayDamage").setColor(color);
       bodyA.gameObject.getData("displayDamage").setVisible(true);
-      console.log(bodyA.gameObject.getData("backend").name, "got hit by", bodyA.gameObject.getData("backend").lastHitBy);
+      console.log(
+        bodyA.gameObject.getData("backend").name,
+        "got hit by",
+        bodyA.gameObject.getData("backend").lastHitBy
+      );
 
       this.matter.world.remove(bodyB);
-      if (initialHealth > 0 && bodyA.gameObject.getData("backend").curHealth <= 0) {
+      //es necesario mover el onDeath directamente a la función update
+      if (
+        initialHealth > 0 &&
+        bodyA.gameObject.getData("backend").curHealth <= 0
+      ) {
         let pay = [0, 0];
-        switch(bodyA.collisionFilter.group){
+        switch (bodyA.collisionFilter.group) {
           case this.groups[0]:
-            pay = bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamASprites});
+            pay = bodyA.gameObject
+              .getData("backend")
+              .onDeath({
+                world: this.matter.world,
+                sprite: bodyA.gameObject,
+                group: this.teamASprites,
+              });
             break;
           case this.groups[1]:
-            pay =bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.teamBSprites});
+            pay = bodyA.gameObject
+              .getData("backend")
+              .onDeath({
+                world: this.matter.world,
+                sprite: bodyA.gameObject,
+                group: this.teamBSprites,
+              });
             break;
           case this.groups[2]:
-            pay = bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.neutralSprites, factory: this.jungleFactory});
+            pay = bodyA.gameObject
+              .getData("backend")
+              .onDeath({
+                world: this.matter.world,
+                sprite: bodyA.gameObject,
+                group: this.neutralSprites,
+                factory: this.jungleFactory,
+              });
             break;
           case this.groups[3]:
-            pay =bodyA.gameObject.getData("backend").onDeath({ world: this.matter.world, sprite: bodyA.gameObject, group: this.enviromentSprites, factory: this.forestManager});
+            pay = bodyA.gameObject
+              .getData("backend")
+              .onDeath({
+                world: this.matter.world,
+                sprite: bodyA.gameObject,
+                group: this.enviromentSprites,
+                factory: this.forestManager,
+              });
             break;
           case this.groups[4]:
-            pay = bodyA.gameObject.getData("backend").onDeath({sprite: bodyA.gameObject, group: this.buildingSprites});
+            pay = bodyA.gameObject
+              .getData("backend")
+              .onDeath({
+                sprite: bodyA.gameObject,
+                group: this.buildingSprites,
+              });
             break;
         }
 
-        this.player1.getData("backend").gainXP({scene: this, amount: pay[0]});
-        this.player1.getData("backend").earnGold({scene: this, amount: pay[1]});
+        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").gainXP({ scene: this, amount: pay[0] });
+        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").earnGold({ scene: this, amount: pay[1] });
       }
     }
     console.log("body A:", bodyA.label, ", body B:", bodyB.label);
-  }
-
-  degToRad(angle) {
-    return (angle * Math.PI) / 180;
-  }
-
-  getRotation(x, y) {
-    var result = 0;
-    if (x > 0) {
-      result = Math.atan(y / x);
-    } else if (x == 0 && y > 0) {
-      result = Math.PI / 2;
-    } else if (x == 0 && y < 0) {
-      result = -Math.PI / 2;
-    } else if (x < 0 && y == 0) {
-      return Math.PI;
-    } else {
-      result = Math.atan(y / x) + Math.PI;
-    }
-
-    if (result > Math.PI) {
-      result -= Math.PI;
-    }
-
-    return result;
-  }
-
-  getRotationAround(xc, yc, xr, yr) {
-    return this.getRotation(xc - xr, yc - yr);
   }
 
   adjustPlayerRotation(pointer) {
@@ -701,26 +852,81 @@ export default class SceneGame extends Phaser.Scene {
       -90 +
       Phaser.Math.RAD_TO_DEG *
         Phaser.Math.Angle.Between(
-          this.player1.x,
-          this.player1.y,
+          this.teamAHeroManager.getPlayer(this.teamASprites).x,
+          this.teamAHeroManager.getPlayer(this.teamASprites).y,
           pointer.x + camera.scrollX,
           pointer.y + camera.scrollY
         );
-    this.player1.setAngle(angle);
+        this.teamAHeroManager.getPlayer(this.teamASprites).setAngle(angle);
   }
 
-  setBuildingSprite(name, width, heigth, group, category, mask, coords, xpFactor, bountyFactor, damage, armor, health, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
-    var sprite = this.matter.add.sprite(coords.x * (9.84 / this.scaleRatio), coords.y * (9.84 / this.scaleRatio), name, null, {
-      isStatic: true,
-      shape: {
-        type: "rectangle",
-        width: width,
-        height: heigth,
-      },
-    });
-    sprite.setScale((9.84 / this.scaleRatio));
-    sprite.setData("backend", new Building(name, 1, xpFactor, bountyFactor, damage, armor, health, healthRegen, atSpeed, accuracy, magicArmor, ranged, range, 1));
-    sprite.setData("displayDamage", this.add.text(coords.x * (9.84 / this.scaleRatio), coords.y * (9.84 / this.scaleRatio), "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * (9.84 / this.scaleRatio)));
+  setBuildingSprite(
+    name,
+    width,
+    heigth,
+    group,
+    category,
+    mask,
+    coords,
+    xpFactor,
+    bountyFactor,
+    damage,
+    armor,
+    health,
+    healthRegen,
+    atSpeed,
+    accuracy,
+    magicArmor,
+    ranged,
+    range
+  ) {
+    var sprite = this.matter.add.sprite(
+      coords.x * (9.84 / this.scaleRatio),
+      coords.y * (9.84 / this.scaleRatio),
+      name,
+      null,
+      {
+        isStatic: true,
+        shape: {
+          type: "rectangle",
+          width: width,
+          height: heigth,
+        },
+      }
+    );
+    sprite.setScale(9.84 / this.scaleRatio);
+    sprite.setData(
+      "backend",
+      new Building(
+        name,
+        1,
+        xpFactor,
+        bountyFactor,
+        damage,
+        armor,
+        health,
+        healthRegen,
+        atSpeed,
+        accuracy,
+        magicArmor,
+        ranged,
+        range,
+        1
+      )
+    );
+    sprite.setData(
+      "displayDamage",
+      this.add
+        .text(
+          coords.x * (9.84 / this.scaleRatio),
+          coords.y * (9.84 / this.scaleRatio),
+          "",
+          { font: "48px Arial", fill: "#eeeeee" }
+        )
+        .setDepth(1)
+        .setData("timer", 0)
+        .setScale(0.2 * (9.84 / this.scaleRatio))
+    );
     sprite.body.label = "building";
     sprite.setCollisionGroup(group);
     sprite.setCollisionCategory(category);
@@ -730,75 +936,13 @@ export default class SceneGame extends Phaser.Scene {
     this.buildingSprites.add(sprite);
   }
 
-  onBuildingsUpdate(){
-    this.buildingSprites.children.each(function(entity){
-      if(entity.getData("displayDamage").data.values.timer > 0){
+  onBuildingsUpdate() {
+    this.buildingSprites.children.each(function (entity) {
+      if (entity.getData("displayDamage").data.values.timer > 0) {
         entity.getData("displayDamage").data.values.timer--;
-      }else{
+      } else {
         entity.getData("displayDamage").setVisible(false);
       }
     });
-  }
-
-  setSprite(
-    width,
-    height,
-    frameWidth,
-    frameHeight,
-    positionX,
-    positionY,
-    name,
-    centerX,
-    centerY
-  ) {
-    if (!centerX && !centerY) {
-      return this.matter.add.sprite(positionX, positionY, name, null, {
-        shape: {
-          type: "rectangle",
-          width: width,
-          height: height,
-        },
-        render: {
-          sprite: {
-            xOffset: (frameWidth - width - 1 + width / 2) / frameWidth - 0.5,
-            yOffset: -((frameHeight - height - 1) / 2 / frameHeight),
-          },
-        },
-      });
-    } else if (centerX && !centerY) {
-      return this.matter.add.sprite(positionX, positionY, name, null, {
-        shape: {
-          type: "rectangle",
-          width: width,
-          height: height,
-        },
-        render: {
-          sprite: {
-            yOffset: -((frameHeight - height - 1) / 2 / frameHeight),
-          },
-        },
-      });
-    } else if (!centerX && centerY) {
-      return this.matter.add.sprite(positionX, positionY, name, null, {
-        shape: {
-          type: "rectangle",
-          width: width,
-          height: height,
-        },
-        render: {
-          sprite: {
-            xOffset: (frameWidth - width - 1 + width / 2) / frameWidth - 0.5,
-          },
-        },
-      });
-    } else {
-      return this.matter.add.sprite(positionX, positionY, name, null, {
-        shape: {
-          type: "rectangle",
-          width: width,
-          height: height,
-        },
-      });
-    }
   }
 }

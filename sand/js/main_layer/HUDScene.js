@@ -36,23 +36,23 @@ export default class HUDGame extends Phaser.Scene {
         let game = this.scene.get('GameScene');
         
         //elementos dinámincos
-        this.health = game.initialData.curHealth;
-        this.maxHealth = game.initialData.maxHealth;
-        this.regenH = game.initialData.healthRegen;
-        this.mana = game.initialData.curMana;
-        this.maxMana = game.initialData.maxMana;
-        this.regenM = game.initialData.manaRegen;
-        this.damage = game.initialData.damage;
-        this.spellPower = game.initialData.spellPower;
-        this.magicArm = game.initialData.magicArmor;
-        this.arm = game.initialData.armor;
-        this.vel = game.initialData.speed;
-        this.atS = game.initialData.atSpeed;
-        this.level = game.initialData.level;
-        this.xp = game.initialData.xp;
-        this.xpNext = game.initialData.calculateNextLevelXp();
+        this.health = game.initialData().curHealth;
+        this.maxHealth = game.initialData().maxHealth;
+        this.regenH = game.initialData().healthRegen;
+        this.mana = game.initialData().curMana;
+        this.maxMana = game.initialData().maxMana;
+        this.regenM = game.initialData().manaRegen;
+        this.damage = game.initialData().damage;
+        this.spellPower = game.initialData().spellPower;
+        this.magicArm = game.initialData().magicArmor;
+        this.arm = game.initialData().armor;
+        this.vel = game.initialData().speed;
+        this.atS = game.initialData().atSpeed;
+        this.level = game.initialData().level;
+        this.xp = game.initialData().xp;
+        this.xpNext = game.initialData().xpNext;
         this.clock = game.clock;
-        this.gold = game.initialData.gold;
+        this.gold = game.initialData().gold;
         
         //elementos gráficos estáticos
         var UnderBar = this.add.rectangle(3 * width / 8, (height - (height / 12)), 2 * width / 3, height / 6, 0x090909);
@@ -117,82 +117,82 @@ export default class HUDGame extends Phaser.Scene {
 
         //eventos de modificación de valores HUD
         game.events.on('updateLevel', function () {
-            this.level = game.player1.getData('backend').level;
+            this.level = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').level;
             levelText.setText('level: ' + fitNumber(this.level, 0));
         }, this);
 
         game.events.on('updateXP', function () {
-            this.xp = game.player1.getData('backend').xp;
-            this.xpNext = game.player1.getData('backend').calculateNextLevelXp();
+            this.xp = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').xp;
+            this.xpNext = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').calculateNextLevelXp();
             xpBar.width = (this.xp / this.xpNext) * (width / 12);
         }, this);
 
         game.events.on('updateDamage', function () {
-            this.damage = game.player1.getData('backend').damage;
+            this.damage = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').damage;
             statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateSpellPower', function () {
-            this.spellPower = game.player1.getData('backend').spellPower;
+            this.spellPower = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').spellPower;
             statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateArmor', function () {
-            this.arm = game.player1.getData('backend').armor;
+            this.arm = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').armor;
             statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateMagicArmor', function () {
-            this.magicArm = game.player1.getData('backend').magicArmor;
+            this.magicArm = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').magicArmor;
             statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateSpeed', function () {
-            this.vel = game.player1.getData('backend').speed;
+            this.vel = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').speed;
             statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateAtSpeed', function () {
-            this.atS = game.player1.getData('backend').atSpeed;
+            this.atS = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').atSpeed;
             statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateHealth', function () {
-            this.health = game.player1.getData('backend').curHealth;
+            this.health = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').curHealth;
             healthText.setText(this.healthFormatedText());
             healthBar.width = (this.health/this.maxHealth) * (width / 3);
         }, this);
 
         game.events.on('updateMaxHealth', function () {
-            this.maxHealth = game.player1.getData('backend').maxHealth;
+            this.maxHealth = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').maxHealth;
             healthText.setText(this.healthFormatedText());
             healthBar.width = (this.health/this.maxHealth) * (width / 3);
         }, this);
 
         game.events.on('updateHealthRegen', function () {
-            this.regenH = game.player1.getData('backend').healthRegen;
+            this.regenH = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').healthRegen;
             healthText.setText(this.healthFormatedText());
         }, this);
 
         game.events.on('updateMana', function () {
-            this.mana = game.player1.getData('backend').curMana;
+            this.mana = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').curMana;
             manaText.setText(this.manaFormatedText());
             manaBar.width = (this.mana/this.maxMana) * (width / 3);
         }, this);
 
         game.events.on('updateMaxMana', function () {
-            this.maxMana = game.player1.getData('backend').maxMana;
+            this.maxMana = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').maxMana;
             manaText.setText(this.manaFormatedText());
             manaBar.width = (this.mana/this.maxMana) * (width / 3);
         }, this);
 
         game.events.on('updateManaRegen', function () {
-            this.regenM = game.player1.getData('backend').manaRegen;
+            this.regenM = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').manaRegen;
             manaText.setText(this.manaFormatedText());
         }, this);
 
         game.events.on('updateGold', function () {
-            this.gold = game.player1.getData('backend').gold;
+            this.gold = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').gold;
             envinromentText.setText(this.clockText());
         }, this);
 

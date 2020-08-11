@@ -40,3 +40,31 @@ export function clockFormat(num){
 
     return time;
 }
+
+export function degToRad(angle) {
+    return (angle * Math.PI) / 180;
+}
+export function getRotation(x, y) {
+    var result = 0;
+    if (x > 0) {
+      result = Math.atan(y / x);
+    } else if (x == 0 && y > 0) {
+      result = Math.PI / 2;
+    } else if (x == 0 && y < 0) {
+      result = -Math.PI / 2;
+    } else if (x < 0 && y == 0) {
+      return Math.PI;
+    } else {
+      result = Math.atan(y / x) + Math.PI;
+    }
+
+    if (result > Math.PI) {
+      result -= Math.PI;
+    }
+
+    return result;
+  }
+
+export function getRotationAround(xc, yc, xr, yr) {
+    return getRotation(xc - xr, yc - yr);
+  }
