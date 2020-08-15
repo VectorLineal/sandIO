@@ -1,4 +1,4 @@
-import {randomFloat} from "../main_layer/MathUtils.js";
+import {randomFloat, degToRad, getRotation} from "../main_layer/MathUtils.js";
 
 export default class Entity{
     constructor(name, level, xpFactor, bountyFactor, damage, armor, evasion, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
@@ -64,6 +64,53 @@ export default class Entity{
                 frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames[1] }),
                 duration: this.calculateAttackRate() * this.atFrames[1].length / totalFrames
             });
+    }
+
+    commitAttack(animation, frame, gameObject) {
+        gameObject.scene.lastKeyPressed = "";
+        if(!gameObject.getData("backend").getRanged()){
+          var xc = gameObject.x;
+          var yc = gameObject.y;
+          var xr = -gameObject.displayWidth / 4;
+          var yr = gameObject.displayHeight / 2;
+          let magnitude = Math.sqrt(xr * xr + yr * yr);
+          var attackBox = gameObject.scene.matter.add.rectangle(
+            xc +
+              magnitude *
+                Math.cos(
+                  getRotation(xr, yr) + degToRad(gameObject.angle)
+                ),
+            yc +
+              magnitude *
+                Math.sin(
+                  getRotation(xr, yr) + degToRad(gameObject.angle)
+                ),
+                -xr * 0.7 * (9.84 / gameObject.scene.scaleRatio),
+                gameObject.getData("backend").getRange() * (9.84 / gameObject.scene.scaleRatio),
+            {
+              isSensor: true,
+              angle: degToRad(gameObject.angle),
+              render: { visible: true, lineColor: 0x00ff00 },
+            }
+          );
+          attackBox.label = "attackBox." + gameObject.getData("backend").name;
+          if (gameObject.body.collisionFilter.group == gameObject.scene.groups[0]) {
+            attackBox.collisionFilter.category = gameObject.scene.categories[0];
+          } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[1]) {
+            attackBox.collisionFilter.category = gameObject.scene.categories[2];
+          } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[2]) {
+            attackBox.collisionFilter.category = gameObject.scene.categories[4];
+          }
+        }else{
+          //crear proyectil para ataque a distancia, pendiente creacion de clase proyectil
+        }
+    
+        gameObject.play("attack_" + gameObject.getData("backend").name + "_end");
+        console.log("bodies in world:", gameObject.scene.matter.world.getAllBodies());
+      }
+
+    distributeXp(scene, group){
+
     }
 
     //funciones no gráficas
@@ -169,15 +216,8 @@ export default class Entity{
             this.curHealth += (this.healthRegen / 60);
         }
     }
-    spendMana(params){
-        this.curMana += params.amount;
-    }
-
-    applyManaRegen(params){
-        if(this.curMana >= this.maxMana){
-            this.curMana = this.maxMana;
-        }else{
-            this.curMana += (this.manaRegen / 60);
-        }
+    
+    restoreHealth(){
+        this.curHealth = this.maxHealth;
     }
 }

@@ -171,7 +171,7 @@ export default class SceneGame extends Phaser.Scene {
             onCrit: "bleed 18+3x",
             critMultiplier: 1.65,
             ranged: false,
-            range: 15,
+            range: 20,
             detectionRange: 300,
             behavour: 2,
           },
@@ -595,6 +595,9 @@ export default class SceneGame extends Phaser.Scene {
             this.teamAHeroManager.getPlayer(this.teamASprites).play("attack_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name);
             break;
         }
+        for(var i = 0; i< this.neutralSprites.children.getArray().length; i++){
+          this.neutralSprites.children.getArray()[i].play("attack_" + this.neutralSprites.children.getArray()[i].getData("backend").name);
+        }
       }
     }
 
@@ -698,6 +701,7 @@ export default class SceneGame extends Phaser.Scene {
                 world: this.matter.world,
                 sprite: bodyB.gameObject,
                 group: this.teamASprites,
+                factory: this.teamAHeroManager
               });
             break;
           case this.groups[1]:
@@ -707,6 +711,7 @@ export default class SceneGame extends Phaser.Scene {
                 world: this.matter.world,
                 sprite: bodyB.gameObject,
                 group: this.teamBSprites,
+                factory: this.teamBHeroManager
               });
             break;
           case this.groups[2]:
@@ -747,9 +752,9 @@ export default class SceneGame extends Phaser.Scene {
       labelReader.test(bodyB.label) &&
       !labelReader.test(bodyA.label)
     ) {
-      console.log("encaja con body B");
       initialHealth = bodyA.gameObject.getData("backend").curHealth;
       dealtDamage = bodyA.gameObject.getData("backend").takeDamage({
+        scene: this,
         amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
         type: 1,
         accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
@@ -798,6 +803,7 @@ export default class SceneGame extends Phaser.Scene {
                 world: this.matter.world,
                 sprite: bodyA.gameObject,
                 group: this.teamASprites,
+                factory: this.teamAHeroManager
               });
             break;
           case this.groups[1]:
@@ -807,6 +813,7 @@ export default class SceneGame extends Phaser.Scene {
                 world: this.matter.world,
                 sprite: bodyA.gameObject,
                 group: this.teamBSprites,
+                factory: this.teamBHeroManager
               });
             break;
           case this.groups[2]:

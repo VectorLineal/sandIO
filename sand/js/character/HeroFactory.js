@@ -88,10 +88,13 @@ export default class Herofactory extends CharacterFactory {
         let creatureIndex = this.spawnProperties[index].spawns[0];
         let propertie = this.spriteProperties[creatureIndex];
         for(var i = 0; i < params.group.children.entries.length; i++){
-            if(params.group.children.entries[i].getData('backend').name == this.spawnProperties[index].name){
-              params.group.children.entries[i].x = this.spawnProperties[index].spawnX;
-              params.group.children.entries[i].y = this.spawnProperties[index].spawnY;
-                params.group.children.entries[i].setVisible(true);
+          console.log(params.group.children.entries[i].getData('backend').name, "will respawn?");
+          console.log("meant to respawn:", this.spriteProperties[this.spawnProperties[index].spawns[0]].name);
+            if(params.group.children.entries[i].getData('backend').name == this.spriteProperties[this.spawnProperties[index].spawns[0]].name){
+              console.log(params.group.children.entries[i].getData('backend').name, "will respawn");
+              params.group.children.entries[i].x = this.spawnProperties[index].spawnX * params.scaleRatio;
+              params.group.children.entries[i].y = this.spawnProperties[index].spawnY * params.scaleRatio;
+              params.group.children.entries[i].setVisible(true);
 
                 if(!params.scene.matter.world.has(params.group.children.entries[i].body)){
                   var body = params.scene.matter.add.rectangle(params.group.children.entries[i].x, params.group.children.entries[i].y, super.generateHitBox(propertie).shape.width * params.scaleRatio, super.generateHitBox(propertie).shape.height * params.scaleRatio,
@@ -99,10 +102,13 @@ export default class Herofactory extends CharacterFactory {
                       label: params.group.children.entries[i].getData('backend').name,
                       render: super.generateHitBox(propertie).render,
                     }
-                  )
+                  );
+                  body.collisionFilter.group = this.group;
+                  body.collisionFilter.mask = this.mask;
                   body.gameObject = params.group.children.entries[i];
                   params.group.children.entries[i].body = body;
-                  params.group.children.entries[i].getData("backend").curHealth = params.group.children.entries[i].getData("backend").maxHealth;
+                  params.group.children.entries[i].getData("backend").restoreHealth();
+                  params.group.children.entries[i].getData("backend").restoreMana();
                 }
             }
         }

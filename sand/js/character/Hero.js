@@ -199,4 +199,18 @@ export default class Hero extends Character {
   earnGold(params) {
     this.gold += params.amount;
   }
+
+  calculateSpawnTime(){
+    return ((this.level * 2.25) + 3.75) * 60
+  }
+
+  //funciones sobre eventos
+  onDeath(params){
+    params.sprite.anims.stopOnFrame(0);
+    params.sprite.setVisible(false);
+    console.log("respawn in...", this.calculateSpawnTime());
+    params.factory.kill({x: this.spawnX, y: this.spawnY}, this.calculateSpawnTime(), 0);
+    params.world.remove(params.sprite.body);
+    return [this.calculateNextLevelXp(), this.calculateBounty()];
+  }
 }
