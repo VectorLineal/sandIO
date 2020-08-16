@@ -144,8 +144,11 @@ export default class CharacterFactory{
         }
         group.children.each(function(entity){
             //se actualiza la regeneración de salud y mana
-            entity.getData('backend').applyHealthRegen({scene: scene});
-            entity.getData('backend').applyManaRegen({scene: scene});
+            if(!entity.getData('backend').isDead()){
+              entity.getData('backend').applyHealthRegen({scene: scene});
+              entity.getData('backend').applyManaRegen({scene: scene});
+            }
+            
             entity.setVelocity(0);
             
             //se actualizan los display de daño

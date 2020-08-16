@@ -1,5 +1,5 @@
 import "./phaser.js";
-import Playable from "../character/Playable.js";
+import Hero from "../character/Hero.js";
 import Building from "../character/Building.js";
 import NPCFactory from "../character/NPCFactory.js";
 import HeroFactory from "../character/HeroFactory.js";
@@ -95,12 +95,6 @@ export default class SceneGame extends Phaser.Scene {
     ).neutral.trees;
 
     let test = this.cache.json.get("mapEnvironment").neutral.spawnPoints[0];
-    console.log(
-      "current scale:",
-      this.scaleRatio,
-      "tranformation value",
-      this.scaleRatio * this.scaleRatio
-    );
     //map generation
     this.map = this.make.tilemap({ key: "duelMap" });
 
@@ -272,12 +266,6 @@ export default class SceneGame extends Phaser.Scene {
       this.enviromentSprites,
       "tree1",
       9.84 / this.scaleRatio
-    );
-    console.log(
-      "group:",
-      this.forestManager.group,
-      "mask:",
-      this.forestManager.mask
     );
 
     //buildings and alike
@@ -612,16 +600,16 @@ export default class SceneGame extends Phaser.Scene {
     }
 
     //se limpian los collision box inutiles
-    for (
+    /*for (
       var index = 0;
       index < this.matter.world.getAllBodies().length;
       index++
     ) {
-      let labelReader = RegExp(/^(attack|projectile|aoe)Box\.\w+$/);
+      let labelReader = RegExp(/^(bounty|attack|projectile|aoe)Box\.\w+(\#\d+)?$/);
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
         this.matter.world.remove(this.matter.world.getAllBodies()[index]);
       }
-    }
+    }*/
 
     //se actualza el tiempo transcurrido del juego
     this.clock++;
@@ -652,12 +640,17 @@ export default class SceneGame extends Phaser.Scene {
 
   dealDamage(event, bodyA, bodyB) {
     var dealtDamage = { amount: 0, isCrit: false };
-    let initialHealth = 0;
-    let labelReader = RegExp(/^(attack|projectile|aoe)Box\.\w+$/);
+    let labelReader = RegExp(/^(bounty|attack|projectile|aoe)Box\.\w+(\#\d+)?$/);
 
     if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label)) {
-      initialHealth = bodyB.gameObject.getData("backend").curHealth;
+      let factory = this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero);
       dealtDamage = bodyB.gameObject.getData("backend").takeDamage({
+        scene: this,
+        sprite: bodyB.gameObject,
+        body: bodyB,
+        group: this.getRelatedGroup(bodyB.collisionFilter.group),
+        factory: factory,
+        scaleRatio: this.scaleRatio,
         amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
         type: 1,
         accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
@@ -687,170 +680,105 @@ export default class SceneGame extends Phaser.Scene {
       bodyB.gameObject.getData("displayDamage").setVisible(true);
 
       this.matter.world.remove(bodyA);
-      //es necesario mover el onDeath directamente a la función update
-      if (
-        initialHealth > 0 &&
-        bodyB.gameObject.getData("backend").curHealth <= 0
-      ) {
-        let pay = [0, 0];
-        switch (bodyB.collisionFilter.group) {
-          case this.groups[0]:
-            pay = bodyB.gameObject
-              .getData("backend")
-              .onDeath({
-                world: this.matter.world,
-                sprite: bodyB.gameObject,
-                group: this.teamASprites,
-                factory: this.teamAHeroManager
-              });
-            break;
-          case this.groups[1]:
-            pay = bodyB.gameObject
-              .getData("backend")
-              .onDeath({
-                world: this.matter.world,
-                sprite: bodyB.gameObject,
-                group: this.teamBSprites,
-                factory: this.teamBHeroManager
-              });
-            break;
-          case this.groups[2]:
-            pay = bodyB.gameObject
-              .getData("backend")
-              .onDeath({
-                world: this.matter.world,
-                sprite: bodyB.gameObject,
-                group: this.neutralSprites,
-                factory: this.jungleFactory,
-              });
-            break;
-          case this.groups[3]:
-            pay = bodyB.gameObject
-              .getData("backend")
-              .onDeath({
-                world: this.matter.world,
-                sprite: bodyB.gameObject,
-                group: this.enviromentSprites,
-                factory: this.forestManager,
-              });
-            break;
-          case this.groups[4]:
-            pay = bodyB.gameObject
-              .getData("backend")
-              .onDeath({
-                sprite: bodyB.gameObject,
-                group: this.buildingSprites,
-              });
-            break;
-        }
-
-        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").gainXP({ scene: this, amount: pay[0] });
-        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend")
-          .earnGold({ scene: this, amount: pay[1] });
+    } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label)) {
+      switch(bodyB.label.split(".")[0]){
+        case "attackBox":
+          let factory = this.getRelatedFactory(bodyA.collisionFilter.group, bodyA.gameObject.getData("backend") instanceof Hero);
+          dealtDamage = bodyA.gameObject.getData("backend").takeDamage({
+            scene: this,
+            sprite: bodyA.gameObject,
+            body: bodyA,
+            group: this.getRelatedGroup(bodyA.collisionFilter.group),
+            factory: factory,
+            scaleRatio: this.scaleRatio,
+            amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
+            type: 1,
+            accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
+            critChance: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").crit,
+            critMultiplier: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCritMultiplier(),
+            avoidable: true,
+            critable: true,
+            ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
+            attacker: bodyB.label.split(".")[1],
+          });
+          //mostrar texto de daño
+          if(bodyA.gameObject != null){
+            var damageMessage = "";
+            var color = "#eeeeee";
+            if (dealtDamage.amount == 0) {
+              damageMessage = "missed";
+            } else {
+              damageMessage = dealtDamage.amount.toString();
+            }
+            if (dealtDamage.isCrit) {
+              color = "#ff0808";
+            }
+            bodyA.gameObject.getData("displayDamage").x = bodyA.gameObject.x;
+            bodyA.gameObject.getData("displayDamage").y = bodyA.gameObject.y;
+            bodyA.gameObject.getData("displayDamage").data.values.timer = 40;
+            bodyA.gameObject.getData("displayDamage").setText(damageMessage);
+            bodyA.gameObject.getData("displayDamage").setColor(color);
+            bodyA.gameObject.getData("displayDamage").setVisible(true);
+            console.log(
+              bodyA.gameObject.getData("backend").name,
+              "got hit by",
+              bodyA.gameObject.getData("backend").lastHitBy
+            );
+          }
+          this.matter.world.remove(bodyB);
+          break;
+        case "bountyBox":
+          console.log("colisionaron:");
+          for(var i = 0; i < event.pairs.length; i++){
+            //console.log(event.pairs[i]);
+          }
+          break;
+        case "aoeBox":
+          break;
+        case "projectileBox":
+          break;
       }
-    } else if (
-      labelReader.test(bodyB.label) &&
-      !labelReader.test(bodyA.label)
-    ) {
-      initialHealth = bodyA.gameObject.getData("backend").curHealth;
-      dealtDamage = bodyA.gameObject.getData("backend").takeDamage({
-        scene: this,
-        amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
-        type: 1,
-        accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
-        critChance: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").crit,
-        critMultiplier: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCritMultiplier(),
-        avoidable: true,
-        critable: true,
-        ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
-        attacker: bodyB.label.split(".")[1],
-      });
-      //mostrar texto de daño
-      var damageMessage = "";
-      var color = "#eeeeee";
-      if (dealtDamage.amount == 0) {
-        damageMessage = "missed";
-      } else {
-        damageMessage = dealtDamage.amount.toString();
-      }
-      if (dealtDamage.isCrit) {
-        color = "#ff0808";
-      }
-      bodyA.gameObject.getData("displayDamage").x = bodyA.gameObject.x;
-      bodyA.gameObject.getData("displayDamage").y = bodyA.gameObject.y;
-      bodyA.gameObject.getData("displayDamage").data.values.timer = 40;
-      bodyA.gameObject.getData("displayDamage").setText(damageMessage);
-      bodyA.gameObject.getData("displayDamage").setColor(color);
-      bodyA.gameObject.getData("displayDamage").setVisible(true);
-      console.log(
-        bodyA.gameObject.getData("backend").name,
-        "got hit by",
-        bodyA.gameObject.getData("backend").lastHitBy
-      );
-
-      this.matter.world.remove(bodyB);
-      //es necesario mover el onDeath directamente a la función update
-      if (
-        initialHealth > 0 &&
-        bodyA.gameObject.getData("backend").curHealth <= 0
-      ) {
-        let pay = [0, 0];
-        switch (bodyA.collisionFilter.group) {
-          case this.groups[0]:
-            pay = bodyA.gameObject
-              .getData("backend")
-              .onDeath({
-                world: this.matter.world,
-                sprite: bodyA.gameObject,
-                group: this.teamASprites,
-                factory: this.teamAHeroManager
-              });
-            break;
-          case this.groups[1]:
-            pay = bodyA.gameObject
-              .getData("backend")
-              .onDeath({
-                world: this.matter.world,
-                sprite: bodyA.gameObject,
-                group: this.teamBSprites,
-                factory: this.teamBHeroManager
-              });
-            break;
-          case this.groups[2]:
-            pay = bodyA.gameObject
-              .getData("backend")
-              .onDeath({
-                world: this.matter.world,
-                sprite: bodyA.gameObject,
-                group: this.neutralSprites,
-                factory: this.jungleFactory,
-              });
-            break;
-          case this.groups[3]:
-            pay = bodyA.gameObject
-              .getData("backend")
-              .onDeath({
-                world: this.matter.world,
-                sprite: bodyA.gameObject,
-                group: this.enviromentSprites,
-                factory: this.forestManager,
-              });
-            break;
-          case this.groups[4]:
-            pay = bodyA.gameObject
-              .getData("backend")
-              .onDeath({
-                sprite: bodyA.gameObject,
-                group: this.buildingSprites,
-              });
-            break;
-        }
-
-        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").gainXP({ scene: this, amount: pay[0] });
-        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").earnGold({ scene: this, amount: pay[1] });
-      }
+      
     }
     console.log("body A:", bodyA.label, ", body B:", bodyB.label);
+  }
+
+  getRelatedGroup(group){
+    switch(group){
+      case this.groups[0]:
+        return this.teamASprites;
+      case this.groups[1]:
+        return this.teamBSprites;
+      case this.groups[2]:
+        return this.neutralSprites;
+      case this.groups[3]:
+        return this.enviromentSprites;
+      case this.groups[4]:
+        return this.buildingSprites;
+    }
+  }
+
+  getRelatedFactory(group, isHero){
+    switch(group){
+      case this.groups[0]:
+        if(isHero){
+          return this.teamAHeroManager;
+        }else{
+          return this.teamANPCManager
+        }
+      case this.groups[1]:
+        if(isHero){
+          return this.teamBHeroManager;
+        }else{
+          return this.teamBNPCManager
+        }
+      case this.groups[2]:
+        return this.jungleFactory;
+      case this.groups[3]:
+        return this.EnviromentalFactory;
+      case this.groups[4]:
+        return null;
+    }
   }
 
   adjustPlayerRotation(pointer) {

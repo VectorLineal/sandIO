@@ -47,6 +47,10 @@ export default class EnviromentalFactory {
           entity.getData("respawnTimer").time = -1;
         }
 
+        if(!entity.getData('backend').isDead()){
+          entity.getData('backend').applyHealthRegen({scene: scene});
+        }
+
         if(entity.getData("displayDamage").data.values.timer > 0){
           entity.getData("displayDamage").data.values.timer--;
         }else{

@@ -1,4 +1,5 @@
 import {randomFloat, degToRad, getRotation} from "../main_layer/MathUtils.js";
+import Hero from "./Hero.js";
 
 export default class Entity{
     constructor(name, level, xpFactor, bountyFactor, damage, armor, evasion, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
@@ -85,7 +86,7 @@ export default class Entity{
                 Math.sin(
                   getRotation(xr, yr) + degToRad(gameObject.angle)
                 ),
-                -xr * 0.7 * (9.84 / gameObject.scene.scaleRatio),
+                -xr * 0.04 * gameObject.getData("backend").getRange() * (9.84 / gameObject.scene.scaleRatio),
                 gameObject.getData("backend").getRange() * (9.84 / gameObject.scene.scaleRatio),
             {
               isSensor: true,
@@ -93,7 +94,7 @@ export default class Entity{
               render: { visible: true, lineColor: 0x00ff00 },
             }
           );
-          attackBox.label = "attackBox." + gameObject.getData("backend").name;
+          attackBox.label = "attackBox." + gameObject.getData("backend").name + "#" + gameObject.body.collisionFilter.group;
           if (gameObject.body.collisionFilter.group == gameObject.scene.groups[0]) {
             attackBox.collisionFilter.category = gameObject.scene.categories[0];
           } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[1]) {
@@ -150,6 +151,10 @@ export default class Entity{
         }
     }
 
+    isDead(){
+        return this.curHealth <= 0;
+    }
+
     dealDamage(amount, type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
         if(type == 0){
             this.curHealth -=  amount;
@@ -175,7 +180,11 @@ export default class Entity{
         }
     }
 
-    takeDamage(params){ //scene, amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged
+    heal(amount){
+        this.dealDamage(-amount, 0);
+    }
+
+    takeDamage(params){ //scene, sprite, group, factory, scaleRatio, amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged
         //type 0 es puro, 1 físico y 2 mágico
         var rawDamage = params.amount;
         var crit = false;
@@ -190,6 +199,9 @@ export default class Entity{
             }
             this.lastHitBy = params.attacker;
             finalDamage = this.dealDamage(rawDamage, params.type);
+            if(this.curHealth <= 0){
+                this.onDeath(params);
+            }
         }else{
             var hitChance = params.accuracy - this.evasion;
             if(params.ranged){
@@ -204,6 +216,9 @@ export default class Entity{
                 }
                 this.lastHitBy = params.attacker;
                 finalDamage = this.dealDamage(rawDamage, params.type);
+                if(this.curHealth <= 0){
+                    this.onDeath(params);
+                }
             }
         }
         return {amount: finalDamage, isCrit: crit};
@@ -219,5 +234,30 @@ export default class Entity{
     
     restoreHealth(){
         this.curHealth = this.maxHealth;
+    }
+
+    //funciones sobre eventos
+    onDeath(params){
+        if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
+            if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
+            for(var i = 0; i < VREyeParameters.scene.teamBSprites.children.getArray().length; i++){
+                if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
+                params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
+                params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
+                }
+            }
+            }
+        }else if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[0] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
+            if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
+            for(var i = 0; i < params.scene.teamASprites.children.getArray().length; i++){
+                if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
+                    params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
+                    params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
+                }
+            }
+            }
+        }else{
+            return;
+        }
     }
 }

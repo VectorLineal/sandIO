@@ -208,9 +208,9 @@ export default class Hero extends Character {
   onDeath(params){
     params.sprite.anims.stopOnFrame(0);
     params.sprite.setVisible(false);
-    console.log("respawn in...", this.calculateSpawnTime());
     params.factory.kill({x: this.spawnX, y: this.spawnY}, this.calculateSpawnTime(), 0);
-    params.world.remove(params.sprite.body);
-    return [this.calculateNextLevelXp(), this.calculateBounty()];
+    params.scene.matter.world.remove(params.sprite.body);
+    this.curHealth = 0;
+    super.onDeath(params);
   }
 }
