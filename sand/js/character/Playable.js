@@ -82,4 +82,10 @@ export default class Playable extends Hero{
         super.earnGold({amount: params.amount});
         params.scene.events.emit('updateGold');
     }
+
+    //funciones sobre eventos
+    onDeath(params){
+        super.onDeath(params);
+        params.scene.events.emit('updateRespawn');
+    }
 }

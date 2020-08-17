@@ -1,13 +1,14 @@
 import Character from "./Character.js";
 
 export default class NonPlayable extends Character{
-    constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, onCrit, critMultiplier, ranged, range, detectionRange, behavour){
+    constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, onCrit, critMultiplier, ranged, range, detectionRange, behavour, isBoss){
         super(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, ranged, range);
         this.onCrit = onCrit;
         this.critMultiplier = critMultiplier;
         this.ranged = ranged;
         this.detectionRange = detectionRange;
         this.behavour = behavour;
+        this.isBoss = isBoss;
         this.isChasing = false;
     }
 

@@ -91,6 +91,7 @@ export default class CharacterFactory{
         sprite.setData("backend", this.generateLogic(propertie, {x: this.spawnProperties[index].spawnX, y: this.spawnProperties[index].spawnY}));
         sprite.setData("displayDamage", scene.add.text(sprite.x, sprite.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * scaleRatio));
         sprite.body.label = propertie.name;
+        sprite.body.friction = 1;
         sprite.setCollisionGroup(this.group);
         sprite.setCollidesWith(this.mask);
         sprite.setDepth(0.5);

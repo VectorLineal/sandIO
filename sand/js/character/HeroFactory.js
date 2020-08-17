@@ -6,6 +6,23 @@ export default class Herofactory extends CharacterFactory {
   constructor(properties, spawnProperties, group, mask) {
     super(properties, spawnProperties, group, mask);
     this.playerIndex = -1;
+    this.playerSpawnIndex = -1;
+    for(var i = 0; i< this.spriteProperties.length; i++){
+      if(this.spriteProperties[i].player){
+        for(var j = 0; j< this.spawnProperties.length; j++){
+          if(this.spawnProperties[j].spawns[0] == i){
+            this.playerSpawnIndex = j;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  getPlayerTimer(){
+      if(this.playerSpawnIndex >= 0){
+        return this.spawnProperties[this.playerSpawnIndex].timer;
+      }
   }
 
   setPlayerIndex(group){
@@ -88,8 +105,6 @@ export default class Herofactory extends CharacterFactory {
         let creatureIndex = this.spawnProperties[index].spawns[0];
         let propertie = this.spriteProperties[creatureIndex];
         for(var i = 0; i < params.group.children.entries.length; i++){
-          console.log(params.group.children.entries[i].getData('backend').name, "will respawn?");
-          console.log("meant to respawn:", this.spriteProperties[this.spawnProperties[index].spawns[0]].name);
             if(params.group.children.entries[i].getData('backend').name == this.spriteProperties[this.spawnProperties[index].spawns[0]].name){
               console.log(params.group.children.entries[i].getData('backend').name, "will respawn");
               params.group.children.entries[i].x = this.spawnProperties[index].spawnX * params.scaleRatio;
@@ -99,6 +114,7 @@ export default class Herofactory extends CharacterFactory {
                 if(!params.scene.matter.world.has(params.group.children.entries[i].body)){
                   var body = params.scene.matter.add.rectangle(params.group.children.entries[i].x, params.group.children.entries[i].y, super.generateHitBox(propertie).shape.width * params.scaleRatio, super.generateHitBox(propertie).shape.height * params.scaleRatio,
                     {
+                      friction: 1,
                       label: params.group.children.entries[i].getData('backend').name,
                       render: super.generateHitBox(propertie).render,
                     }
@@ -113,5 +129,11 @@ export default class Herofactory extends CharacterFactory {
             }
         }
         this.spawnProperties[index].timer = -1;
+    }
+
+    //funciones sobre eventos
+    onUpdate(scene, group, scaleRatio){
+      super.onUpdate(scene, group, scaleRatio);
+      scene.events.emit('updateRespawn');
     }
 }

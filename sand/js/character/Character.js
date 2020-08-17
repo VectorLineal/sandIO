@@ -5,6 +5,7 @@ export default class Character extends Entity{
     constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, ranged, range){
         super(name, level, xpFactor, bountyFactor, damage, armor, evasion, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range);
         this.race = race;
+        this.isBoss = false;
 
         //referente a poderes, buffs y debuffs
         this.skills = {};
@@ -73,12 +74,23 @@ export default class Character extends Entity{
         }
 
         //se reparte oro y xp a los que estaban cerca aquien murió
-        params.scene.matter.add.circle(params.body.position.x, params.body.position.y, 70 * params.scaleRatio, {
-        /*collisionFilter:{
+        var givesGold = "0";
+        var bounty=[this.calculateNextLevelXp() * 0.2, 0];
+
+        if(this.constructor instanceof Hero || this.isBoss){
+            givesGold = "1";
+            bounty[1] = this.calculateBounty() * 0.2;
+        }
+
+        params.scene.matter.add.circle(params.body.position.x, params.body.position.y, 150 * params.scaleRatio, {
+        collisionFilter:{
             category: category
-        },*/
-        label: "bountyBox." + this.name,
-        isSensor: true
+        },
+        label: "bountyBox." + this.name + "#" + givesGold,
+        isSensor: true,
+        onCollideEndCallback: function(event, bodyA, bodyB){
+            return bounty;
+        }
         });
     }
 

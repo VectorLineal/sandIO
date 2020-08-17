@@ -23,6 +23,7 @@ export default class HUDGame extends Phaser.Scene {
         this.xpNext = 0;
         this.clock = 0;
         this.gold = 0;
+        this.respawnTime = 0;
     }
 
     preload() {
@@ -98,24 +99,40 @@ export default class HUDGame extends Phaser.Scene {
         var statsText = this.add.text(width / 10, (height - (height / 6.3)), '0', { font: '48px Arial', fill: '#eeeeee' });
         var levelText = this.add.text(width / 7, (height - (67 * height / 420)), 'level: 1', { font: '48px Arial', fill: '#eeeeee' });
         var envinromentText = this.add.text(width / 6.5, (height - (height / 7.8)), '0\n00:00', { font: '48px Arial', fill: '#eeeeee' });
+        var respawnText = this.add.text(width / 2, height / 8, 'respawning in... 0 seconds', { font: '48px Arial', fill: '#eeeeee' });
 
         healthText.setText(fitNumber(this.health, 2) + '/' + fitNumber(this.maxHealth, 2) + ' + ' + fitNumber(this.regenH, 2));
         manaText.setText(fitNumber(this.mana, 2) + '/' + fitNumber(this.maxMana, 2) + ' + ' + fitNumber(this.regenM, 2));
         statsText.setText(fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower / 100, 2) + '%\n' + fitNumber(this.arm, 0) + '\n' + fitNumber(this.magicArm, 0) + '\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0));
         envinromentText.setText(fitNumber(this.gold, 0) + '\n' + clockFormat(this.clock));
+        respawnText.setText('respawning in... ' + fitNumber(this.respawnTime / 60, 0) + ' seconds');
         
         healthText.setScale(1.8 / scaleRatio);
         manaText.setScale(1.8 / scaleRatio);
         statsText.setScale(1.35 / scaleRatio);
         levelText.setScale(1.8 / scaleRatio);
         envinromentText.setScale(1.35 / scaleRatio);
+        respawnText.setScale(2.4 / scaleRatio);
 
         healthText.setScrollFactor(1);
         statsText.setScrollFactor(1);
         levelText.setScrollFactor(1);
         envinromentText.setScrollFactor(1);
+        respawnText.setScrollFactor(1);
+
+        respawnText.setVisible(false);
 
         //eventos de modificación de valores HUD
+        game.events.on('updateRespawn', function () {
+            this.respawnTime = game.teamAHeroManager.getPlayerTimer();
+            respawnText.setText('respawning in... ' + fitNumber(this.respawnTime / 60, 0) + ' seconds');
+            if(!respawnText.visible && this.respawnTime > 0){
+                respawnText.setVisible(true);
+            }else if(respawnText.visible && this.respawnTime <= 0){
+                respawnText.setVisible(false);
+            }
+        }, this);
+
         game.events.on('updateLevel', function () {
             this.level = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').level;
             levelText.setText('level: ' + fitNumber(this.level, 0));

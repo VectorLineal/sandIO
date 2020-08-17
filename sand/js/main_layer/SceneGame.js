@@ -1,5 +1,6 @@
 import "./phaser.js";
 import Hero from "../character/Hero.js";
+import NonPlayable from "../character/NonPlayable.js";
 import Building from "../character/Building.js";
 import NPCFactory from "../character/NPCFactory.js";
 import HeroFactory from "../character/HeroFactory.js";
@@ -168,6 +169,7 @@ export default class SceneGame extends Phaser.Scene {
             range: 20,
             detectionRange: 300,
             behavour: 2,
+            isBoss: true
           },
           animations: {
             attack: [0, 1, 2, 3, 4, 5, 6, 7],
@@ -600,16 +602,16 @@ export default class SceneGame extends Phaser.Scene {
     }
 
     //se limpian los collision box inutiles
-    /*for (
+    for (
       var index = 0;
       index < this.matter.world.getAllBodies().length;
       index++
     ) {
-      let labelReader = RegExp(/^(bounty|attack|projectile|aoe)Box\.\w+(\#\d+)?$/);
+      let labelReader = RegExp(/^(used|attack|projectile)Box\.\w+(\#\d+)?$/);
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
         this.matter.world.remove(this.matter.world.getAllBodies()[index]);
       }
-    }*/
+    }
 
     //se actualza el tiempo transcurrido del juego
     this.clock++;
@@ -643,14 +645,16 @@ export default class SceneGame extends Phaser.Scene {
     let labelReader = RegExp(/^(bounty|attack|projectile|aoe)Box\.\w+(\#\d+)?$/);
 
     if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label)) {
-      let factory = this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero);
+      switch(bodyB.label.split(".")[0]){
+        case "attackBox":
+          let factory = this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero);
       dealtDamage = bodyB.gameObject.getData("backend").takeDamage({
         scene: this,
         sprite: bodyB.gameObject,
         body: bodyB,
         group: this.getRelatedGroup(bodyB.collisionFilter.group),
         factory: factory,
-        scaleRatio: this.scaleRatio,
+        scaleRatio: 9.84 / this.scaleRatio,
         amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
         type: 1,
         accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
@@ -680,6 +684,25 @@ export default class SceneGame extends Phaser.Scene {
       bodyB.gameObject.getData("displayDamage").setVisible(true);
 
       this.matter.world.remove(bodyA);
+          break;
+        case "bountyBox":
+          console.log("colisionaron:");
+          for(var i = 0; i < event.pairs.length; i++){
+            console.log(event.pairs[i].bodyB);
+            if(event.pairs[i].bodyB.gameObject.getData("backend") instanceof Hero){
+              event.pairs[i].bodyB.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[0]});
+              if(event.pairs[i].bodyA.label.split("#")[1] == "1"){
+                event.pairs[i].bodyB.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[1]});
+              }
+            }
+          }
+          bodyA.label = "usedBox." + bodyA.label.split(".")[1];
+          break;
+        case "aoeBox":
+          break;
+        case "projectileBox":
+          break;
+      }
     } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label)) {
       switch(bodyB.label.split(".")[0]){
         case "attackBox":
@@ -690,7 +713,7 @@ export default class SceneGame extends Phaser.Scene {
             body: bodyA,
             group: this.getRelatedGroup(bodyA.collisionFilter.group),
             factory: factory,
-            scaleRatio: this.scaleRatio,
+            scaleRatio: 9.84 / this.scaleRatio,
             amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
             type: 1,
             accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
@@ -730,8 +753,15 @@ export default class SceneGame extends Phaser.Scene {
         case "bountyBox":
           console.log("colisionaron:");
           for(var i = 0; i < event.pairs.length; i++){
-            //console.log(event.pairs[i]);
+            console.log(event.pairs[i].bodyA);
+            if(event.pairs[i].bodyA.gameObject.getData("backend") instanceof Hero){
+              event.pairs[i].bodyA.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[0]});
+              if(event.pairs[i].bodyB.label.split("#")[1] == "1"){
+                event.pairs[i].bodyA.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[1]});
+              }
+            }
           }
+          bodyB.label = "usedBox." + bodyB.label.split(".")[1];
           break;
         case "aoeBox":
           break;

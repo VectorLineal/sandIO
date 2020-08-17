@@ -36,7 +36,8 @@ export default class NPCFactory extends CharacterFactory{
       propertie.character.ranged,
       propertie.character.range,
       propertie.character.detectionRange,
-      propertie.character.behavour
+      propertie.character.behavour,
+      propertie.character.isBoss
     );
   }
 
