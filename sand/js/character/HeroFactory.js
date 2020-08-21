@@ -1,6 +1,7 @@
 import Hero from "./Hero.js";
 import Playable from "./Playable.js";
 import CharacterFactory from "./CharacterFactory.js";
+import {getInlineLinearFunction} from "../main_layer/MathUtils.js";
 
 export default class Herofactory extends CharacterFactory {
   constructor(properties, spawnProperties, group, mask) {
@@ -50,18 +51,12 @@ export default class Herofactory extends CharacterFactory {
             propertie.character.type,
             propertie.character.bountyFactor,
             propertie.character.race,
-            propertie.character.baseStr,
-            propertie.character.strGrowth,
-            propertie.character.baseRes,
-            propertie.character.resGrowth,
-            propertie.character.baseAgi,
-            propertie.character.agiGrowth,
-            propertie.character.basePer,
-            propertie.character.perGrowth,
-            propertie.character.baseInt,
-            propertie.character.intGrowth,
-            propertie.character.baseDet,
-            propertie.character.detGrowth,
+            getInlineLinearFunction(propertie.character.Str),
+            getInlineLinearFunction(propertie.character.Res),
+            getInlineLinearFunction(propertie.character.Agi),
+            getInlineLinearFunction(propertie.character.Per),
+            getInlineLinearFunction(propertie.character.Int),
+            getInlineLinearFunction(propertie.character.Det),
             1,
             propertie.character.xpFactor,
             propertie.character.bodyArmor,
@@ -70,27 +65,21 @@ export default class Herofactory extends CharacterFactory {
           );
       }else{
         return new Hero(
-            propertie.name,
-            propertie.character.type,
-            propertie.character.bountyFactor,
-            propertie.character.race,
-            propertie.character.baseStr,
-            propertie.character.strGrowth,
-            propertie.character.baseRes,
-            propertie.character.resGrowth,
-            propertie.character.baseAgi,
-            propertie.character.agiGrowth,
-            propertie.character.basePer,
-            propertie.character.perGrowth,
-            propertie.character.baseInt,
-            propertie.character.intGrowth,
-            propertie.character.baseDet,
-            propertie.character.detGrowth,
-            1,
-            propertie.character.xpFactor,
-            propertie.character.bodyArmor,
-            propertie.character.weapon,
-            spawnPoint
+          propertie.name,
+          propertie.character.type,
+          propertie.character.bountyFactor,
+          propertie.character.race,
+          getInlineLinearFunction(propertie.character.Str),
+          getInlineLinearFunction(propertie.character.Res),
+          getInlineLinearFunction(propertie.character.Agi),
+          getInlineLinearFunction(propertie.character.Per),
+          getInlineLinearFunction(propertie.character.Int),
+          getInlineLinearFunction(propertie.character.Det),
+          1,
+          propertie.character.xpFactor,
+          propertie.character.bodyArmor,
+          propertie.character.weapon,
+          spawnPoint
           );
       }
   }
@@ -134,6 +123,8 @@ export default class Herofactory extends CharacterFactory {
     //funciones sobre eventos
     onUpdate(scene, group, scaleRatio){
       super.onUpdate(scene, group, scaleRatio);
-      scene.events.emit('updateRespawn');
+      if(this.getPlayer(group).getData("backend").isDead()){
+        scene.events.emit('updateRespawn');
+      }
     }
 }

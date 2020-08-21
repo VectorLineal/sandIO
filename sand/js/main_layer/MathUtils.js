@@ -1,3 +1,5 @@
+import LinearFunction from "./LinearFunction.js";
+
 export function randomInt(max){
     if(max < 0){
         console.log("insert a natural number as parameter");
@@ -68,3 +70,43 @@ export function getRotation(x, y) {
 export function getRotationAround(xc, yc, xr, yr) {
     return getRotation(xc - xr, yc - yr);
   }
+
+export function getInlineLinearFunction(inline) {
+  let functionReader = RegExp(/^(((\+)?|\-)(\d+(\.\d+)?)?x)?(((\+)?|\-)\d+(\.\d+)?)?$/);
+  var a = 0;
+  var b = 0;
+
+  if(!functionReader.test(inline)){
+    console.log("syntax error in function");
+    return null;
+  }else if(inline == ""){
+    console.log("inline function is empty, aproximates to 0");
+    return new LinearFunction(a, b);
+  }else if(!inline.includes("x")){
+    var value = inline.replace("+", "");
+    b = parseFloat(value);
+    return new LinearFunction(a, b);
+  }else{
+    var values = inline.split("x");
+
+    if(values[0] == "-"){
+      a = -1;
+    }else if(values[0] == "+" || values[0] == ""){
+      a = 1;
+    }else{
+      values[0] = values[0].replace("+", "");
+      a = parseFloat(values[0]);
+    }
+
+    if(values[1] != ""){
+    	values[1] = values[1].replace("+", "");
+    	b = parseFloat(values[1]);
+    }
+
+    return new LinearFunction(a, b);
+  }
+}
+
+export function calculateInlineLinearFunction(inline, value){
+  return getInlineLinearFunction(inline).calculate(value);
+}

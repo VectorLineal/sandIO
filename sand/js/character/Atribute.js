@@ -1,9 +1,17 @@
-import LinearFunction from "./LinearFunction.js";
+import LinearFunction from "../main_layer/LinearFunction.js";
 
 class Atribute{
-    constructor(name, base, increment){
-        this.name = name
-        this.change = new LinearFunction(increment, base);
+    constructor(params){
+        this.name = params.name
+        if(params.increment != null & params.base != null){
+            this.change = new LinearFunction(params.increment, params.base);
+        }else if(params.inline != null){
+            this.change = params.inline;
+        }else{
+            console.log("didn't add a valid function, using f(x) = 0");
+            this.change = new LinearFunction(0, 0);
+        }
+        
         this.current = this.change.calculate(0);
     }
 
@@ -25,7 +33,7 @@ class Atribute{
                 return 0.1 * this.current;
             case "perception":
                 //critico
-                return 0.3 * this.current;
+                return 0.15 * this.current;
             case "intelligence":
                 //mana
                 return 12 * this.current;

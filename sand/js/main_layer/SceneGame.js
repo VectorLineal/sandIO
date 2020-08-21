@@ -5,7 +5,6 @@ import Building from "../character/Building.js";
 import NPCFactory from "../character/NPCFactory.js";
 import HeroFactory from "../character/HeroFactory.js";
 import EnviromentalFactory from "../character/EnviromentalFactory.js";
-import LinearFunction from "../character/LinearFunction.js";
 
 export default class SceneGame extends Phaser.Scene {
   constructor() {
@@ -22,17 +21,7 @@ export default class SceneGame extends Phaser.Scene {
 
     //factories y managers de entidades del juego
     this.jungleFactory;
-    this.forestManager = new EnviromentalFactory(
-      "tree",
-      100,
-      500,
-      50,
-      [],
-      24,
-      24,
-      3,
-      4294967295
-    );
+    this.forestManager;
     this.teamAHeroManager;
     this.teamANPCManager;
     this.teamBHeroManager;
@@ -82,20 +71,20 @@ export default class SceneGame extends Phaser.Scene {
     this.load.image("gate", "assets/gate.png");
     this.load.image("tower", "assets/tower.png");
     this.load.image("fort", "assets/fort.png");
+
     this.load.tilemapTiledJSON("duelMap", "assets/duel_map.json");
-    this.load.json("mapEnvironment", "assets/duel_map_environment.json");
     this.load.image("tiles", "assets/maptiles.png");
+
+    //carga de datos
+    this.load.json("mapEnvironment", "assets/duel_map_environment.json");
+    this.load.json("entities", "assets/entities.json");
   }
 
   create() {
     let { width, height } = this.sys.game.canvas;
     let scaleRatio = (1.5 * width) / height;
     this.scaleRatio = scaleRatio;
-    this.forestManager.spawnPoints = this.cache.json.get(
-      "mapEnvironment"
-    ).neutral.trees;
 
-    let test = this.cache.json.get("mapEnvironment").neutral.spawnPoints[0];
     //map generation
     this.map = this.make.tilemap({ key: "duelMap" });
 
@@ -106,14 +95,14 @@ export default class SceneGame extends Phaser.Scene {
     this.cameras.main.setBounds(
       0,
       0,
-      960 * (9.84 / scaleRatio),
-      1600 * (9.84 / scaleRatio)
+      this.map.width * this.map.tileWidth * (9.84 / scaleRatio),
+      this.map.height * this.map.tileHeight * (9.84 / scaleRatio)
     );
     this.matter.world.setBounds(
       0,
       0,
-      960 * (9.84 / scaleRatio),
-      1600 * (9.84 / scaleRatio)
+      this.map.width * this.map.tileWidth * (9.84 / scaleRatio),
+      this.map.height * this.map.tileHeight * (9.84 / scaleRatio)
     );
 
     //sprite groups
@@ -135,49 +124,7 @@ export default class SceneGame extends Phaser.Scene {
     //npcs
     this.jungleFactory = new NPCFactory(
       [
-        {
-          name: "chimera",
-          width: 46,
-          height: 136,
-          frameWidth: 92,
-          frameHeight: 149,
-          centerX: true,
-          centerY: false,
-          character: {
-            xpFactor: 80,
-            bountyFactor: 30,
-            race: "beast",
-            fortitude: new LinearFunction(2, 14),
-            damage: new LinearFunction(33, 105),
-            armor: new LinearFunction(5.3, 33),
-            maxHealth: new LinearFunction(17.5, 240.0),
-            healthRegen: new LinearFunction(2, 18),
-            speed: new LinearFunction(0.1, 40),
-            atSpeed: new LinearFunction(6, 160),
-            evasion: new LinearFunction(0.8, 10),
-            crit: new LinearFunction(0.6, 5),
-            accuracy: new LinearFunction(2, 125),
-            maxMana: new LinearFunction(14, 300),
-            manaRegen: new LinearFunction(0.8, 1.2),
-            spellPower: new LinearFunction(0.5, 0.5),
-            will: new LinearFunction(1.2, 3),
-            magicArmor: new LinearFunction(9.6, 60),
-            concentration: new LinearFunction(0.5, 0.5),
-            onCrit: "bleed 18+3x",
-            critMultiplier: 1.65,
-            ranged: false,
-            range: 20,
-            detectionRange: 300,
-            behavour: 2,
-            isBoss: true
-          },
-          animations: {
-            attack: [0, 1, 2, 3, 4, 5, 6, 7],
-            attackEnd: [5, 3, 1, 0],
-            q: [0, 8, 9, 0],
-            e: [0, 10, 11, 12, 13, 14, 0],
-          },
-        },
+        this.cache.json.get("entities").npc["chimera"]
       ],
       [
         {
@@ -198,56 +145,7 @@ export default class SceneGame extends Phaser.Scene {
     // The player and its settings
     this.teamAHeroManager = new HeroFactory(
       [
-        {
-          name: "minotaur_warrior",
-          width: 46,
-          height: 41,
-          frameWidth: 60,
-          frameHeight: 76,
-          centerX: false,
-          centerY: false,
-          character: {
-            type: "warrior",
-            bountyFactor: 30,
-            race: "minotaur",
-            baseStr: 24,
-            strGrowth: 3.8,
-            baseRes: 20,
-            resGrowth: 3.2,
-            baseAgi: 15,
-            agiGrowth: 1,
-            basePer: 12,
-            perGrowth: 1.2,
-            baseInt: 14,
-            intGrowth: 1.8,
-            baseDet: 22,
-            detGrowth: 2.2,
-            xpFactor: 100,
-            bodyArmor:{
-              name: "bronce plate",
-              baseMagicArmor: 27,
-              baseArmor: 115,
-              evasion: -11,
-              speed: 1.9,
-              atSpeed: -18.5,
-              accuracy: 20
-            },
-            weapon: {
-              name: "maul",
-              onCrit: "stun 0.2",
-              baseDamage: 126,
-              ranged: false,
-              range: 35,
-              evasion: -20,
-              speed: -11.2,
-              atSpeed: -60,
-              accuracy: 0,
-              critMultiplier: 1.3
-            }
-          },
-          animations: {attack: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], attackEnd: [7, 5, 3, 0], q: [0, 11, 12, 13, 14, 12, 0], r: [0, 10, 10, 10, 10, 0]},
-          player: true,
-        },
+        this.cache.json.get("entities").hero["minotaur_warrior"]
       ],
       [{ x: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x, y: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y, spawns: [0] }],
       this.groups[0],
@@ -260,9 +158,17 @@ export default class SceneGame extends Phaser.Scene {
     );
 
     //enviromental elements
-    this.forestManager.group = this.groups[3];
-    this.forestManager.mask =
-      this.categories[0] ^ this.categories[2] ^ this.categories[5] ^ 1;
+    this.forestManager = new EnviromentalFactory(
+      this.cache.json.get("entities").hero["tree"].name,
+      this.cache.json.get("entities").hero["tree"].armor,
+      this.cache.json.get("entities").hero["tree"].maxHealth,
+      this.cache.json.get("entities").hero["tree"].magicArmor,
+      this.cache.json.get("mapEnvironment").neutral.trees,
+      this.cache.json.get("entities").hero["tree"].entityWidth,
+      this.cache.json.get("entities").hero["tree"].entityHeight,
+      this.groups[3],
+      this.categories[0] ^ this.categories[2] ^ this.categories[5] ^ 1 //4294967295
+    );
     this.forestManager.generateInitialSet(
       this,
       this.enviromentSprites,

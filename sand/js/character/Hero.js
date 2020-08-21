@@ -8,19 +8,7 @@ export default class Hero extends Character {
     name,
     type,
     bountyFactor,
-    race,
-    baseStr,
-    strGrowth,
-    baseRes,
-    resGrowth,
-    baseAgi,
-    agiGrowth,
-    basePer,
-    perGrowth,
-    baseInt,
-    intGrowth,
-    baseDet,
-    detGrowth,
+    race,Str, Res, Agi, Per, Int, Det,
     level,
     xpFactor,
     bodyArmor,
@@ -59,12 +47,12 @@ export default class Hero extends Character {
     }
     this.gold = 0;
     //referente a atributos del personaje
-    this.str = new Atribute("stregth", baseStr, strGrowth);
-    this.res = new Atribute("resistance", baseRes, resGrowth);
-    this.agi = new Atribute("agility", baseAgi, agiGrowth);
-    this.per = new Atribute("perception", basePer, perGrowth);
-    this.int = new Atribute("intelligence", baseInt, intGrowth);
-    this.det = new Atribute("determination", baseDet, detGrowth);
+    this.str = new Atribute({name: "stregth", inline: Str});
+    this.res = new Atribute({name: "resistance", inline: Res});
+    this.agi = new Atribute({name: "agility", inline: Agi});
+    this.per = new Atribute({name: "perception", inline: Per});
+    this.int = new Atribute({name: "intelligence", inline: Int});
+    this.det = new Atribute({name: "determination", inline: Det});
     this.str.update(level);
     this.res.update(level);
     this.agi.update(level);
@@ -86,7 +74,6 @@ export default class Hero extends Character {
       weapon.critMultiplier
     );
     this.bodyArmor = new Armor(
-      bodyArmor.name,
       bodyArmor.baseMagicArmor,
       bodyArmor.baseArmor,
       bodyArmor.evasion,
@@ -168,7 +155,7 @@ export default class Hero extends Character {
 
       this.evasion +=
         0.3 * (this.agi.change.derivate() + this.per.change.derivate());
-      this.crit += 0.3 * this.per.change.derivate();
+      this.crit += 0.15 * this.per.change.derivate();
       this.accuracy += 0.4 * this.per.change.derivate();
       this.maxMana += 12 * this.int.change.derivate();
       this.curMana += 12 * this.int.change.derivate();
