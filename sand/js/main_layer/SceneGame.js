@@ -159,22 +159,12 @@ export default class SceneGame extends Phaser.Scene {
 
     //enviromental elements
     this.forestManager = new EnviromentalFactory(
-      this.cache.json.get("entities").hero["tree"].name,
-      this.cache.json.get("entities").hero["tree"].armor,
-      this.cache.json.get("entities").hero["tree"].maxHealth,
-      this.cache.json.get("entities").hero["tree"].magicArmor,
+      this.cache.json.get("entities").enviromental["tree"],
       this.cache.json.get("mapEnvironment").neutral.trees,
-      this.cache.json.get("entities").hero["tree"].entityWidth,
-      this.cache.json.get("entities").hero["tree"].entityHeight,
       this.groups[3],
       this.categories[0] ^ this.categories[2] ^ this.categories[5] ^ 1 //4294967295
     );
-    this.forestManager.generateInitialSet(
-      this,
-      this.enviromentSprites,
-      "tree1",
-      9.84 / this.scaleRatio
-    );
+    this.forestManager.generateInitialSet(this, this.enviromentSprites, "tree1", 9.84 / this.scaleRatio);
 
     //buildings and alike
     //team 1
@@ -185,90 +175,38 @@ export default class SceneGame extends Phaser.Scene {
     let objectiveCoords = this.cache.json.get("mapEnvironment").team1.objective;
     for (var index = 0; index < wallsCoords.length; index++) {
       this.setBuildingSprite(
-        "wall",
-        80,
-        32,
+        this.cache.json.get("entities").building["wall"],
         this.groups[4],
         1,
         this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1,
-        wallsCoords[index],
-        300,
-        300,
-        1,
-        50,
-        10000,
-        0,
-        1,
-        100,
-        50,
-        false,
-        0
+        wallsCoords[index]
       );
     }
     for (var index = 0; index < gatesCoords.length; index++) {
       this.setBuildingSprite(
-        "gate",
-        112,
-        32,
+        this.cache.json.get("entities").building["gate"],
         this.groups[4],
         this.categories[0],
         this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1,
-        gatesCoords[index],
-        200,
-        200,
-        1,
-        70,
-        7000,
-        0,
-        1,
-        100,
-        70,
-        false,
-        0
+        gatesCoords[index]
       );
     }
     for (var index = 0; index < towersCoords.length; index++) {
       this.setBuildingSprite(
-        "tower",
-        48,
-        48,
+        this.cache.json.get("entities").building["tower"],
         this.groups[4],
         1,
         this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1,
-        towersCoords[index],
-        400,
-        400,
-        160,
-        100,
-        6500,
-        0,
-        450,
-        130,
-        120,
-        true,
-        128
+        towersCoords[index]
       );
     }
     for (var index = 0; index < fortsCoords.length; index++) {
       this.setBuildingSprite(
-        "fort",
-        96,
-        96,
+        this.cache.json.get("entities").building["fort"],
         this.groups[4],
         1,
         this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1,
-        fortsCoords[index],
-        900,
-        900,
-        550,
-        180,
-        13000,
-        0,
-        500,
-        150,
-        200,
-        true,
-        160
+        fortsCoords[index]
       );
     }
     //team 2
@@ -279,90 +217,38 @@ export default class SceneGame extends Phaser.Scene {
     objectiveCoords = this.cache.json.get("mapEnvironment").team2.objective;
     for (var index = 0; index < wallsCoords.length; index++) {
       this.setBuildingSprite(
-        "wall",
-        80,
-        32,
+        this.cache.json.get("entities").building["wall"],
         this.groups[4],
         1,
         this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1,
-        wallsCoords[index],
-        300,
-        300,
-        1,
-        50,
-        10000,
-        0,
-        1,
-        100,
-        50,
-        false,
-        0
+        wallsCoords[index]
       );
     }
     for (var index = 0; index < gatesCoords.length; index++) {
       this.setBuildingSprite(
-        "gate",
-        112,
-        32,
+        this.cache.json.get("entities").building["gate"],
         this.groups[4],
         this.categories[2],
         this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1,
-        gatesCoords[index],
-        200,
-        200,
-        1,
-        70,
-        7000,
-        0,
-        1,
-        100,
-        70,
-        false,
-        0
+        gatesCoords[index]
       );
     }
     for (var index = 0; index < towersCoords.length; index++) {
       this.setBuildingSprite(
-        "tower",
-        48,
-        48,
+        this.cache.json.get("entities").building["tower"],
         this.groups[4],
         1,
         this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1,
-        towersCoords[index],
-        400,
-        400,
-        160,
-        100,
-        6500,
-        0,
-        450,
-        130,
-        120,
-        true,
-        128
+        towersCoords[index]
       );
     }
     for (var index = 0; index < fortsCoords.length; index++) {
       this.setBuildingSprite(
-        "fort",
-        96,
-        96,
+        this.cache.json.get("entities").building["fort"],
         this.groups[4],
         1,
         this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1,
-        fortsCoords[index],
-        900,
-        900,
-        550,
-        180,
-        13000,
-        0,
-        500,
-        150,
-        200,
-        true,
-        160
+        fortsCoords[index]
       );
     }
 
@@ -731,37 +617,18 @@ export default class SceneGame extends Phaser.Scene {
         this.teamAHeroManager.getPlayer(this.teamASprites).setAngle(angle);
   }
 
-  setBuildingSprite(
-    name,
-    width,
-    heigth,
-    group,
-    category,
-    mask,
-    coords,
-    xpFactor,
-    bountyFactor,
-    damage,
-    armor,
-    health,
-    healthRegen,
-    atSpeed,
-    accuracy,
-    magicArmor,
-    ranged,
-    range
-  ) {
+  setBuildingSprite(params, group, category, mask, coords) {
     var sprite = this.matter.add.sprite(
       coords.x * (9.84 / this.scaleRatio),
       coords.y * (9.84 / this.scaleRatio),
-      name,
+      params.name,
       null,
       {
         isStatic: true,
         shape: {
           type: "rectangle",
-          width: width,
-          height: heigth,
+          width: params.width,
+          height: params.heigth,
         },
       }
     );
@@ -769,19 +636,19 @@ export default class SceneGame extends Phaser.Scene {
     sprite.setData(
       "backend",
       new Building(
-        name,
+        params.name,
         1,
-        xpFactor,
-        bountyFactor,
-        damage,
-        armor,
-        health,
-        healthRegen,
-        atSpeed,
-        accuracy,
-        magicArmor,
-        ranged,
-        range,
+        params.xpFactor,
+        params.bountyFactor,
+        params.damage,
+        params.armor,
+        params.health,
+        params.healthRegen,
+        params.atSpeed,
+        params.accuracy,
+        params.magicArmor,
+        params.ranged,
+        params.range,
         1
       )
     );

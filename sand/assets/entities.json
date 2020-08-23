@@ -95,7 +95,86 @@
           }
     },
     "building": {
-
+      "wall": {
+        "name": "wall",
+        "width": 80,
+        "heigth": 32,
+        "xpFactor": 300,
+        "bountyFactor": 300,
+        "damage": 1,
+        "armor": 50,
+        "health": 10000,
+        "healthRegen": 0,
+        "atSpeed": 1,
+        "accuracy": 100,
+        "magicArmor": 50,
+        "ranged": false,
+        "range": 0
+      },
+      "gate": {
+        "name": "gate",
+        "width": 112,
+        "heigth": 32,
+        "xpFactor": 200,
+        "bountyFactor": 200,
+        "damage": 1,
+        "armor": 70,
+        "health": 7000,
+        "healthRegen": 0,
+        "atSpeed": 1,
+        "accuracy": 100,
+        "magicArmor": 70,
+        "ranged": false,
+        "range": 0
+      },
+      "tower": {
+        "name": "tower",
+        "width": 48,
+        "heigth": 48,
+        "xpFactor": 400,
+        "bountyFactor": 400,
+        "damage": 160,
+        "armor": 100,
+        "health": 650.0,
+        "healthRegen": 0,
+        "atSpeed": 450,
+        "accuracy": 130,
+        "magicArmor": 120,
+        "ranged": false,
+        "range": 128
+      },
+      "fort": {
+        "name": "fort",
+        "width": 96,
+        "heigth": 96,
+        "xpFactor": 900,
+        "bountyFactor": 900,
+        "damage": 550,
+        "armor": 180,
+        "health": 13000,
+        "healthRegen": 0,
+        "atSpeed": 500,
+        "accuracy": 150,
+        "magicArmor": 200,
+        "ranged": false,
+        "range": 160
+      },
+      "objective": {
+        "name": "objective",
+        "width": 128,
+        "heigth": 128,
+        "xpFactor": 0,
+        "bountyFactor": 0,
+        "damage": 1,
+        "armor": 150,
+        "health": 15000,
+        "healthRegen": 10,
+        "atSpeed": 1,
+        "accuracy": 100,
+        "magicArmor": 150,
+        "ranged": false,
+        "range": 0
+      }
     },
     "enviromental": {
         "tree":{

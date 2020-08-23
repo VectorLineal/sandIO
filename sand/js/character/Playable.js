@@ -61,21 +61,8 @@ export default class Playable extends Hero{
     }
 
     gainXP(params){
-        var overflow = 0;
-        if(this.level <= 24){
-            this.xp += params.amount;
-            params.scene.events.emit('updateXP');
-            if(this.xp >= this.calculateNextLevelXp()){
-                overflow = this.calculateNextLevelXp() - this.xp;
-                this.levelUp(params.scene);
-                if(this.level <= 24){
-                    this.xp = - overflow;
-                }else{
-                    this.xp = 13 * this.xpFactor;
-                }
-                params.scene.events.emit('updateXP');
-            }
-        }
+        super.gainXP(params);
+        params.scene.events.emit('updateXP');
     }
 
     earnGold(params){

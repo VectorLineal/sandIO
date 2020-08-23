@@ -140,8 +140,7 @@ export default class Hero extends Character {
     this.det.update(this.level);
     if (this.level <= 24) {
       this.level++;
-      this.fortitude +=
-        0.3 * (this.str.change.derivate() + this.res.change.derivate());
+      this.fortitude += 0.3 * (this.str.change.derivate() + this.res.change.derivate());
       this.damage += 2 * this.str.change.derivate();
       this.armor += 0.6 * this.str.change.derivate();
       this.maxHealth += 20 * this.res.change.derivate();
@@ -153,8 +152,7 @@ export default class Hero extends Character {
       //se tiene que actualizar la animación para que vaya acorde a la velocidad de ataque
       this.rebalanceAttackAnimations(scene);
 
-      this.evasion +=
-        0.3 * (this.agi.change.derivate() + this.per.change.derivate());
+      this.evasion += 0.3 * (this.agi.change.derivate() + this.per.change.derivate());
       this.crit += 0.15 * this.per.change.derivate();
       this.accuracy += 0.4 * this.per.change.derivate();
       this.maxMana += 12 * this.int.change.derivate();
@@ -167,19 +165,27 @@ export default class Hero extends Character {
     }
   }
 
-  gainXP(params) {
+  balanceXp(scene){
     var overflow = 0;
+    if (this.xp >= this.calculateNextLevelXp()) {
+      overflow = this.xp - this.calculateNextLevelXp();
+      this.levelUp(scene);
+      if (this.level <= 24) {
+        this.xp = overflow;
+        return this.balanceXp(scene);
+      } else {
+        this.xp = 13 * this.xpFactor;
+        return;
+      }
+    }else{
+      return;
+    }
+  }
+
+  gainXP(params) {
     if (this.level <= 24) {
       this.xp += params.amount;
-      if (this.xp >= this.calculateNextLevelXp()) {
-        overflow = this.calculateNextLevelXp() - this.xp;
-        this.levelUp(params.scene);
-        if (this.level <= 24) {
-          this.xp = -overflow;
-        } else {
-          this.xp = 13 * this.xpFactor;
-        }
-      }
+      this.balanceXp(params.scene);
     }
   }
 

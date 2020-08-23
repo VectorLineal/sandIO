@@ -1,14 +1,14 @@
 import Building from "./Building.js";
 
 export default class EnviromentalFactory {
-    constructor(name, armor, maxHealth, magicArmor, spawnPoints, entityWidth, entityHeight, group, mask) {
-      this.name = name;
+    constructor(params, spawnPoints, group, mask) {
+      this.name = params.name;
       this.spawnPoints = spawnPoints;
-      this.maxHealth = maxHealth;
-      this.armor = armor;
-      this.magicArmor = magicArmor;
-      this.entityWidth = entityWidth;
-      this.entityHeight = entityHeight;
+      this.maxHealth = params.maxHealth;
+      this.armor = params.armor;
+      this.magicArmor = params.magicArmor;
+      this.entityWidth = params.entityWidth;
+      this.entityHeight = params.entityHeight;
       this.group = group;
       this.mask = mask;
     }
