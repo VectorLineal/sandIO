@@ -96,7 +96,7 @@ export default class SceneGame extends Phaser.Scene {
       0,
       0,
       this.map.width * this.map.tileWidth * (9.84 / scaleRatio),
-      this.map.height * this.map.tileHeight * (9.84 / scaleRatio)
+      this.map.height * this.map.tileHeight * (9.84 / scaleRatio) + height / 6
     );
     this.matter.world.setBounds(
       0,
@@ -134,7 +134,7 @@ export default class SceneGame extends Phaser.Scene {
         },
       ],
       this.groups[2],
-      this.categories[0] ^ this.categories[2] ^ this.categories[5] ^ 1
+      this.categories[0] ^ this.categories[2] ^ this.categories[5] ^ 1, 1800
     );
     this.jungleFactory.generateInitialSet(
       this,
@@ -149,7 +149,7 @@ export default class SceneGame extends Phaser.Scene {
       ],
       [{ x: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x, y: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y, spawns: [0] }],
       this.groups[0],
-      this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1
+      this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, 360
     );
     this.teamAHeroManager.generateInitialSet(
       this,
@@ -407,7 +407,10 @@ export default class SceneGame extends Phaser.Scene {
 
     //se actualza el tiempo transcurrido del juego
     this.clock++;
-    this.events.emit("updateClock");
+    if(this.clock % 60 == 0){
+      this.events.emit("updateClock");
+    }
+    
   }
 
   //funciones no heredadas de la escena
@@ -455,7 +458,7 @@ export default class SceneGame extends Phaser.Scene {
         avoidable: true,
         critable: true,
         ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
-        attacker: bodyA.label.split(".")[1],
+        attacker: bodyA.label.split(".")[1]
       });
       //mostrar texto de daño
       var damageMessage = "";
@@ -652,6 +655,8 @@ export default class SceneGame extends Phaser.Scene {
         1
       )
     );
+    //se retira la barra de vida, se ve antiestética, tal vez luego se vuelva a poner
+    //sprite.setData("healthBar", this.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth) * sprite.displayWidth, 10 * this.scaleRatio, 0xff0000).setDepth(1));
     sprite.setData(
       "displayDamage",
       this.add
@@ -676,6 +681,10 @@ export default class SceneGame extends Phaser.Scene {
 
   onBuildingsUpdate() {
     this.buildingSprites.children.each(function (entity) {
+      entity.getData("backend").applyHealthRegen({});
+      /*entity.getData('healthBar').x = entity.x;
+      entity.getData('healthBar').y = entity.y;
+      entity.getData('healthBar').width = (entity.getData("backend").curHealth / entity.getData("backend").maxHealth) * entity.displayWidth;*/
       if (entity.getData("displayDamage").data.values.timer > 0) {
         entity.getData("displayDamage").data.values.timer--;
       } else {

@@ -3,8 +3,8 @@ import CharacterFactory from "./CharacterFactory.js";
 import {calculateInlineLinearFunction} from "../main_layer/MathUtils.js";
 
 export default class NPCFactory extends CharacterFactory{
-  constructor(properties, spawnProperties, group, mask) {
-    super(properties, spawnProperties, group, mask);
+  constructor(properties, spawnProperties, group, mask, respawnMeanTime) {
+    super(properties, spawnProperties, group, mask, respawnMeanTime);
     this.level = 0;
   }
 

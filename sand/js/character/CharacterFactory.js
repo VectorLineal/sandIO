@@ -1,10 +1,11 @@
 import {randomInt} from "../main_layer/MathUtils.js";
 
-export default class CharacterFactory{
-    constructor(properties, spawnProperties, group, mask) {
+export default class CharacterFactory{ //esta es en teoría una clase abstracta
+    constructor(properties, spawnProperties, group, mask, respawnMeanTime) {
         this.spriteProperties = properties; //se refiere a un arreglo de septuplas tipo {name, width, height, frameWidth, frameHeight, centerX, centerY, character, animations}
         this.group = group;
         this.mask = mask;
+        this.respawnMeanTime = respawnMeanTime;
         this.spawnProperties = []; //spawns se refiere a los índices del arreglo properties, indica posibles NPCs que pueden spawnear en esete punto
         for(var index = 0; index < spawnProperties.length; index++){
           this.spawnProperties.push({spawnX: spawnProperties[index].x, spawnY: spawnProperties[index].y, spawns: spawnProperties[index].spawns, timer: -1}); 
@@ -89,6 +90,7 @@ export default class CharacterFactory{
         
         sprite.setScale(scaleRatio);
         sprite.setData("backend", this.generateLogic(propertie, {x: this.spawnProperties[index].spawnX, y: this.spawnProperties[index].spawnY}));
+        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth) * sprite.displayWidth, 8 * scaleRatio, 0xff0000).setDepth(1).setAlpha(0.6));
         sprite.setData("displayDamage", scene.add.text(sprite.x, sprite.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * scaleRatio));
         sprite.body.label = propertie.name;
         sprite.body.friction = 1;
@@ -148,6 +150,9 @@ export default class CharacterFactory{
             if(!entity.getData('backend').isDead()){
               entity.getData('backend').applyHealthRegen({scene: scene});
               entity.getData('backend').applyManaRegen({scene: scene});
+              entity.getData('healthBar').x = entity.x;
+              entity.getData('healthBar').y = entity.y;
+              entity.getData('healthBar').width = (entity.getData("backend").curHealth / entity.getData("backend").maxHealth) * entity.displayWidth;
             }
             
             entity.setVelocity(0);

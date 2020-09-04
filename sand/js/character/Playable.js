@@ -7,19 +7,13 @@ export default class Playable extends Hero{
 
     initialUpdate(scene){
         scene.events.emit('updateLevel');
-        scene.events.emit('updateDamage');
-        scene.events.emit('updateArmor');
+        scene.events.emit('updateStats');
         scene.events.emit('updateMaxHealth');
         scene.events.emit('updateHealth');
         scene.events.emit('updateHealthRegen');
-        scene.events.emit('updateSpeed');
-        scene.events.emit('updateAtSpeed');
         scene.events.emit('updateMaxMana');
         scene.events.emit('updateMana');
         scene.events.emit('updateManaRegen');
-        scene.events.emit('updateSpellPower');
-        scene.events.emit('updateMagicArmor');
-        scene.events.emit('updateXP');
     }
 
     takeDamage(params){ //scene, amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged
@@ -46,18 +40,13 @@ export default class Playable extends Hero{
     levelUp(scene){
         super.levelUp(scene);
         scene.events.emit('updateLevel');
-        scene.events.emit('updateDamage');
-        scene.events.emit('updateArmor');
+        scene.events.emit('updateStats');
         scene.events.emit('updateMaxHealth');
         scene.events.emit('updateHealth');
         scene.events.emit('updateHealthRegen');
-        scene.events.emit('updateSpeed');
-        scene.events.emit('updateAtSpeed');
         scene.events.emit('updateMaxMana');
         scene.events.emit('updateMana');
         scene.events.emit('updateManaRegen');
-        scene.events.emit('updateSpellPower');
-        scene.events.emit('updateMagicArmor');
     }
 
     gainXP(params){

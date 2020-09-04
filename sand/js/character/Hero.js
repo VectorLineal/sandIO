@@ -193,15 +193,16 @@ export default class Hero extends Character {
     this.gold += params.amount;
   }
 
-  calculateSpawnTime(){
-    return ((this.level * 2.25) + 3.75) * 60
+  calculateSpawnTime(respawnMeanTime){
+    return ((this.level * respawnMeanTime * 0.375) + (respawnMeanTime * 0.625));
   }
 
   //funciones sobre eventos
   onDeath(params){
     params.sprite.anims.stopOnFrame(0);
     params.sprite.setVisible(false);
-    params.factory.kill({x: this.spawnX, y: this.spawnY}, this.calculateSpawnTime(), 0);
+    params.sprite.getData("healthBar").setVisible(false);
+    params.factory.kill({x: this.spawnX, y: this.spawnY}, this.calculateSpawnTime(params.factory.respawnMeanTime), 0);
     params.scene.matter.world.remove(params.sprite.body);
     this.curHealth = 0;
     super.onDeath(params);

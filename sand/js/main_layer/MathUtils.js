@@ -107,6 +107,10 @@ export function getInlineLinearFunction(inline) {
   }
 }
 
+export function transformArmorToPercentage(amount){
+        return (0.013 * amount) / (2.584 + (0.01 * amount));
+}
+
 export function calculateInlineLinearFunction(inline, value){
   return getInlineLinearFunction(inline).calculate(value);
 }

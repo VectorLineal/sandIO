@@ -1,4 +1,4 @@
-import {randomFloat, degToRad, getRotation} from "../main_layer/MathUtils.js";
+import {randomFloat, degToRad, getRotation, transformArmorToPercentage} from "../main_layer/MathUtils.js";
 import Hero from "./Hero.js";
 
 export default class Entity{
@@ -130,6 +130,14 @@ export default class Entity{
             return 200000 / this.atSpeed;
         }
     }
+
+    getArmorMultiplier(magic){
+        if(magic){
+            return transformArmorToPercentage(this.magicArmor);
+        }else{
+            return transformArmorToPercentage(this.armor);
+        }
+    }
     
     calculateNextLevelXp(){
         if(this.level >= 1 && this.level <= 24){
@@ -160,21 +168,11 @@ export default class Entity{
             this.curHealth -=  amount;
             return amount;
         }else if(type == 1){
-            if(amount - this.armor >= amount * 0.15){
-                this.curHealth -=  amount -this.armor;
-                return amount -this.armor;
-            }else{
-                this.curHealth -=  amount * 0.15;
-                return amount * 0.15;
-            }
+            this.curHealth -=  amount * (1 - this.getArmorMultiplier(false));
+            return amount * (1 - this.getArmorMultiplier(false));
         }else if(type == 2){
-            if(amount - this.magicArmor >= amount * 0.15){
-                this.curHealth -=  amount -this.magicArmor;
-                return amount -this.magicArmor;
-            }else{
-                this.curHealth -=  amount * 0.15;
-                return amount * 0.15;
-            }
+            this.curHealth -=  amount * (1 - this.getArmorMultiplier(true));
+            return amount * (1 - this.getArmorMultiplier(true));
         }else{
             console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic")
         }

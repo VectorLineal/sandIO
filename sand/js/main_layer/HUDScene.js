@@ -1,5 +1,5 @@
 import "./phaser.js";
-import {fitNumber, clockFormat} from "./MathUtils.js";
+import {fitNumber, clockFormat, transformArmorToPercentage} from "./MathUtils.js";
 
 export default class HUDGame extends Phaser.Scene {
 
@@ -24,6 +24,7 @@ export default class HUDGame extends Phaser.Scene {
         this.clock = 0;
         this.gold = 0;
         this.respawnTime = 0;
+        this.percentual = false;
     }
 
     preload() {
@@ -56,7 +57,7 @@ export default class HUDGame extends Phaser.Scene {
         this.gold = game.initialData().gold;
         
         //elementos gráficos estáticos
-        var UnderBar = this.add.rectangle(3 * width / 8, (height - (height / 12)), 2 * width / 3, height / 6, 0x090909);
+        var UnderBar = this.add.rectangle(width / 2, (height - (height / 12)), width, height / 6, 0x090909);
         let levelFrame = this.add.rectangle(5 * width / 28, (height - (height / 7)), width / 14, height / 30, 0xefb810);
         var hudIcons = this.add.group();
 
@@ -144,32 +145,12 @@ export default class HUDGame extends Phaser.Scene {
             xpBar.width = (this.xp / this.xpNext) * (width / 12);
         }, this);
 
-        game.events.on('updateDamage', function () {
+        game.events.on('updateStats', function () {
             this.damage = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').damage;
-            statsText.setText(this.statsFormatedText());
-        }, this);
-
-        game.events.on('updateSpellPower', function () {
             this.spellPower = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').spellPower;
-            statsText.setText(this.statsFormatedText());
-        }, this);
-
-        game.events.on('updateArmor', function () {
-            this.arm = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').armor;
-            statsText.setText(this.statsFormatedText());
-        }, this);
-
-        game.events.on('updateMagicArmor', function () {
             this.magicArm = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').magicArmor;
-            statsText.setText(this.statsFormatedText());
-        }, this);
-
-        game.events.on('updateSpeed', function () {
+            this.arm = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').armor;
             this.vel = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').speed;
-            statsText.setText(this.statsFormatedText());
-        }, this);
-
-        game.events.on('updateAtSpeed', function () {
             this.atS = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').atSpeed;
             statsText.setText(this.statsFormatedText());
         }, this);
@@ -219,20 +200,27 @@ export default class HUDGame extends Phaser.Scene {
         }, this);
 
         this.scene.bringToTop('HUDScene');
+        this.input.keyboard.on('keydown-SPACE', function(event){
+            this.percentual = !this.percentual;
+        });
     }
 
     statsFormatedText(){
-        return fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower, 2) + '%\n' + fitNumber(this.arm, 0) + '\n' + fitNumber(this.magicArm, 0) + '\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0);
-    };
+        if(!this.percentual){
+            return fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower, 2) + '%\n' + fitNumber(this.arm, 0) + '\n' + fitNumber(this.magicArm, 0) + '\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0);
+        }else{
+            return fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower, 2) + '%\n' + fitNumber(transformArmorToPercentage(this.arm) * 100, 2) + '%\n' + fitNumber(transformArmorToPercentage(this.magicArm) * 100, 2) + '%\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0);
+        }
+    }
     healthFormatedText(){
         return fitNumber(this.health, 2) + '/' + fitNumber(this.maxHealth, 2) + ' + ' + fitNumber(this.regenH, 2)
-    };
+    }
     manaFormatedText(){
         return fitNumber(this.mana, 2) + '/' + fitNumber(this.maxMana, 2) + ' + ' + fitNumber(this.regenM, 2)
-    };
+    }
     clockText(){
         return fitNumber(this.gold, 0) + '\n' + clockFormat(this.clock);
-    };
+    }
     
     update() {
     }

@@ -4,8 +4,8 @@ import CharacterFactory from "./CharacterFactory.js";
 import {getInlineLinearFunction} from "../main_layer/MathUtils.js";
 
 export default class Herofactory extends CharacterFactory {
-  constructor(properties, spawnProperties, group, mask) {
-    super(properties, spawnProperties, group, mask);
+  constructor(properties, spawnProperties, group, mask, respawnMeanTime) {
+    super(properties, spawnProperties, group, mask, respawnMeanTime);
     this.playerIndex = -1;
     this.playerSpawnIndex = -1;
     for(var i = 0; i< this.spriteProperties.length; i++){
@@ -114,6 +114,7 @@ export default class Herofactory extends CharacterFactory {
                   params.group.children.entries[i].body = body;
                   params.group.children.entries[i].getData("backend").restoreHealth();
                   params.group.children.entries[i].getData("backend").restoreMana();
+                  params.group.children.entries[i].getData("healthBar").setVisible(true);
                 }
             }
         }
@@ -123,7 +124,7 @@ export default class Herofactory extends CharacterFactory {
     //funciones sobre eventos
     onUpdate(scene, group, scaleRatio){
       super.onUpdate(scene, group, scaleRatio);
-      if(this.getPlayer(group).getData("backend").isDead()){
+      if(this.getPlayer(group).getData("backend").isDead() && this.getPlayerTimer() % 60 == 0){
         scene.events.emit('updateRespawn');
       }
     }

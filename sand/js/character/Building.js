@@ -69,6 +69,7 @@ export default class Building extends Entity {
         break;
       case (1, 2):
         this.onDeath = function (params) {
+          //params.sprite.getData("healthBar").destroy();
           params.sprite.getData("displayDamage").destroy();
           params.group.remove(params.sprite, true, true);
           if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
@@ -108,6 +109,7 @@ export default class Building extends Entity {
           " is not a valid type, 0: envirometal elemnts, 1: static structures, 2: static interactable structures, 3: game objective"
         );
         this.onDeath = function (params) {
+          //params.sprite.getData("healthBar").destroy();
           params.sprite.getData("displayDamage").destroy();
           params.group.remove(params.sprite, true, true);
           if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
