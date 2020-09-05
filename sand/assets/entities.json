@@ -180,7 +180,7 @@
         "bountyFactor": 200,
         "damage": 1,
         "armor": 70,
-        "health": 7000,
+        "health": 70.00,
         "healthRegen": 0,
         "atSpeed": 1,
         "accuracy": 100,

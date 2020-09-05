@@ -82,6 +82,12 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
             width: propertie.width,
             height: propertie.height,
           },
+          render: {
+            sprite:{
+              xOffset: 0,
+              yOffset: 0
+            }
+          }
         };
       }
     }
@@ -104,8 +110,8 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
           color = 0xff0000;
           underColor = 0x00ffff;
         }
-        sprite.setData("underBar", scene.add.rectangle(sprite.x, sprite.y, sprite.body.shape.width * scaleRatio, 8 * scaleRatio, underColor).setDepth(1).setAlpha(0.4));
-        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth) * sprite.body.shape.width * scaleRatio, 8 * scaleRatio, color).setDepth(1).setAlpha(0.6));
+        sprite.setData("underBar", scene.add.rectangle(sprite.x, sprite.y, 48 * scaleRatio, 6 * scaleRatio, underColor).setDepth(1).setAlpha(0.2));
+        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth) * 48 * scaleRatio, 6 * scaleRatio, color).setDepth(1).setAlpha(0.4));
         sprite.setData("displayDamage", scene.add.text(sprite.x, sprite.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * scaleRatio));
         sprite.body.label = propertie.name;
         sprite.body.friction = 1;
@@ -169,7 +175,7 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
               entity.getData('underBar').y = entity.y;
               entity.getData('healthBar').x = entity.x;
               entity.getData('healthBar').y = entity.y;
-              entity.getData('healthBar').width = (entity.getData("backend").curHealth / entity.getData("backend").maxHealth) * entity.body.shape.width * scaleRatio;
+              entity.getData('healthBar').width = (entity.getData("backend").curHealth / entity.getData("backend").maxHealth) * 48 * scaleRatio;
             }
             
             entity.setVelocity(0);

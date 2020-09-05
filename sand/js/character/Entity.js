@@ -204,6 +204,12 @@ export default class Entity{
             }
             this.lastHitBy = params.attacker;
             finalDamage = this.dealDamage(rawDamage, params.type);
+            if(this.lastHitBy.split("#")[1] == params.scene.groups[0] || this.lastHitBy.split("#")[1] == params.scene.groups[1]){
+                let punctuation = params.scene.getPunctuationByHeroAndGroup(this.lastHitBy.split("#")[0], parseInt(this.lastHitBy.split("#")[1]));
+                if(punctuation != null){
+                    punctuation.damage += finalDamage;
+                }
+            }
             if(this.curHealth <= 0){
                 this.onDeath(params);
             }
@@ -221,6 +227,13 @@ export default class Entity{
                 }
                 this.lastHitBy = params.attacker;
                 finalDamage = this.dealDamage(rawDamage, params.type);
+                //se suma el daño hecho a la puntuacion de los jugadores si el atacante es un heroe
+                if(this.lastHitBy.split("#")[1] == params.scene.groups[0] || this.lastHitBy.split("#")[1] == params.scene.groups[1]){
+                    let punctuation = params.scene.getPunctuationByHeroAndGroup(this.lastHitBy.split("#")[0], parseInt(this.lastHitBy.split("#")[1]));
+                    if(punctuation != null){
+                        punctuation.damage += finalDamage;
+                    }
+                }
                 if(this.curHealth <= 0){
                     this.onDeath(params);
                 }
@@ -245,24 +258,45 @@ export default class Entity{
     onDeath(params){
         if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
-            for(var i = 0; i < VREyeParameters.scene.teamBSprites.children.getArray().length; i++){
-                if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
-                params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
-                params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
+                for(var i = 0; i < params.scene.teamBSprites.children.getArray().length; i++){
+                    if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
+                        let punctuation = params.scene.getPunctuationByHeroAndGroup(this.lastHitBy.split("#")[0] ,parseInt(this.lastHitBy.split("#")[1]));
+                        params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
+                        params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
+                        punctuation.GPM += this.calculateBounty() * 0.8;
+                        punctuation.XPM += this.calculateNextLevelXp() * 0.8;
+                        punctuation.lastHits++;
+                        console.log("hasta acá bien");
+                        if(this.constructor instanceof Hero){
+                            console.log(this.name, "es heroeal morir");
+                            punctuation.kills++;
+                            let localPunctuation = params.scene.getPunctuationByHeroAndGroup(this.name , params.body.collisionFilter.group);
+                            if(localPunctuation != null){
+                                localPunctuation.deaths++;
+                            }
+                        }
+                        break;
+                    }
                 }
             }
-            }
+            return params.scene.categories[3];
         }else if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[0] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
-            for(var i = 0; i < params.scene.teamASprites.children.getArray().length; i++){
-                if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
-                    params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
-                    params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
+                for(var i = 0; i < params.scene.teamASprites.children.getArray().length; i++){
+                    if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
+                        let punctuation = params.scene.getPunctuationByHeroAndGroup(this.lastHitBy.split("#")[0] ,parseInt(this.lastHitBy.split("#")[1]));
+                        params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
+                        params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
+                        punctuation.GPM += this.calculateBounty() * 0.8;
+                        punctuation.XPM += this.calculateNextLevelXp() * 0.8;
+                        punctuation.lastHits++;
+                        break;
+                    }
                 }
             }
-            }
+            return params.scene.categories[1];
         }else{
-            return;
+            return 0;
         }
     }
 }

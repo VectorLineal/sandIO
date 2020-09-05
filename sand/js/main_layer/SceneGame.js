@@ -12,11 +12,11 @@ export default class SceneGame extends Phaser.Scene {
     //referente al puntaje y progresión del juego
     this.clock = 0;
     this.playerName = "el cueros";
-    this.puntuations={
+    this.punctuations={
       teamA:[
         {
           name: this.playerName,
-          characterName: "minotaur_warrior",
+          hero: "demon_rogue",
           kills: 0,
           deaths: 0,
           assists: 0,
@@ -24,13 +24,14 @@ export default class SceneGame extends Phaser.Scene {
           damageTaken: 0,
           healing: 0,
           GPM: 0,
-          XPM: 0
+          XPM: 0,
+          lastHits: 0
         }
       ],
       teamB:[
         {
           name: "elca pucho",
-          characterName: "demon_rogue",
+          hero: "minotaur_warrior",
           kills: 0,
           deaths: 0,
           assists: 0,
@@ -38,7 +39,8 @@ export default class SceneGame extends Phaser.Scene {
           damageTaken: 0,
           healing: 0,
           GPM: 0,
-          XPM: 0
+          XPM: 0,
+          lastHits: 0
         }
       ]
     }
@@ -340,6 +342,7 @@ export default class SceneGame extends Phaser.Scene {
 
     //se actualizan todas las entidades
     this.teamAHeroManager.onUpdate(this, this.teamASprites, 9.84 / this.scaleRatio);
+    this.teamBHeroManager.onUpdate(this, this.teamBSprites, 9.84 / this.scaleRatio);
     this.forestManager.onUpdate(
       this,
       this.enviromentSprites,
@@ -474,6 +477,18 @@ export default class SceneGame extends Phaser.Scene {
       }
     }
 
+    //se limpiam bos de area
+    /*for (
+      var index = 0;
+      index < this.matter.world.getAllBodies().length;
+      index++
+    ) {
+      let labelReader = RegExp(/^(bounty|area)Box\.\w+(\#\d+)?$/);
+      if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
+        this.matter.world.getAllBodies()[index].label = "usedBox." + this.matter.world.getAllBodies()[index].label.split(".")[1];
+      }
+    }*/
+
     //se actualza el tiempo transcurrido del juego
     this.clock++;
     if(this.clock % 60 == 0){
@@ -512,7 +527,7 @@ export default class SceneGame extends Phaser.Scene {
       switch(bodyB.label.split(".")[0]){
         case "attackBox":
           let factory = this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero);
-      dealtDamage = bodyB.gameObject.getData("backend").takeDamage({
+        dealtDamage = bodyB.gameObject.getData("backend").takeDamage({
         scene: this,
         sprite: bodyB.gameObject,
         body: bodyB,
@@ -554,9 +569,12 @@ export default class SceneGame extends Phaser.Scene {
           for(var i = 0; i < event.pairs.length; i++){
             console.log(event.pairs[i].bodyB);
             if(event.pairs[i].bodyB.gameObject.getData("backend") instanceof Hero){
+              let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyB.gameObject.getData("backend").name, event.pairs[i].bodyB.collisionFilter.group);
               event.pairs[i].bodyB.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[0]});
+              punctuation.XPM += event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[0];
               if(event.pairs[i].bodyA.label.split("#")[1] == "1"){
                 event.pairs[i].bodyB.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[1]});
+                punctuation.GPM += event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[1];
               }
             }
           }
@@ -606,22 +624,21 @@ export default class SceneGame extends Phaser.Scene {
             bodyA.gameObject.getData("displayDamage").setText(damageMessage);
             bodyA.gameObject.getData("displayDamage").setColor(color);
             bodyA.gameObject.getData("displayDamage").setVisible(true);
-            console.log(
-              bodyA.gameObject.getData("backend").name,
-              "got hit by",
-              bodyA.gameObject.getData("backend").lastHitBy
-            );
+            console.log(bodyA.gameObject.getData("backend").name, "got hit by", bodyA.gameObject.getData("backend").lastHitBy);
+
           }
           this.matter.world.remove(bodyB);
           break;
         case "bountyBox":
-          console.log("colisionaron:");
           for(var i = 0; i < event.pairs.length; i++){
             console.log(event.pairs[i].bodyA);
             if(event.pairs[i].bodyA.gameObject.getData("backend") instanceof Hero){
+              let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyA.gameObject.getData("backend").name, event.pairs[i].bodyA.collisionFilter.group);
               event.pairs[i].bodyA.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[0]});
+              punctuation.XPM += event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[0];
               if(event.pairs[i].bodyB.label.split("#")[1] == "1"){
                 event.pairs[i].bodyA.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[1]});
+                punctuation.GPM += event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[1];
               }
             }
           }
@@ -671,6 +688,29 @@ export default class SceneGame extends Phaser.Scene {
       case this.groups[3]:
         return this.EnviromentalFactory;
       case this.groups[4]:
+        return null;
+    }
+  }
+
+  getPunctuationByHeroAndGroup(name, group){
+    switch(group){
+      case this.groups[0]:
+        for(var i = 0; i < this.punctuations.teamA.length; i++){
+          if(this.punctuations.teamA[i].hero == name){
+            return this.punctuations.teamA[i];
+          }
+        }
+        console.log("hero doesn't exist in team A punctuations");
+        return null;
+      case this.groups[1]:
+        for(var i = 0; i < this.punctuations.teamB.length; i++){
+          if(this.punctuations.teamB[i].hero == name){
+            return this.punctuations.teamB[i];
+          }
+        }
+        console.log("hero doesn't exist in team B punctuations");
+        return null;
+      default:
         return null;
     }
   }

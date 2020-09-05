@@ -48,30 +48,7 @@ export default class Character extends Entity{
     onDeath(params){
         //si el último que dio el golpe es una criatura neutral, no se reparte ni xp ni oro por lo que la función termina su ejecución acá
         //se reparte oro y xp al último que dio el golpe siemre y cuando sea un heroe
-        var category = 0;
-        if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
-            category = params.scene.categories[3];
-            if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
-            for(var i = 0; i < VREyeParameters.scene.teamBSprites.children.getArray().length; i++){
-                if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
-                params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
-                params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
-                }
-            }
-            }
-        }else if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[0] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
-            category = params.scene.categories[1];
-            if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
-            for(var i = 0; i < params.scene.teamASprites.children.getArray().length; i++){
-                if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
-                    params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
-                    params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
-                }
-            }
-            }
-        }else{
-            return;
-        }
+        let category = super.onDeath(params);
 
         //se reparte oro y xp a los que estaban cerca aquien murió
         var givesGold = "0";
@@ -92,6 +69,7 @@ export default class Character extends Entity{
             return bounty;
         }
         });
+        return category;
     }
 
     //funciones sobre sprites

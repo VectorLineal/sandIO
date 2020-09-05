@@ -131,6 +131,15 @@ export default class Hero extends Character {
     return this.weapon.ranged;
   }
 
+  takeDamage(params){
+    let damageStatus = super.takeDamage(params);
+    let punctuation = params.scene.getPunctuationByHeroAndGroup(this.name, params.body.collisionFilter.group);
+    if(punctuation != null){
+      punctuation.damageTaken += damageStatus.amount;
+    }
+    return damageStatus;
+  }
+
   levelUp(scene) {
     this.str.update(this.level);
     this.res.update(this.level);
@@ -206,6 +215,30 @@ export default class Hero extends Character {
     params.factory.kill({x: this.spawnX, y: this.spawnY}, this.calculateSpawnTime(params.factory.respawnMeanTime), 0);
     params.scene.matter.world.remove(params.sprite.body);
     this.curHealth = 0;
-    super.onDeath(params);
+    let category = super.onDeath(params);
+    if(category == params.scene.categories[1]){
+      for(var i = 0; i < params.scene.teamASprites.children.getArray().length; i++){
+        if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
+          let punctuation = params.scene.getPunctuationByHeroAndGroup(this.lastHitBy.split("#")[0] ,parseInt(this.lastHitBy.split("#")[1]));
+          punctuation.kills++;
+          let localPunctuation = params.scene.getPunctuationByHeroAndGroup(this.name , params.body.collisionFilter.group);
+          if(localPunctuation != null){
+            localPunctuation.deaths++;
+          }
+        }
+      }
+    }else if(category == params.scene.categories[3]){
+      for(var i = 0; i < params.scene.teamBSprites.children.getArray().length; i++){
+        if(params.scene.teamBSprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamBSprites.children.getArray()[i].getData("backend") instanceof Hero)){
+          let punctuation = params.scene.getPunctuationByHeroAndGroup(this.lastHitBy.split("#")[0] ,parseInt(this.lastHitBy.split("#")[1]));
+          punctuation.kills++;
+          let localPunctuation = params.scene.getPunctuationByHeroAndGroup(this.name , params.body.collisionFilter.group);
+          if(localPunctuation != null){
+            localPunctuation.deaths++;
+          }
+        }
+      }
+    }
+    
   }
 }

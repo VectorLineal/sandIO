@@ -111,10 +111,15 @@ export default class Herofactory extends CharacterFactory {
                       render: super.generateHitBox(propertie).render,
                     }
                   );
+                  body.shape = {
+                    width: super.generateHitBox(propertie).shape.width * params.scaleRatio,
+                    height: super.generateHitBox(propertie).shape.height * params.scaleRatio
+                  };
                   body.collisionFilter.group = this.group;
                   body.collisionFilter.mask = this.mask;
                   body.gameObject = params.group.children.entries[i];
                   params.group.children.entries[i].body = body;
+                  console.log(params.group.children.entries[i].getData('backend').name,"body is", params.group.children.entries[i].body);
                   params.group.children.entries[i].getData("backend").restoreHealth();
                   params.group.children.entries[i].getData("backend").restoreMana();
                   params.group.children.entries[i].getData("underBar").setVisible(true);

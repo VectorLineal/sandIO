@@ -25,6 +25,19 @@ export default class HUDGame extends Phaser.Scene {
         this.gold = 0;
         this.respawnTime = 0;
         this.percentual = false;
+
+        //elementos gráficos
+        this.namesTable;
+        this.heroesTable;
+        this.killsTable;
+        this.deathsTable;
+        this.assistsTable;
+        this.damageTable;
+        this.damageTakenTable;
+        this.healingTable;
+        this.GPMTable;
+        this.XPMTable;
+        this.lstHitsTable;
     }
 
     preload() {
@@ -57,6 +70,7 @@ export default class HUDGame extends Phaser.Scene {
         this.gold = game.initialData().gold;
         
         //elementos gráficos estáticos
+        this.punctuationTable = this.add.rectangle(width / 2, height / 2, 3 * width / 4, height / 2, 0x28195c).setAlpha(0.4).setVisible(false);
         var UnderBar = this.add.rectangle(width / 2, (height - (height / 12)), width, height / 6, 0x090909);
         let levelFrame = this.add.rectangle(5 * width / 28, (height - (height / 7)), width / 14, height / 30, 0xefb810);
         var hudIcons = this.add.group();
@@ -95,6 +109,18 @@ export default class HUDGame extends Phaser.Scene {
         var xpBar = this.add.rectangle(3 * width / 14, (height - (height / 7)), (this.xp / this.xpNext) * (width / 12), height / 60, 0xdddddd);
         
         //elementos de texto dinámicos
+        this.namesTable = this.add.text(width / 8, (height / 3), 'player\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.heroesTable = this.add.text(27 * width / 88, (height / 3), 'hero\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.killsTable = this.add.text(39 * width / 88, (height / 3), 'kills\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.deathsTable = this.add.text(43 * width / 88, (height / 3), 'deaths\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.assistsTable = this.add.text(47 * width / 88, (height / 3), 'assist\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.damageTable = this.add.text(51 * width / 88, (height / 3), 'damage\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.damageTakenTable = this.add.text(55 * width / 88, (height / 3), 'taken\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.healingTable = this.add.text(59 * width / 88, (height / 3), 'healed\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.GPMTable = this.add.text(63 * width / 88, (height / 3), 'GPM\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.XPMTable = this.add.text(67 * width / 88, (height / 3), 'XPM\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+        this.lstHitsTable= this.add.text(71 * width / 88, (height / 3), 'LH\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
+
         var healthText = this.add.text(width / 3, (height - (67 * height / 560)), '0/0 + 0', { font: '48px Arial', fill: '#eeeeee' });
         var manaText = this.add.text(width / 3, (height - (27 * height / 560)), '0/0 + 0', { font: '48px Arial', fill: '#eeeeee' });
         var statsText = this.add.text(width / 10, (height - (height / 6.3)), '0', { font: '48px Arial', fill: '#eeeeee' });
@@ -197,12 +223,89 @@ export default class HUDGame extends Phaser.Scene {
         game.events.on('updateClock', function () {
             this.clock = game.clock;
             envinromentText.setText(this.clockText());
+            this.updatePuntuations();
         }, this);
 
+        game.events.on('updateScore', this.updatePuntuations, this);
+
         this.scene.bringToTop('HUDScene');
+
+        //our controls
         this.input.keyboard.on('keydown-SPACE', function(event){
             this.percentual = !this.percentual;
-        });
+            statsText.setText(this.statsFormatedText());
+        }, this);
+        this.input.keyboard.on('keydown-P', function(event){
+            this.setTableVisible(true);
+        }, this);
+        this.input.keyboard.on('keyup-P', function(event){
+            this.setTableVisible(false);
+        }, this);
+        this.input.keyboard.addCapture('SPACE');
+        this.input.keyboard.addCapture('TAB');
+    }
+    
+    update() {
+    }
+    
+    //funciones no heredadas de escena
+    updatePuntuations(){
+        let punctuations = this.scene.get('GameScene').punctuations;
+        this.namesTable.setText('player\n\nteam A\n' + this.getPunctuationParam(punctuations, "name", 0) + "\nteam B\n" + this.getPunctuationParam(punctuations, "name", 1));
+        this.heroesTable.setText('hero\n\n\n' + this.getPunctuationParam(punctuations, "hero", 0) + "\n\n" + this.getPunctuationParam(punctuations, "hero", 1));
+        this.killsTable.setText('kills\n\n\n'+ this.getPunctuationParam(punctuations, "kills", 0) + "\n\n" + this.getPunctuationParam(punctuations, "kills", 1));
+        this.deathsTable.setText('deaths\n\n\n'+ this.getPunctuationParam(punctuations, "deaths", 0) + "\n\n" + this.getPunctuationParam(punctuations, "deaths", 1));
+        this.assistsTable.setText('assists\n\n\n'+ this.getPunctuationParam(punctuations, "assists", 0) + "\n\n" + this.getPunctuationParam(punctuations, "assists", 1));
+        this.damageTable.setText('damage\n\n\n'+ this.getPunctuationParam(punctuations, "damage", 0) + "\n\n" + this.getPunctuationParam(punctuations, "damage", 1));
+        this.damageTakenTable.setText('taken\n\n\n'+ this.getPunctuationParam(punctuations, "damageTaken", 0) + "\n\n" + this.getPunctuationParam(punctuations, "damageTaken", 1));
+        this.healingTable.setText('healing\n\n\n'+ this.getPunctuationParam(punctuations, "healing", 0) + "\n\n" + this.getPunctuationParam(punctuations, "healing", 1));
+        this.GPMTable.setText('GPM\n\n\n'+ this.getPunctuationParam(punctuations, "GPM", 0) + "\n\n" + this.getPunctuationParam(punctuations, "GPM", 1));
+        this.XPMTable.setText('XPM\n\n\n'+ this.getPunctuationParam(punctuations, "XPM", 0) + "\n\n" + this.getPunctuationParam(punctuations, "XPM", 1));
+        this.lstHitsTable.setText('LH\n\n\n'+ this.getPunctuationParam(punctuations, "lastHits", 0) + "\n\n" + this.getPunctuationParam(punctuations, "lastHits", 1));
+    }
+
+    setTableVisible(visible){
+        this.punctuationTable.setVisible(visible);
+        this.namesTable.setVisible(visible);
+        this.heroesTable.setVisible(visible);
+        this.killsTable.setVisible(visible);
+        this.deathsTable.setVisible(visible);
+        this.assistsTable.setVisible(visible);
+        this.damageTable.setVisible(visible);
+        this.damageTakenTable.setVisible(visible);
+        this.healingTable.setVisible(visible);
+        this.GPMTable.setVisible(visible);
+        this.XPMTable.setVisible(visible);
+        this.lstHitsTable.setVisible(visible);
+    }
+
+    getPunctuationParam(punctuations, param, team){
+        var message = "";
+        if(team == 0){
+            for(var i = 0; i < punctuations.teamA.length; i++){
+                if(param == "XPM" || param == "GPM"){
+                    message += fitNumber(punctuations.teamA[i][param] * 3600 / this.clock, 0) + "\n";
+                }else if(param == "name" || param == "hero"){
+                    message += punctuations.teamA[i][param] + "\n";
+                }else{
+                    message += fitNumber(punctuations.teamA[i][param], 0) + "\n";
+                }
+                
+            }
+        }else{
+            for(var i = 0; i < punctuations.teamB.length; i++){
+                if(param == "XPM" || param == "GPM"){
+                    message += fitNumber(punctuations.teamB[i][param] * 3600 / this.clock, 0) + "\n";
+                }else if(param == "name" || param == "hero"){
+                    message += punctuations.teamB[i][param] + "\n";
+                }else{
+                    message += fitNumber(punctuations.teamB[i][param], 0) + "\n";
+                }
+                
+            }
+        }
+
+        return message;
     }
 
     statsFormatedText(){
@@ -212,16 +315,16 @@ export default class HUDGame extends Phaser.Scene {
             return fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower, 2) + '%\n' + fitNumber(transformArmorToPercentage(this.arm) * 100, 2) + '%\n' + fitNumber(transformArmorToPercentage(this.magicArm) * 100, 2) + '%\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0);
         }
     }
+
     healthFormatedText(){
         return fitNumber(this.health, 2) + '/' + fitNumber(this.maxHealth, 2) + ' + ' + fitNumber(this.regenH, 2)
     }
+
     manaFormatedText(){
         return fitNumber(this.mana, 2) + '/' + fitNumber(this.maxMana, 2) + ' + ' + fitNumber(this.regenM, 2)
     }
+
     clockText(){
         return fitNumber(this.gold, 0) + '\n' + clockFormat(this.clock);
-    }
-    
-    update() {
     }
 }
