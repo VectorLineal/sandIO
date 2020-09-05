@@ -90,7 +90,7 @@ export default class Hero extends Character {
     this.curHealth = this.maxHealth;
     this.healthRegen = 0.1 + this.res.getStat2();
     this.speed =
-      this.weapon.speed + this.bodyArmor.speed + 28 + this.agi.getStat1();
+      this.weapon.speed + this.bodyArmor.speed + 20 + this.agi.getStat1();
     this.atSpeed =
       this.weapon.atSpeed + this.bodyArmor.atSpeed + 100 + this.agi.getStat2();
     this.evasion =
@@ -146,8 +146,8 @@ export default class Hero extends Character {
       this.maxHealth += 20 * this.res.change.derivate();
       this.curHealth += 20 * this.res.change.derivate();
       this.healthRegen += 0.2 * this.res.change.derivate();
-      this.speed += 0.1 * this.agi.change.derivate();
-      this.atSpeed += 4 * this.agi.change.derivate();
+      this.speed += 0.02 * this.agi.change.derivate();
+      this.atSpeed += 2 * this.agi.change.derivate();
 
       //se tiene que actualizar la animación para que vaya acorde a la velocidad de ataque
       this.rebalanceAttackAnimations(scene);

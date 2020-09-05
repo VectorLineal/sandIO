@@ -30,7 +30,7 @@ class Atribute{
                 return 20 * this.current;
             case "agility":
                 //velocidad
-                return 0.1 * this.current;
+                return 0.02 * this.current;
             case "perception":
                 //critico
                 return 0.15 * this.current;
@@ -53,7 +53,7 @@ class Atribute{
                 return 0.2 * this.current;
             case "agility":
                 //velocidad_ataque
-                return 4 * this.current;
+                return 2 * this.current;
             case "perception":
                 //precision
                 return 0.4 * this.current;

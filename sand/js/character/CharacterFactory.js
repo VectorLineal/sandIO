@@ -125,7 +125,7 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
           sprite.on("animationcomplete-spelle_" + sprite.getData("backend").name, sprite.getData("backend").commitSpelle, this);
         }
         if(propertie.animations.f != null){
-          sprite.getData("backend").addAnimation(scene, "spelf_" + sprite.getData("backend").name, propertie.animations.f);
+          sprite.getData("backend").addAnimation(scene, "spellf_" + sprite.getData("backend").name, propertie.animations.f);
           sprite.on("animationcomplete-spellf_" + sprite.getData("backend").name, sprite.getData("backend").commitSpellf, this);
         }
         if(propertie.animations.r != null){
