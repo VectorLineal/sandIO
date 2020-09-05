@@ -1,4 +1,6 @@
 import {randomInt} from "../main_layer/MathUtils.js";
+import Hero from "./Hero.js";
+import Playable from "./Playable.js";
 
 export default class CharacterFactory{ //esta es en teoría una clase abstracta
     constructor(properties, spawnProperties, group, mask, respawnMeanTime) {
@@ -18,7 +20,6 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
             return index;
           }
         }
-    
         console.log("el elemento {", x, ",", y, "} no se encuentra en la lista de puntos de respawn.");
         return -1;
     }
@@ -90,7 +91,21 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
         
         sprite.setScale(scaleRatio);
         sprite.setData("backend", this.generateLogic(propertie, {x: this.spawnProperties[index].spawnX, y: this.spawnProperties[index].spawnY}));
-        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth) * sprite.displayWidth, 8 * scaleRatio, 0xff0000).setDepth(1).setAlpha(0.6));
+        //se decide el color de la barra de vida, diferente para jugadores y npcs
+        var color = 0;
+        var underColor = 0;
+        /*if(sprite.getData("backend") instanceof Playable){
+          color = 0x0000ff;
+          underColor = 0xffff00;
+        }else */if(sprite.getData("backend") instanceof Hero){
+          color = 0x00ff00;
+          underColor = 0xff00ff;
+        }else{
+          color = 0xff0000;
+          underColor = 0x00ffff;
+        }
+        sprite.setData("underBar", scene.add.rectangle(sprite.x, sprite.y, sprite.body.shape.width * scaleRatio, 8 * scaleRatio, underColor).setDepth(1).setAlpha(0.4));
+        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth) * sprite.body.shape.width * scaleRatio, 8 * scaleRatio, color).setDepth(1).setAlpha(0.6));
         sprite.setData("displayDamage", scene.add.text(sprite.x, sprite.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * scaleRatio));
         sprite.body.label = propertie.name;
         sprite.body.friction = 1;
@@ -150,9 +165,11 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
             if(!entity.getData('backend').isDead()){
               entity.getData('backend').applyHealthRegen({scene: scene});
               entity.getData('backend').applyManaRegen({scene: scene});
+              entity.getData('underBar').x = entity.x;
+              entity.getData('underBar').y = entity.y;
               entity.getData('healthBar').x = entity.x;
               entity.getData('healthBar').y = entity.y;
-              entity.getData('healthBar').width = (entity.getData("backend").curHealth / entity.getData("backend").maxHealth) * entity.displayWidth;
+              entity.getData('healthBar').width = (entity.getData("backend").curHealth / entity.getData("backend").maxHealth) * entity.body.shape.width * scaleRatio;
             }
             
             entity.setVelocity(0);

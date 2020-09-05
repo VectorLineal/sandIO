@@ -9,7 +9,39 @@ import EnviromentalFactory from "../character/EnviromentalFactory.js";
 export default class SceneGame extends Phaser.Scene {
   constructor() {
     super({ key: "GameScene", active: true });
+    //referente al puntaje y progresión del juego
     this.clock = 0;
+    this.playerName = "el cueros";
+    this.puntuations={
+      teamA:[
+        {
+          name: this.playerName,
+          characterName: "minotaur_warrior",
+          kills: 0,
+          deaths: 0,
+          assists: 0,
+          damage: 0,
+          damageTaken: 0,
+          healing: 0,
+          GPM: 0,
+          XPM: 0
+        }
+      ],
+      teamB:[
+        {
+          name: "elca pucho",
+          characterName: "demon_rogue",
+          kills: 0,
+          deaths: 0,
+          assists: 0,
+          damage: 0,
+          damageTaken: 0,
+          healing: 0,
+          GPM: 0,
+          XPM: 0
+        }
+      ]
+    }
     //muy importante para hacer escalado de forma correcta
     this.scaleRatio = 3;
     //categorias y grupos de colisión
@@ -58,6 +90,11 @@ export default class SceneGame extends Phaser.Scene {
       "minotaur_warrior",
       "assets/warrior_minotaur_test.png",
       { frameWidth: 60, frameHeight: 76 }
+    );
+    this.load.spritesheet(
+      "demon_rogue",
+      "assets/demon_rogue_sheet.png",
+      { frameWidth: 137, frameHeight: 137 }
     );
     this.load.spritesheet("chimera", "assets/chimera_sheet.png", {
       frameWidth: 92,
@@ -142,10 +179,12 @@ export default class SceneGame extends Phaser.Scene {
       9.84 / scaleRatio
     );
 
-    // The player and its settings
+    // The player's team and its settings
+    var picked = this.cache.json.get("entities").hero["demon_rogue"]
+    picked.player = true;
     this.teamAHeroManager = new HeroFactory(
       [
-        this.cache.json.get("entities").hero["minotaur_warrior"]
+        picked
       ],
       [{ x: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x, y: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y, spawns: [0] }],
       this.groups[0],
@@ -154,6 +193,21 @@ export default class SceneGame extends Phaser.Scene {
     this.teamAHeroManager.generateInitialSet(
       this,
       this.teamASprites,
+      9.84 / scaleRatio
+    );
+
+    // The enemy team and its settings
+    this.teamBHeroManager = new HeroFactory(
+      [
+        this.cache.json.get("entities").hero["minotaur_warrior"]
+      ],
+      [{ x: this.cache.json.get("mapEnvironment").team2.spawnPoints[0].x, y: this.cache.json.get("mapEnvironment").team2.spawnPoints[0].y, spawns: [0] }],
+      this.groups[1],
+      this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, 360
+    );
+    this.teamBHeroManager.generateInitialSet(
+      this,
+      this.teamBSprites,
       9.84 / scaleRatio
     );
 
@@ -326,14 +380,14 @@ export default class SceneGame extends Phaser.Scene {
           case "q":
             if (
               this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
-              30 + 2 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
+              40 + 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
             ) {
               this.teamAHeroManager.getPlayer(this.teamASprites).play(
                 "spellq_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name
               );
               this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
                 scene: this,
-                amount: -30 - 2 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
+                amount: -40 - 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
               });
             } else {
               this.lastKeyPressed = "";
@@ -342,11 +396,14 @@ export default class SceneGame extends Phaser.Scene {
           case "e":
             if (
               this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
-              45 + 7 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
+              30 + 3 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
             ) {
+              this.teamAHeroManager.getPlayer(this.teamASprites).play(
+                "spelle_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name
+              );
               this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
                 scene: this,
-                amount: -45 - 7 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
+                amount: -30 - 3 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
               });
               this.lastKeyPressed = "";
             } else {
@@ -354,8 +411,20 @@ export default class SceneGame extends Phaser.Scene {
             }
             break;
           case "f":
-            //es una pasiva, no hace nada
-            this.lastKeyPressed = "";
+            if (
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
+              30 + 6 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
+            ) {
+              this.teamAHeroManager.getPlayer(this.teamASprites).play(
+                "spellf_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name
+              );
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
+                scene: this,
+                amount: -30 - 6 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
+              });
+            } else {
+              this.lastKeyPressed = "";
+            }
             break;
           case "r":
             if (

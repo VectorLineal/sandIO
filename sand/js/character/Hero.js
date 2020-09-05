@@ -201,6 +201,7 @@ export default class Hero extends Character {
   onDeath(params){
     params.sprite.anims.stopOnFrame(0);
     params.sprite.setVisible(false);
+    params.sprite.getData("underBar").setVisible(false);
     params.sprite.getData("healthBar").setVisible(false);
     params.factory.kill({x: this.spawnX, y: this.spawnY}, this.calculateSpawnTime(params.factory.respawnMeanTime), 0);
     params.scene.matter.world.remove(params.sprite.body);

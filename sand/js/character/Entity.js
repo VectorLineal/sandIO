@@ -74,6 +74,13 @@ export default class Entity{
           var yc = gameObject.y;
           var xr = -gameObject.displayWidth / 4;
           var yr = gameObject.displayHeight / 2;
+          if(gameObject.body.render.sprite.xOffset == 0){
+            xr = -((gameObject.displayWidth * (1 - ((gameObject.displayWidth - gameObject.body.shape.width * gameObject.scene.scaleRatio / 2 - 1) / gameObject.displayWidth - 0.5))) / 4);
+          }
+          if(gameObject.body.render.sprite.yOffset == 0){
+            yr = (gameObject.displayHeight * (1 - ((gameObject.displayHeight - gameObject.body.shape.height * gameObject.scene.scaleRatio - 1) / 2 / gameObject.displayHeight))) / 2;
+          }
+
           let magnitude = Math.sqrt(xr * xr + yr * yr);
           var attackBox = gameObject.scene.matter.add.rectangle(
             xc +
@@ -86,8 +93,8 @@ export default class Entity{
                 Math.sin(
                   getRotation(xr, yr) + degToRad(gameObject.angle)
                 ),
-                -xr * 0.04 * gameObject.getData("backend").getRange() * (9.84 / gameObject.scene.scaleRatio),
-                gameObject.getData("backend").getRange() * (9.84 / gameObject.scene.scaleRatio),
+                gameObject.getData("backend").getRange().width * (9.84 / gameObject.scene.scaleRatio),
+                gameObject.getData("backend").getRange().height * (9.84 / gameObject.scene.scaleRatio),
             {
               isSensor: true,
               angle: degToRad(gameObject.angle),

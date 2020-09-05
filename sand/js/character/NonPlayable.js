@@ -55,6 +55,7 @@ export default class NonPlayable extends Character{
     onDeath(params){
         params.factory.kill({x: this.spawnX, y: this.spawnY}, params.factory.respawnMeanTime, params.factory.respawnMeanTime / 2);
         params.sprite.getData("displayDamage").destroy();
+        params.sprite.getData("underBar").destroy();
         params.sprite.getData("healthBar").destroy();
         params.group.remove(params.sprite, true, true);
         super.onDeath(params);

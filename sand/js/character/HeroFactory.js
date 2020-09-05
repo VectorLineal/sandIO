@@ -40,7 +40,7 @@ export default class Herofactory extends CharacterFactory {
         return group.children.entries[this.playerIndex];
     }else{
         console.log("this is not the player's Hero group");
-        return {};
+        return null;
     }
   }
 
@@ -87,7 +87,10 @@ export default class Herofactory extends CharacterFactory {
   generateInitialSet(scene, group, scaleRatio){
     super.generateInitialSet(scene, group, scaleRatio);
     this.setPlayerIndex(group);
-    this.getPlayer(group).getData('backend').initialUpdate(scene);
+    if(this.getPlayer(group) != null){
+      this.getPlayer(group).getData('backend').initialUpdate(scene);
+    }
+    
   }
 
     respawn(params, index){
@@ -114,6 +117,7 @@ export default class Herofactory extends CharacterFactory {
                   params.group.children.entries[i].body = body;
                   params.group.children.entries[i].getData("backend").restoreHealth();
                   params.group.children.entries[i].getData("backend").restoreMana();
+                  params.group.children.entries[i].getData("underBar").setVisible(true);
                   params.group.children.entries[i].getData("healthBar").setVisible(true);
                 }
             }
@@ -124,8 +128,11 @@ export default class Herofactory extends CharacterFactory {
     //funciones sobre eventos
     onUpdate(scene, group, scaleRatio){
       super.onUpdate(scene, group, scaleRatio);
-      if(this.getPlayer(group).getData("backend").isDead() && this.getPlayerTimer() % 60 == 0){
-        scene.events.emit('updateRespawn');
+      if(this.getPlayer(group) != null){
+        if(this.getPlayer(group).getData("backend").isDead() && this.getPlayerTimer() % 60 == 0){
+          scene.events.emit('updateRespawn');
+        }
       }
+      
     }
 }
