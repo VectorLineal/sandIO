@@ -29,7 +29,7 @@
               },
               "weapon": {
                 "name": "maul",
-                "onCrit": "stun(0.2)",
+                "onCrit": "stun(12)",
                 "baseDamage": 126,
                 "ranged": false,
                 "range": {
@@ -41,6 +41,59 @@
                 "atSpeed": -60,
                 "accuracy": 10,
                 "critMultiplier": 1.3
+              }
+            },
+            "animations": {
+                "attack": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                "attackEnd": [7, 5, 3, 1, 0],
+                "q": [0, 11, 12, 13, 14, 12, 0],
+                "r": [0, 10, 10, 10, 10, 0]
+            },
+            "player": false
+          },
+          "demon_hunter": {
+            "name": "demon_hunter",
+            "width": 45,
+            "height": 37,
+            "frameWidth": 60,
+            "frameHeight": 76,
+            "centerX": false,
+            "centerY": false,
+            "character": {
+              "type": "hunter",
+              "bountyFactor": 30,
+              "race": "demon",
+              "Str": "2.4x+22",
+              "Res": "2.4x+19",
+              "Agi": "4x+21",
+              "Per": "3x+16",
+              "Int": "3.4x+20",
+              "Det": "1.4x+17",
+              "xpFactor": 100,
+              "bodyArmor":{
+                "baseMagicArmor": 24,
+                "baseArmor": 107.4,
+                "evasion": 2,
+                "speed": 3.7,
+                "atSpeed": 0,
+                "accuracy": 20
+              },
+              "weapon": {
+                "name": "hunt bow",
+                "onCrit": "armorChange(-2x-15, 60)",
+                "baseDamage": 76,
+                "ranged": false,
+                "range": {
+                  "reach": 126,
+                  "speed": 50,
+                  "width": 21,
+                  "height": 35
+                },
+                "evasion": 0,
+                "speed": 0,
+                "atSpeed": -40,
+                "accuracy": 50,
+                "critMultiplier": 2
               }
             },
             "animations": {
@@ -207,6 +260,7 @@
         "ranged": false,
         "range": {
           "reach": 128,
+          "speed": 50,
           "width": 0,
           "height": 0
         }
@@ -227,6 +281,7 @@
         "ranged": false,
         "range": {
           "reach": 160,
+          "speed": 50,
           "width": 0,
           "height": 0
         }
@@ -260,5 +315,90 @@
             "entityWidth": 24,
             "entityHeight": 24
         }
+    },
+    "races":{
+      "demon": {
+        "effect": "AOE(5, armorChange(-x-5, 1))",
+        "forEnemy": true
+      },
+      "dragonborn": {
+        "effect": "armormChange(3x+25, -1)",
+        "forEnemy": false
+      },
+      "dwarf": {
+        "effect": "critTriggered(fortitudeChange(x+15, 180) healthrChange(0.6x+3, 180))",
+        "forEnemy": false
+      },
+      "elemental": {
+        "effect": "concentrationChange(x+5, -1) willChange(x+5, -1) fortitudeChange(x+5, -1)",
+        "forEnemy": false
+      },
+      "elf": {
+        "effect": "spellpChange(2n+15, -1)",
+        "forEnemy": false
+      },
+      "ghoul": {
+        "effect": "lifestealChange(x+15, -1)",
+        "forEnemy": false
+      },
+      "goblin": {
+        "effect": "onAttackHit(damage(self.spellp*(0.2x+1), 2, 0))",
+        "forEnemy": false
+      },
+      "human": {
+        "effect": "onCrit(AOE(6, speedChange(0.08x+2, 120)))",
+        "forEnemy": false
+      },
+      "ifrit": {
+        "effect": "evasionChange(2x+5, -1) concentrationChange(2x+5, -1)",
+        "forEnemy": false
+      },
+      "lich": {
+        "effect": "statusTriggered(damageChange(x+15, 120) atspeedChange(x+15, 120))",
+        "forEnemy": false
+      },
+      "minotaur": {
+        "effect": "healthTriggered(0.3, 3, speedChange(0.2x+1, -3) atspeedChange(3x+12, -3))",
+        "forEnemy": false
+      },
+      "naga": {
+        "effect": "waterTriggered(speedChange(0.12x+1, -3)) speedChange(0.04x+1, -1)",
+        "forEnemy": false
+      },
+      "orc": {
+        "effect": "critTriggered(fortitudeChange(2x+10, 120) willChange(2x+10, 120))",
+        "forEnemy": false
+      },
+      "troll": {
+        "effect": "healthTriggered(0.25, 3, healthrChange(0.5x+7, -3))",
+        "forEnemy": false
+      },
+      "wereTurtle": {
+        "effect": "armorChange(3x+27, -1) speedChange(-3, -1)",
+        "forEnemy": false
+      }
+    },
+    "classes":{
+      "alchemist": "",
+      "assasin": "",
+      "bountyHunter": "",
+      "corsair": "",
+      "darkKnight": "",
+      "druid": "",
+      "fighterMage": "",
+      "hunter": "",
+      "inquisitor": "",
+      "knight": "",
+      "monk": "",
+      "necromancer": "",
+      "priest": "",
+      "psionic": "",
+      "rogue": "",
+      "shaman": "",
+      "sorcerer": "",
+      "timeMage": "",
+      "warlock": "",
+      "warrior": "",
+      "wizard": ""
     }
 }

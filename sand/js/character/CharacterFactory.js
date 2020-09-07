@@ -110,11 +110,11 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
           color = 0xff0000;
           underColor = 0x00ffff;
         }
-        sprite.setData("underBar", scene.add.rectangle(sprite.x, sprite.y, 48 * scaleRatio, 6 * scaleRatio, underColor).setDepth(1).setAlpha(0.2));
-        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth) * 48 * scaleRatio, 6 * scaleRatio, color).setDepth(1).setAlpha(0.4));
+        sprite.setData("underBar", scene.add.rectangle(sprite.x, sprite.y, sprite.body.shape.width * scaleRatio, 6 * scaleRatio, underColor).setDepth(1).setAlpha(0.2));
+        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth) * sprite.body.shape.width * scaleRatio, 6 * scaleRatio, color).setDepth(1).setAlpha(0.4));
         sprite.setData("displayDamage", scene.add.text(sprite.x, sprite.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * scaleRatio));
         sprite.body.label = propertie.name;
-        sprite.body.friction = 1;
+        sprite.body.frictionAir = 0.1;
         sprite.setCollisionGroup(this.group);
         sprite.setCollidesWith(this.mask);
         sprite.setDepth(0.5);
@@ -175,10 +175,10 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
               entity.getData('underBar').y = entity.y;
               entity.getData('healthBar').x = entity.x;
               entity.getData('healthBar').y = entity.y;
-              entity.getData('healthBar').width = (entity.getData("backend").curHealth / entity.getData("backend").maxHealth) * 48 * scaleRatio;
+              entity.getData('healthBar').width = (entity.getData("backend").curHealth / entity.getData("backend").maxHealth) * entity.body.shape.width * scaleRatio;
             }
             
-            entity.setVelocity(0);
+            //entity.setVelocity(0);
             
             //se actualizan los display de daño
             if(entity.getData("displayDamage").data.values.timer > 0){

@@ -144,6 +144,11 @@ export default class SceneGame extends Phaser.Scene {
       this.map.height * this.map.tileHeight * (9.84 / scaleRatio)
     );
 
+    this.matter.world.getAllBodies()[0].collisionFilter.mask = 1;
+    this.matter.world.getAllBodies()[1].collisionFilter.mask = 1;
+    this.matter.world.getAllBodies()[2].collisionFilter.mask = 1;
+    this.matter.world.getAllBodies()[3].collisionFilter.mask = 1;
+
     //sprite groups
     this.enviromentSprites = this.add.group();
     this.neutralSprites = this.add.group();
@@ -330,6 +335,20 @@ export default class SceneGame extends Phaser.Scene {
     //input
     this.input.mouse.disableContextMenu(); //se reactiva en producción
     this.input.on("pointermove", this.adjustPlayerRotation, this);
+    
+    this.input.keyboard.on('keyup-A', function(event){
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").stop(this.teamAHeroManager.getPlayer(this.teamASprites),"x");
+    }, this);
+    this.input.keyboard.on('keyup-D', function(event){
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").stop(this.teamAHeroManager.getPlayer(this.teamASprites),"x");
+    }, this);
+    
+    this.input.keyboard.on('keyup-W', function(event){
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").stop(this.teamAHeroManager.getPlayer(this.teamASprites),"y");
+    }, this);
+    this.input.keyboard.on('keyup-S', function(event){
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").stop(this.teamAHeroManager.getPlayer(this.teamASprites),"y");
+    }, this);
 
     //camera
     this.cameras.main.startFollow(this.teamAHeroManager.getPlayer(this.teamASprites), true, 1, 1);
@@ -338,23 +357,8 @@ export default class SceneGame extends Phaser.Scene {
   }
 
   update() {
+    //se manejan los controles
     var pointer = this.input.activePointer;
-
-    //se actualizan todas las entidades
-    this.teamAHeroManager.onUpdate(this, this.teamASprites, 9.84 / this.scaleRatio);
-    this.teamBHeroManager.onUpdate(this, this.teamBSprites, 9.84 / this.scaleRatio);
-    this.forestManager.onUpdate(
-      this,
-      this.enviromentSprites,
-      9.84 / this.scaleRatio
-    );
-    this.jungleFactory.onUpdate(
-      this,
-      this.neutralSprites,
-      9.84 / this.scaleRatio,
-      this.clock
-    );
-    this.onBuildingsUpdate();
 
     if (this.left.isDown) {
       this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend")
@@ -465,19 +469,44 @@ export default class SceneGame extends Phaser.Scene {
       this.lastKeyPressed = "r";
     }
 
+    //se actualizan todas las entidades
+    this.teamAHeroManager.onUpdate(this, this.teamASprites, 9.84 / this.scaleRatio);
+    this.teamBHeroManager.onUpdate(this, this.teamBSprites, 9.84 / this.scaleRatio);
+    this.forestManager.onUpdate(
+      this,
+      this.enviromentSprites,
+      9.84 / this.scaleRatio
+    );
+    this.jungleFactory.onUpdate(
+      this,
+      this.neutralSprites,
+      9.84 / this.scaleRatio,
+      this.clock
+    );
+    this.onBuildingsUpdate();
+
     //se limpian los collision box inutiles
     for (
       var index = 0;
       index < this.matter.world.getAllBodies().length;
       index++
     ) {
-      let labelReader = RegExp(/^(used|attack|projectile)Box\.\w+(\#\d+)?$/);
+      let labelReader = RegExp(/^(area|bounty|projectile)Box\.\w+(\#\d+)?$/);
+      if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
+        if(this.matter.world.getAllBodies()[index].timer > 0){
+          this.matter.world.getAllBodies()[index].timer--;
+        }else{
+          this.matter.world.getAllBodies()[index].label = "usedBox." + this.matter.world.getAllBodies()[index].label.split(".")[1];
+        }
+      }
+      labelReader = RegExp(/^(used|attack)Box\.\w+(\#\d+)?$/);
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
         this.matter.world.remove(this.matter.world.getAllBodies()[index]);
       }
+      
     }
 
-    //se limpiam bos de area
+    //se limpiam las box de area
     /*for (
       var index = 0;
       index < this.matter.world.getAllBodies().length;
@@ -523,7 +552,7 @@ export default class SceneGame extends Phaser.Scene {
     var dealtDamage = { amount: 0, isCrit: false };
     let labelReader = RegExp(/^(bounty|attack|projectile|aoe)Box\.\w+(\#\d+)?$/);
 
-    if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label)) {
+    if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null) {
       switch(bodyB.label.split(".")[0]){
         case "attackBox":
           let factory = this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero);
@@ -567,14 +596,16 @@ export default class SceneGame extends Phaser.Scene {
         case "bountyBox":
           console.log("colisionaron:");
           for(var i = 0; i < event.pairs.length; i++){
-            console.log(event.pairs[i].bodyB);
-            if(event.pairs[i].bodyB.gameObject.getData("backend") instanceof Hero){
-              let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyB.gameObject.getData("backend").name, event.pairs[i].bodyB.collisionFilter.group);
-              event.pairs[i].bodyB.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[0]});
-              punctuation.XPM += event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[0];
-              if(event.pairs[i].bodyA.label.split("#")[1] == "1"){
-                event.pairs[i].bodyB.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[1]});
-                punctuation.GPM += event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[1];
+            if(event.pairs[i].bodyB.gameObject != null){
+              console.log(event.pairs[i].bodyB);
+              if(event.pairs[i].bodyB.gameObject.getData("backend") instanceof Hero){
+                let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyB.gameObject.getData("backend").name, event.pairs[i].bodyB.collisionFilter.group);
+                event.pairs[i].bodyB.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[0]});
+                punctuation.XPM += event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[0];
+                if(event.pairs[i].bodyA.label.split("#")[1] == "1"){
+                  event.pairs[i].bodyB.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[1]});
+                  punctuation.GPM += event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[1];
+                }
               }
             }
           }
@@ -585,7 +616,7 @@ export default class SceneGame extends Phaser.Scene {
         case "projectileBox":
           break;
       }
-    } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label)) {
+    } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label) && bodyA.gameObject != null) {
       switch(bodyB.label.split(".")[0]){
         case "attackBox":
           let factory = this.getRelatedFactory(bodyA.collisionFilter.group, bodyA.gameObject.getData("backend") instanceof Hero);
@@ -631,14 +662,16 @@ export default class SceneGame extends Phaser.Scene {
           break;
         case "bountyBox":
           for(var i = 0; i < event.pairs.length; i++){
-            console.log(event.pairs[i].bodyA);
-            if(event.pairs[i].bodyA.gameObject.getData("backend") instanceof Hero){
-              let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyA.gameObject.getData("backend").name, event.pairs[i].bodyA.collisionFilter.group);
-              event.pairs[i].bodyA.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[0]});
-              punctuation.XPM += event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[0];
-              if(event.pairs[i].bodyB.label.split("#")[1] == "1"){
-                event.pairs[i].bodyA.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[1]});
-                punctuation.GPM += event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[1];
+            if(event.pairs[i].bodyA.gameObject != null){
+              console.log(event.pairs[i].bodyA);
+              if(event.pairs[i].bodyA.gameObject.getData("backend") instanceof Hero){
+                let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyA.gameObject.getData("backend").name, event.pairs[i].bodyA.collisionFilter.group);
+                event.pairs[i].bodyA.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[0]});
+                punctuation.XPM += event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[0];
+                if(event.pairs[i].bodyB.label.split("#")[1] == "1"){
+                  event.pairs[i].bodyA.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[1]});
+                  punctuation.GPM += event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[1];
+                }
               }
             }
           }

@@ -215,9 +215,6 @@ export default class Entity{
             }
         }else{
             var hitChance = params.accuracy - this.evasion;
-            if(params.ranged){
-                hitChance += 100;
-            }
             if(randomFloat(101) <= hitChance){
                 if(params.critable){
                     if(randomFloat(101) <= params.critChance){

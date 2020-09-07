@@ -39,7 +39,6 @@ export default class Herofactory extends CharacterFactory {
     if(this.playerIndex > -1){
         return group.children.entries[this.playerIndex];
     }else{
-        console.log("this is not the player's Hero group");
         return null;
     }
   }
@@ -106,14 +105,14 @@ export default class Herofactory extends CharacterFactory {
                 if(!params.scene.matter.world.has(params.group.children.entries[i].body)){
                   var body = params.scene.matter.add.rectangle(params.group.children.entries[i].x, params.group.children.entries[i].y, super.generateHitBox(propertie).shape.width * params.scaleRatio, super.generateHitBox(propertie).shape.height * params.scaleRatio,
                     {
-                      friction: 1,
+                      frictionAir: 0.1,
                       label: params.group.children.entries[i].getData('backend').name,
                       render: super.generateHitBox(propertie).render,
                     }
                   );
                   body.shape = {
-                    width: super.generateHitBox(propertie).shape.width * params.scaleRatio,
-                    height: super.generateHitBox(propertie).shape.height * params.scaleRatio
+                    width: super.generateHitBox(propertie).shape.width,
+                    height: super.generateHitBox(propertie).shape.height
                   };
                   body.collisionFilter.group = this.group;
                   body.collisionFilter.mask = this.mask;

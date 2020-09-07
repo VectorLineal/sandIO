@@ -59,20 +59,32 @@ export default class Character extends Entity{
             bounty[1] = this.calculateBounty() * 0.2;
         }
 
-        params.scene.matter.add.circle(params.body.position.x, params.body.position.y, 150 * params.scaleRatio, {
-        collisionFilter:{
-            category: category
-        },
-        label: "bountyBox." + this.name + "#" + givesGold,
-        isSensor: true,
-        onCollideEndCallback: function(event, bodyA, bodyB){
-            return bounty;
+        if(category == params.scene.categories[1] || category == params.scene.categories[3]){
+            let box = params.scene.matter.add.circle(params.body.position.x, params.body.position.y, 150 * params.scaleRatio, {
+                collisionFilter:{
+                    category: category
+                },
+                label: "bountyBox." + this.name + "#" + givesGold,
+                isSensor: true,
+                onCollideEndCallback: function(event, bodyA, bodyB){
+                    return bounty;
+                }
+            });
+            box.timer = 1;
         }
-        });
         return category;
     }
 
     //funciones sobre sprites
+    stop(sprite, direction){
+        if(direction == "y"){
+            sprite.setVelocityY(0);
+        }else if(direction == "x"){
+            sprite.setVelocityX(0);
+        }else{
+            sprite.setVelocity(0);
+        }
+    }
     moveY(sprite, direction, scale){
         if(direction){
             sprite.setVelocityY(-this.speed * scale / 6);
