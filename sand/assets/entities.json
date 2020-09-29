@@ -379,26 +379,89 @@
       }
     },
     "classes":{
-      "alchemist": "",
-      "assasin": "",
-      "bountyHunter": "",
-      "corsair": "",
-      "darkKnight": "",
-      "druid": "",
-      "fighterMage": "",
-      "hunter": "",
-      "inquisitor": "",
-      "knight": "",
-      "monk": "",
-      "necromancer": "",
-      "priest": "",
-      "psionic": "",
-      "rogue": "",
-      "shaman": "",
-      "sorcerer": "",
-      "timeMage": "",
-      "warlock": "",
-      "warrior": "",
-      "wizard": ""
+      "assasin": {
+        "effect": "critmulChange(0.02x+0.3, -1)",
+        "forEnemy": false
+      },
+      "bountyHunter": {
+        "effect": "onAttackHit(if(other.marked==true, Attack.damage = Attack.damage * (0.25x+1.2)))",
+        "forEnemy": false
+      },
+      "corsair": {
+        "effect": "ccTriggered(willChange(x+5, 180) armorChange(2x+10, 180))",
+        "forEnemy": true
+      },
+      "darkKnight": {
+        "effect": "onCrit(armorChange(-x-14, 180))",
+        "forEnemy": false
+      },
+      "druid": {
+        "effect": "onSpellHit(if(self.group==other.group, other.armorChange(0.6x+7, 120) other.manarChange(0.2x+8, 120)))",
+        "forEnemy": false
+      },
+      "fighterMage": {
+        "effect": "onCrit(spellpChange(0.5x+5, 120) concentrationChange(0.5x+5, 120))",
+        "forEnemy": false
+      },
+      "hunter": {
+        "effect": "FOVChange(0.2x+1, -1)",
+        "forEnemy": false
+      },
+      "inquisitor": {
+        "effect": "onKillMain(self.cooldowns = self.cooldowns * (-0.004x+0.95))",
+        "forEnemy": false
+      },
+      "knight": {
+        "effect": "AOE(4, accuracyChange(-x-5, 1))",
+        "forEnemy": true
+      },
+      "monk": {
+        "effect": "damageChange(5x+16, -1) critChange(0.2x+0.5, -1)",
+        "forEnemy": false
+      },
+      "necromancer": {
+        "effect": "onKill(summon('zombie', 0.08x+1))",
+        "forEnemy": false
+      },
+      "priest": {
+        "effect": "onCastSpell(heal(3x+16, 0))",
+        "forEnemy": false
+      },
+      "psionic": {
+        "effect": "willChange(x+6, -1) spellTriggered(other.Spell.damage = other.Spell.damage * (1-self.will/600))",
+        "forEnemy": false
+      },
+      "rogue": {
+        "effect": "onCrit(steal(3x+35, 0))",
+        "forEnemy": true
+      },
+      "shaman": {
+        "effect": "onAttackHit(fortitudeChange(0.6x+5, 120))",
+        "forEnemy": true
+      },
+      "sorcerer": {
+        "effect": "onCastSpell(damageChange(x+5, 240, 4))",
+        "forEnemy": false
+      },
+      "timeMage": {
+        "effect": "onKillMain(heal(self.health * 0.002x+0.02, 0))",
+        "forEnemy": false
+      },
+      "tinkerer": {
+        "effect": "onKill(healMana(x+20, 0)) onKillMain(healMana(3x+60, 0))",
+        "forEnemy": false
+      },
+      "warlock": {
+        "effect": "healthTriggered(0.3, 3, spellpChange(0.6x+8, -3))",
+        "forEnemy": false
+      },
+      "warrior": {
+        "effect": "armorChange(2x+16, -1)",
+        "forEnemy": false
+      },
+      "wizard": {
+        "effect": "spellpChange(x+6, -1)",
+        "forEnemy": false
+      }
     }
 }
