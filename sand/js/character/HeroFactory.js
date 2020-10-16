@@ -123,6 +123,7 @@ export default class Herofactory extends CharacterFactory {
                   params.group.children.entries[i].getData("backend").restoreMana();
                   params.group.children.entries[i].getData("underBar").setVisible(true);
                   params.group.children.entries[i].getData("healthBar").setVisible(true);
+                  params.group.children.entries[i].getData("shieldBar").setVisible(true);
                 }
             }
         }
@@ -132,11 +133,17 @@ export default class Herofactory extends CharacterFactory {
     //funciones sobre eventos
     onUpdate(scene, group, scaleRatio){
       super.onUpdate(scene, group, scaleRatio);
+      group.children.each(function(entity){
+        entity.getData("backend").gold += 1/60;
+      });
+
       if(this.getPlayer(group) != null){
         if(this.getPlayer(group).getData("backend").isDead() && this.getPlayerTimer() % 60 == 0){
           scene.events.emit('updateRespawn');
         }
+        if(scene.clock % 60 == 0){
+          scene.events.emit('updateGold');
+        }
       }
-      
     }
 }

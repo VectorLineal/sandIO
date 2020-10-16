@@ -58,7 +58,9 @@
         ],
         "spawnPoints" : [
             {"x": 384, "y": 752}
-        ]
+        ],
+        "water":[],
+        "lava":[]
     },
     "team1" : {
         "spawnPoints" : [

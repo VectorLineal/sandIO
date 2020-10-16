@@ -133,6 +133,7 @@ export default class Hero extends Character {
 
   takeDamage(params){
     let damageStatus = super.takeDamage(params);
+    //se actualizan las puntuaciones
     let punctuation = params.scene.getPunctuationByHeroAndGroup(this.name, params.body.collisionFilter.group);
     if(punctuation != null){
       punctuation.damageTaken += damageStatus.amount;
@@ -208,10 +209,15 @@ export default class Hero extends Character {
 
   //funciones sobre eventos
   onDeath(params){
+    //limpiar todas las alteraciones de stats y cambios de estado
+    this.shield = 0;
+    
+    //resetear animaciones a estado idle
     params.sprite.anims.stopOnFrame(0);
     params.sprite.setVisible(false);
     params.sprite.getData("underBar").setVisible(false);
     params.sprite.getData("healthBar").setVisible(false);
+    params.sprite.getData("shieldBar").setVisible(false);
     params.factory.kill({x: this.spawnX, y: this.spawnY}, this.calculateSpawnTime(params.factory.respawnMeanTime), 0);
     params.scene.matter.world.remove(params.sprite.body);
     this.curHealth = 0;

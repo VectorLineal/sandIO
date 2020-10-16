@@ -10,7 +10,7 @@ export default class Entity{
         this.lastHitBy = "none"; //sirve para referenciar a la última entidad que ha atacado para calcular la entrega de xp y oro
 
         //referente a poderes, buffs y debuffs
-        this.pasives = {};
+        this.pasives = [];
         this.bonusStats = [];
         this.debuffs = [];
         this.CCEffects = [];
@@ -25,6 +25,9 @@ export default class Entity{
         this.atSpeed = atSpeed;
         this.accuracy = accuracy;
         this.magicArmor = magicArmor;
+
+        //stats adicionales de efectos, poderes, etc.
+        this.shield = 0;
 
         //character's body
         this.atFrames = [];
@@ -170,15 +173,29 @@ export default class Entity{
         return this.curHealth <= 0;
     }
 
+    shieldDamage(amount){
+        var overflow = amount;
+        if(this.shield <= 0 || amount <= 0){
+            return overflow;
+        }else if(this.shield < amount){
+            overflow = amount - this.shield;
+            this.shield = 0;
+        }else{
+            this.shield -= amount;
+            overflow = 0;
+        }
+        return overflow;
+    }
+
     dealDamage(amount, type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
         if(type == 0){
-            this.curHealth -=  amount;
+            this.curHealth -=  this.shieldDamage(amount);
             return amount;
         }else if(type == 1){
-            this.curHealth -=  amount * (1 - this.getArmorMultiplier(false));
+            this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(false)));
             return amount * (1 - this.getArmorMultiplier(false));
         }else if(type == 2){
-            this.curHealth -=  amount * (1 - this.getArmorMultiplier(true));
+            this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(true)));
             return amount * (1 - this.getArmorMultiplier(true));
         }else{
             console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic")
@@ -236,6 +253,26 @@ export default class Entity{
                 }
             }
         }
+        //mostrar texto de daño
+        if(params.sprite != null && params.sprite.body != null){
+            var damageMessage = "";
+            var color = "#eeeeee";
+            if (finalDamage == 0) {
+              damageMessage = "missed";
+            }else{
+              damageMessage = finalDamage.toString();
+            }
+            if (crit) {
+              color = "#ff0808";
+            }
+            params.sprite.getData("displayDamage").x = params.sprite.x;
+            params.sprite.getData("displayDamage").y = params.sprite.y;
+            params.sprite.getData("displayDamage").data.values.timer = 40;
+            params.sprite.getData("displayDamage").setText(damageMessage);
+            params.sprite.getData("displayDamage").setColor(color);
+            params.sprite.getData("displayDamage").setVisible(true);
+            console.log(this.name, "got hit by", this.lastHitBy);
+        }
         return {amount: finalDamage, isCrit: crit};
     }
 
@@ -243,7 +280,7 @@ export default class Entity{
         if(this.curHealth >= this.maxHealth){
             this.curHealth = this.maxHealth;
         }else{
-            this.curHealth += (this.healthRegen / 60);
+            this.heal(this.healthRegen / 60);
         }
     }
     
@@ -263,9 +300,7 @@ export default class Entity{
                         punctuation.GPM += this.calculateBounty() * 0.8;
                         punctuation.XPM += this.calculateNextLevelXp() * 0.8;
                         punctuation.lastHits++;
-                        console.log("hasta acá bien");
                         if(this.constructor instanceof Hero){
-                            console.log(this.name, "es heroeal morir");
                             punctuation.kills++;
                             let localPunctuation = params.scene.getPunctuationByHeroAndGroup(this.name , params.body.collisionFilter.group);
                             if(localPunctuation != null){

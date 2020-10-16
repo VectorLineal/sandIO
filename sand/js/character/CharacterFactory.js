@@ -111,7 +111,8 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
           underColor = 0x00ffff;
         }
         sprite.setData("underBar", scene.add.rectangle(sprite.x, sprite.y, sprite.body.shape.width * scaleRatio, 6 * scaleRatio, underColor).setDepth(1).setAlpha(0.2));
-        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth) * sprite.body.shape.width * scaleRatio, 6 * scaleRatio, color).setDepth(1).setAlpha(0.4));
+        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y, (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth * sprite.body.shape.width) * scaleRatio, 6 * scaleRatio, color).setDepth(1).setAlpha(0.4));
+        sprite.setData("shieldBar", scene.add.rectangle(sprite.x + sprite.getData("healthBar").width, sprite.y, sprite.getData("healthBar").width, 6 * scaleRatio, 0xaaaaaa).setDepth(1).setAlpha(0.4));
         sprite.setData("displayDamage", scene.add.text(sprite.x, sprite.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * scaleRatio));
         sprite.body.label = propertie.name;
         sprite.body.frictionAir = 0.1;
@@ -175,7 +176,11 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
               entity.getData('underBar').y = entity.y;
               entity.getData('healthBar').x = entity.x;
               entity.getData('healthBar').y = entity.y;
-              entity.getData('healthBar').width = (entity.getData("backend").curHealth / entity.getData("backend").maxHealth) * entity.body.shape.width * scaleRatio;
+              entity.getData('healthBar').width = (entity.getData("backend").curHealth / (entity.getData("backend").maxHealth + entity.getData("backend").shield)) * entity.body.shape.width * scaleRatio;
+              entity.getData('shieldBar').x = entity.x + entity.getData('healthBar').width;
+              entity.getData('shieldBar').y = entity.y;
+              entity.getData('shieldBar').width = (entity.getData("backend").shield / (entity.getData("backend").maxHealth + entity.getData("backend").shield)) * entity.body.shape.width * scaleRatio;;
+              
             }
             
             //entity.setVelocity(0);

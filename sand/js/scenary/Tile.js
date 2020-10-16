@@ -1,8 +1,10 @@
-class Tile{
-    //función de tipo f(x)=ax+b
-    constructor(sprite, speedMod, evasionMod){
-        this.sprite=sprite;
-        this.speedMod=speedMod;
-        this.evasionMod=evasionMod
+export default class Tile{
+    constructor(speedMod, effect){
+        this.speedMod = speedMod;
+        if(effect == "burn"){
+            this.onStep = function(params){
+                params.sprite.statusChange();
+            }
+        }
     }
 }

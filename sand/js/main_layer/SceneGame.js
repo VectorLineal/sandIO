@@ -549,49 +549,31 @@ export default class SceneGame extends Phaser.Scene {
   }
 
   dealDamage(event, bodyA, bodyB) {
-    var dealtDamage = { amount: 0, isCrit: false };
+    //var dealtDamage = { amount: 0, isCrit: false };
     let labelReader = RegExp(/^(bounty|attack|projectile|aoe)Box\.\w+(\#\d+)?$/);
 
     if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null) {
       switch(bodyB.label.split(".")[0]){
         case "attackBox":
           let factory = this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero);
-        dealtDamage = bodyB.gameObject.getData("backend").takeDamage({
-        scene: this,
-        sprite: bodyB.gameObject,
-        body: bodyB,
-        group: this.getRelatedGroup(bodyB.collisionFilter.group),
-        factory: factory,
-        scaleRatio: 9.84 / this.scaleRatio,
-        amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
-        type: 1,
-        accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
-        critChance: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").crit,
-        critMultiplier: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCritMultiplier(),
-        avoidable: true,
-        critable: true,
-        ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
-        attacker: bodyA.label.split(".")[1]
-      });
-      //mostrar texto de daño
-      var damageMessage = "";
-      var color = "#eeeeee";
-      if (dealtDamage.amount == 0) {
-        damageMessage = "missed";
-      } else {
-        damageMessage = dealtDamage.amount.toString();
-      }
-      if (dealtDamage.isCrit) {
-        color = "#ff0808";
-      }
-      bodyB.gameObject.getData("displayDamage").x = bodyB.gameObject.x;
-      bodyB.gameObject.getData("displayDamage").y = bodyB.gameObject.y;
-      bodyB.gameObject.getData("displayDamage").data.values.timer = 40;
-      bodyB.gameObject.getData("displayDamage").setText(damageMessage);
-      bodyB.gameObject.getData("displayDamage").setColor(color);
-      bodyB.gameObject.getData("displayDamage").setVisible(true);
-
-      this.matter.world.remove(bodyA);
+          bodyB.gameObject.getData("backend").takeDamage({
+            scene: this,
+            sprite: bodyB.gameObject,
+            body: bodyB,
+            group: this.getRelatedGroup(bodyB.collisionFilter.group),
+            factory: factory,
+            scaleRatio: 9.84 / this.scaleRatio,
+            amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
+            type: 1,
+            accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
+            critChance: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").crit,
+            critMultiplier: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCritMultiplier(),
+            avoidable: true,
+            critable: true,
+            ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
+            attacker: bodyA.label.split(".")[1]
+          });
+          this.matter.world.remove(bodyA);
           break;
         case "bountyBox":
           console.log("colisionaron:");
@@ -620,7 +602,7 @@ export default class SceneGame extends Phaser.Scene {
       switch(bodyB.label.split(".")[0]){
         case "attackBox":
           let factory = this.getRelatedFactory(bodyA.collisionFilter.group, bodyA.gameObject.getData("backend") instanceof Hero);
-          dealtDamage = bodyA.gameObject.getData("backend").takeDamage({
+          bodyA.gameObject.getData("backend").takeDamage({
             scene: this,
             sprite: bodyA.gameObject,
             body: bodyA,
@@ -637,27 +619,6 @@ export default class SceneGame extends Phaser.Scene {
             ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
             attacker: bodyB.label.split(".")[1],
           });
-          //mostrar texto de daño
-          if(bodyA.gameObject != null){
-            var damageMessage = "";
-            var color = "#eeeeee";
-            if (dealtDamage.amount == 0) {
-              damageMessage = "missed";
-            } else {
-              damageMessage = dealtDamage.amount.toString();
-            }
-            if (dealtDamage.isCrit) {
-              color = "#ff0808";
-            }
-            bodyA.gameObject.getData("displayDamage").x = bodyA.gameObject.x;
-            bodyA.gameObject.getData("displayDamage").y = bodyA.gameObject.y;
-            bodyA.gameObject.getData("displayDamage").data.values.timer = 40;
-            bodyA.gameObject.getData("displayDamage").setText(damageMessage);
-            bodyA.gameObject.getData("displayDamage").setColor(color);
-            bodyA.gameObject.getData("displayDamage").setVisible(true);
-            console.log(bodyA.gameObject.getData("backend").name, "got hit by", bodyA.gameObject.getData("backend").lastHitBy);
-
-          }
           this.matter.world.remove(bodyB);
           break;
         case "bountyBox":

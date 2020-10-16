@@ -9,6 +9,7 @@ export default class HUDGame extends Phaser.Scene {
         this.health = 0;
         this.maxHealth = 0;
         this.regenH = 0;
+        this.shield = 0;
         this.mana = 0;
         this.maxMana = 0;
         this.regenM = 0;
@@ -104,7 +105,8 @@ export default class HUDGame extends Phaser.Scene {
         });
 
         //elementos gráficos dinámicos
-        var healthBar = this.add.rectangle(width / 2, (height - (3 * height / 28)), (this.health / this.maxHealth) * (width / 3), height / 20, 0xff0000);
+        var healthBar = this.add.rectangle(width / 2, (height - (3 * height / 28)), (this.health / (this.maxHealth + this.shield)) * (width / 3), height / 20, 0xff0000);
+        var shieldBar = this.add.rectangle((width / 2) + healthBar.width, (height - (3 * height / 28)), (this.shield / (this.maxHealth + this.shield)) * (width / 3), height / 20, 0xaaaaaa);
         var manaBar = this.add.rectangle(width / 2, (height - (height / 28)), (this.health / this.maxHealth) * (width / 3), height / 20, 0x0000ff);
         var xpBar = this.add.rectangle(3 * width / 14, (height - (height / 7)), (this.xp / this.xpNext) * (width / 12), height / 60, 0xdddddd);
         
@@ -183,18 +185,25 @@ export default class HUDGame extends Phaser.Scene {
 
         game.events.on('updateHealth', function () {
             this.health = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').curHealth;
+            this.shield = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').shield;
             healthText.setText(this.healthFormatedText());
-            healthBar.width = (this.health/this.maxHealth) * (width / 3);
+            healthBar.width = (this.health / (this.maxHealth + this.shield)) * (width / 3);
+            shieldBar.x = (2 * healthBar.width) + (((this.shield / (this.maxHealth + this.shield)) * (width / 3)));
+            shieldBar.width = (this.shield / (this.maxHealth + this.shield)) * (width / 3);
         }, this);
 
         game.events.on('updateMaxHealth', function () {
             this.maxHealth = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').maxHealth;
+            this.shield = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').shield;
             healthText.setText(this.healthFormatedText());
-            healthBar.width = (this.health/this.maxHealth) * (width / 3);
+            healthBar.width = (this.health / (this.maxHealth + this.shield)) * (width / 3);
+            shieldBar.x = (2 * healthBar.width) + (((this.shield / (this.maxHealth + this.shield)) * (width / 3)));
+            shieldBar.width = (this.shield / (this.maxHealth + this.shield)) * (width / 3)
         }, this);
 
         game.events.on('updateHealthRegen', function () {
             this.regenH = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').healthRegen;
+            this.shield = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').shield;
             healthText.setText(this.healthFormatedText());
         }, this);
 
@@ -317,11 +326,15 @@ export default class HUDGame extends Phaser.Scene {
     }
 
     healthFormatedText(){
-        return fitNumber(this.health, 2) + '/' + fitNumber(this.maxHealth, 2) + ' + ' + fitNumber(this.regenH, 2)
+        var shield = ""
+        if(this.shield > 0){
+            shield = "+" + fitNumber(this.shield, 0);
+        }
+        return fitNumber(this.health, 0) + shield + '/' + fitNumber(this.maxHealth + this.shield, 0) + ' + ' + fitNumber(this.regenH, 2)
     }
 
     manaFormatedText(){
-        return fitNumber(this.mana, 2) + '/' + fitNumber(this.maxMana, 2) + ' + ' + fitNumber(this.regenM, 2)
+        return fitNumber(this.mana, 0) + '/' + fitNumber(this.maxMana, 0) + ' + ' + fitNumber(this.regenM, 2)
     }
 
     clockText(){
