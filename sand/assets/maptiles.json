@@ -1,4 +1,12 @@
 { "columns":16,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"",
+         "target":"."
+        }
+    },
  "image":"maptiles.png",
  "imageheight":208,
  "imagewidth":256,
@@ -8,6 +16,33 @@
  "tilecount":208,
  "tiledversion":"1.3.1",
  "tileheight":16,
+ "tiles":[
+        {
+         "id":11,
+         "objectgroup":
+            {
+             "draworder":"index",
+             "id":4,
+             "name":"",
+             "objects":[
+                    {
+                     "height":16,
+                     "id":3,
+                     "name":"",
+                     "rotation":0,
+                     "type":"",
+                     "visible":true,
+                     "width":16,
+                     "x":0.0716845878136201,
+                     "y":0.0716845878136201
+                    }],
+             "opacity":1,
+             "type":"objectgroup",
+             "visible":true,
+             "x":0,
+             "y":0
+            }
+        }],
  "tilewidth":16,
  "type":"tileset",
  "version":1.2

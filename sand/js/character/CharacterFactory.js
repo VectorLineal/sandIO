@@ -172,6 +172,7 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
             if(!entity.getData('backend').isDead()){
               entity.getData('backend').applyHealthRegen({scene: scene});
               entity.getData('backend').applyManaRegen({scene: scene});
+              entity.getData('backend').statusManager.onUpdate(scene, entity.getData('backend'));
               entity.getData('underBar').x = entity.x;
               entity.getData('underBar').y = entity.y;
               entity.getData('healthBar').x = entity.x;

@@ -2,9 +2,8 @@ import Character from "./Character.js";
 
 export default class NonPlayable extends Character{
     constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, onCrit, critMultiplier, ranged, range, detectionRange, behavour, isBoss){
-        super(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, ranged, range);
+        super(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, critMultiplier, ranged, range);
         this.onCrit = onCrit;
-        this.critMultiplier = critMultiplier;
         this.ranged = ranged;
         this.detectionRange = detectionRange;
         this.behavour = behavour;
@@ -18,26 +17,6 @@ export default class NonPlayable extends Character{
 
     getCritMultiplier(){
         return this.critMultiplier;
-    }
-
-    applyHealthRegen(){
-        if(this.curHealth >= this.maxHealth){
-            this.curHealth = this.maxHealth;
-        }else{
-            this.curHealth += (this.healthRegen / 60);
-        }
-    }
-
-    spendMana(amount){
-        this.curMana +=  amount;
-    }
-
-    applyManaRegen(){
-        if(this.curMana >= this.maxMana){
-            this.curMana = this.maxMana;
-        }else{
-            this.curMana += (this.manaRegen / 60);
-        }
     }
 
     noticePlayer(sprite, playerSprite){

@@ -37,7 +37,10 @@ export default class Hero extends Character {
       0,
       0,
       0,
-      spawnPoint
+      spawnPoint,
+      0,
+      false,
+      0
     );
     this.type = type;
     this.xp = 0;
@@ -120,7 +123,7 @@ export default class Hero extends Character {
   }
 
   getCritMultiplier() {
-    return this.weapon.critMultiplier;
+    return this.weapon.critMultiplier + this.critMultiplier;
   }
 
   getRange() {

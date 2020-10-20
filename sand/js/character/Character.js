@@ -2,7 +2,7 @@ import Entity from "./Entity.js";
 import Hero from "./Hero.js";
 
 export default class Character extends Entity{
-    constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, ranged, range){
+    constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, critMultiplier, ranged, range){
         super(name, level, xpFactor, bountyFactor, damage, armor, evasion, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range);
         this.race = race;
         this.isBoss = false;
@@ -21,6 +21,7 @@ export default class Character extends Entity{
         this.spellPower = spellPower;
         this.will = will;
         this.concentration = concentration;
+        this.critMultiplier = critMultiplier;
 
         //character's body
         this.spawnX = spawnPoint.x;

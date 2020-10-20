@@ -88,6 +88,7 @@ export default class Herofactory extends CharacterFactory {
     this.setPlayerIndex(group);
     if(this.getPlayer(group) != null){
       this.getPlayer(group).getData('backend').initialUpdate(scene);
+      console.log("actualizo los tats base");
     }
     
   }

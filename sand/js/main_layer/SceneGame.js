@@ -130,24 +130,48 @@ export default class SceneGame extends Phaser.Scene {
     var tileset = this.map.addTilesetImage("maptiles", "tiles");
 
     this.layer = this.map.createStaticLayer("duel", tileset, 0, 0);
+    //se escala el mapa
     this.layer.setScale(9.84 / this.scaleRatio);
+    //se ajustan limites de la camara
     this.cameras.main.setBounds(
       0,
       0,
       this.map.width * this.map.tileWidth * (9.84 / scaleRatio),
       this.map.height * this.map.tileHeight * (9.84 / scaleRatio) + height / 6
     );
+    //se pone colisionador del mundo
     this.matter.world.setBounds(
       0,
       0,
       this.map.width * this.map.tileWidth * (9.84 / scaleRatio),
       this.map.height * this.map.tileHeight * (9.84 / scaleRatio)
     );
-
+    //se asegura que los límites del mapa colisionen con todos los cuerpos solamente
     this.matter.world.getAllBodies()[0].collisionFilter.mask = 1;
     this.matter.world.getAllBodies()[1].collisionFilter.mask = 1;
     this.matter.world.getAllBodies()[2].collisionFilter.mask = 1;
     this.matter.world.getAllBodies()[3].collisionFilter.mask = 1;
+
+    //se añaden collision box de los rios y pozos de lava, generador de fñisicas defectuoso, se descarta funcionalidad en caso que no funcione
+    /*for(var i = 0; i < 1this.cache.json.get("mapEnvironment").neutral.water.length; i++){
+      let box = this.matter.add.fromVertices(this.cache.json.get("mapEnvironment").neutral.water[i].x * (9.84 / scaleRatio), this.cache.json.get("mapEnvironment").neutral.water[i].y * (9.84 / scaleRatio), this.cache.json.get("mapEnvironment").neutral.water[i].vertices, {
+        label: "waterBox",
+        isSensor: true,
+        render: { visible: true, lineColor: 0x00ffff },
+      }, true);
+      box.scale = (9.84 / scaleRatio);
+      box.collisionFilter.mask = 1;
+    }
+    for(var i = 0; i < this.cache.json.get("mapEnvironment").neutral.lava.length; i++){
+      let box = this.matter.add.fromVertices(this.cache.json.get("mapEnvironment").neutral.lava[i].x * (9.84 / scaleRatio), this.cache.json.get("mapEnvironment").neutral.lava[i].y * (9.84 / scaleRatio), this.cache.json.get("mapEnvironment").neutral.lava[i].vertices, {
+        label: "labaBox",
+        isSensor: true,
+        render: { visible: true, lineColor: 0x00ffff },
+      }, true);
+      box.scale = (9.84 / scaleRatio);
+      box.collisionFilter.mask = 1;
+    }*/
+    
 
     //sprite groups
     this.enviromentSprites = this.add.group();
@@ -396,6 +420,7 @@ export default class SceneGame extends Phaser.Scene {
                 scene: this,
                 amount: -40 - 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
               });
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.singleEffects.damageInmune = 12 + Math.ceil(1.92 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level);
             } else {
               this.lastKeyPressed = "";
             }
@@ -526,7 +551,7 @@ export default class SceneGame extends Phaser.Scene {
     
   }
 
-  //funciones no heredadas de la escena
+  //funciones no heredadas de la esca
 
   initialData(){
     return {curHealth: 200,
@@ -563,15 +588,11 @@ export default class SceneGame extends Phaser.Scene {
             group: this.getRelatedGroup(bodyB.collisionFilter.group),
             factory: factory,
             scaleRatio: 9.84 / this.scaleRatio,
-            amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
             type: 1,
-            accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
-            critChance: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").crit,
-            critMultiplier: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCritMultiplier(),
             avoidable: true,
             critable: true,
-            ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
-            attacker: bodyA.label.split(".")[1]
+            attacker: this.querySpriteByLabel(bodyA.label.split(".")[1]).getData("backend"),
+            attackerLabel: bodyA.label.split(".")[1]
           });
           this.matter.world.remove(bodyA);
           break;
@@ -609,15 +630,11 @@ export default class SceneGame extends Phaser.Scene {
             group: this.getRelatedGroup(bodyA.collisionFilter.group),
             factory: factory,
             scaleRatio: 9.84 / this.scaleRatio,
-            amount: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").damage,
             type: 1,
-            accuracy: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").accuracy,
-            critChance: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").crit,
-            critMultiplier: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCritMultiplier(),
             avoidable: true,
             critable: true,
-            ranged: this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getRanged(),
-            attacker: bodyB.label.split(".")[1],
+            attacker: this.querySpriteByLabel(bodyB.label.split(".")[1]).getData("backend"),
+            attackerLabel: bodyB.label.split(".")[1]
           });
           this.matter.world.remove(bodyB);
           break;
@@ -661,6 +678,18 @@ export default class SceneGame extends Phaser.Scene {
       case this.groups[4]:
         return this.buildingSprites;
     }
+  }
+
+  querySpriteByLabel(label){
+    var group = this.getRelatedGroup(parseInt(label.split("#")[1]));
+    var sprite = {};
+    group.children.each(function(entity){
+      if(entity.getData('backend').name == label.split("#")[0]){
+        sprite = entity;
+        return;
+      }
+    });
+    return sprite;
   }
 
   getRelatedFactory(group, isHero){

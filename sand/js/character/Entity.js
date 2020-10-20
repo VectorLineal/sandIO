@@ -1,5 +1,6 @@
 import {randomFloat, degToRad, getRotation, transformArmorToPercentage} from "../main_layer/MathUtils.js";
 import Hero from "./Hero.js";
+import StatusManager from "./skill/StatusManager.js";
 
 export default class Entity{
     constructor(name, level, xpFactor, bountyFactor, damage, armor, evasion, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range){
@@ -11,9 +12,7 @@ export default class Entity{
 
         //referente a poderes, buffs y debuffs
         this.pasives = [];
-        this.bonusStats = [];
-        this.debuffs = [];
-        this.CCEffects = [];
+        this.statusManager = new StatusManager();
         
         //stats del personaje como tal
         this.damage = damage;
@@ -26,8 +25,10 @@ export default class Entity{
         this.accuracy = accuracy;
         this.magicArmor = magicArmor;
 
-        //stats adicionales de efectos, poderes, etc.
+        //stats adicionales de efectos, poderes o que son constantes para todos, etc.
         this.shield = 0;
+        this.fov = 10;
+        this.cauterize = 0;
 
         //character's body
         this.atFrames = [];
@@ -188,41 +189,48 @@ export default class Entity{
     }
 
     dealDamage(amount, type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
-        if(type == 0){
-            this.curHealth -=  this.shieldDamage(amount);
-            return amount;
-        }else if(type == 1){
-            this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(false)));
-            return amount * (1 - this.getArmorMultiplier(false));
-        }else if(type == 2){
-            this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(true)));
-            return amount * (1 - this.getArmorMultiplier(true));
+        if(!this.statusManager.isDamageInmune()){
+            if(type == 0){
+                this.curHealth -=  this.shieldDamage(amount);
+                return amount;
+            }else if(type == 1){
+                this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(false)));
+                return amount * (1 - this.getArmorMultiplier(false));
+            }else if(type == 2){
+                this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(true)));
+                return amount * (1 - this.getArmorMultiplier(true));
+            }else{
+                console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic")
+            }
         }else{
-            console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic")
+            return 0;
         }
     }
 
     heal(amount){
-        this.dealDamage(-amount, 0);
+        this.curHealth += amount;
+        if(this.curHealth >= this.maxHealth){
+            this.curHealth = this.maxHealth;
+        }
     }
-
-    takeDamage(params){ //scene, sprite, group, factory, scaleRatio, amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged
+    
+    takeDamage(params){ //scene, sprite, body, group, factory, scaleRatio, type, avoidable, critable, attacker, attackerLabel
         //type 0 es puro, 1 físico y 2 mágico
-        var rawDamage = params.amount;
+        var rawDamage = params.attacker.damage;
         var crit = false;
         var finalDamage = 0;
 
         if(!params.avoidable){
             if(params.critable){
-                if(randomFloat(101) <= params.critChance){
-                    rawDamage *= params.critMultiplier;
+                if(randomFloat(101) <= params.attacker.crit){
+                    rawDamage *= params.attacker.getCritMultiplier();
                     crit = true;
                 }
             }
-            this.lastHitBy = params.attacker;
+            this.lastHitBy = params.attackerLabel;
             finalDamage = this.dealDamage(rawDamage, params.type);
-            if(this.lastHitBy.split("#")[1] == params.scene.groups[0] || this.lastHitBy.split("#")[1] == params.scene.groups[1]){
-                let punctuation = params.scene.getPunctuationByHeroAndGroup(this.lastHitBy.split("#")[0], parseInt(this.lastHitBy.split("#")[1]));
+            if(params.attackerLabel.split("#")[1] == params.scene.groups[0] || params.attackerLabel.split("#")[1] == params.scene.groups[1]){
+                let punctuation = params.scene.getPunctuationByHeroAndGroup(params.attackerLabel.split("#")[0], parseInt(params.attackerLabel.split("#")[1]));
                 if(punctuation != null){
                     punctuation.damage += finalDamage;
                 }
@@ -231,19 +239,19 @@ export default class Entity{
                 this.onDeath(params);
             }
         }else{
-            var hitChance = params.accuracy - this.evasion;
+            var hitChance = params.attacker.accuracy - this.evasion;
             if(randomFloat(101) <= hitChance){
                 if(params.critable){
-                    if(randomFloat(101) <= params.critChance){
-                        rawDamage *= params.critMultiplier;
+                    if(randomFloat(101) <= params.attacker.crit){
+                        rawDamage *= params.attacker.getCritMultiplier();
                         crit = true;
                     }
                 }
-                this.lastHitBy = params.attacker;
+                this.lastHitBy = params.attackerLabel;
                 finalDamage = this.dealDamage(rawDamage, params.type);
                 //se suma el daño hecho a la puntuacion de los jugadores si el atacante es un heroe
-                if(this.lastHitBy.split("#")[1] == params.scene.groups[0] || this.lastHitBy.split("#")[1] == params.scene.groups[1]){
-                    let punctuation = params.scene.getPunctuationByHeroAndGroup(this.lastHitBy.split("#")[0], parseInt(this.lastHitBy.split("#")[1]));
+                if(params.attackerLabel.split("#")[1] == params.scene.groups[0] || params.attackerLabel.split("#")[1] == params.scene.groups[1]){
+                    let punctuation = params.scene.getPunctuationByHeroAndGroup(params.attackerLabel.split("#")[0], parseInt(params.attackerLabel.split("#")[1]));
                     if(punctuation != null){
                         punctuation.damage += finalDamage;
                     }
@@ -277,11 +285,7 @@ export default class Entity{
     }
 
     applyHealthRegen(params){
-        if(this.curHealth >= this.maxHealth){
-            this.curHealth = this.maxHealth;
-        }else{
-            this.heal(this.healthRegen / 60);
-        }
+        this.heal(this.healthRegen / 60);
     }
     
     restoreHealth(){
