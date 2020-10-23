@@ -37,6 +37,12 @@ export default class StatusManager{
     }
 
     //funciones no gráficas
+    awake(){
+        this.singleEffects.sleep = 0;
+    }
+    makeVisible(){
+        this.singleEffects.invisibility = 0;
+    }
     isStunt(){
         return this.singleEffects.stun != 0;
     }

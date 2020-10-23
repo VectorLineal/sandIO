@@ -4,6 +4,6 @@ class Pasive extends Skill{
     }
 
     isAura(){
-        return this.range > 0;
+        return this.range.reach > 0;
     }
 }

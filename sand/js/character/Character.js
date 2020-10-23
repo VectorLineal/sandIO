@@ -87,42 +87,55 @@ export default class Character extends Entity{
         }
     }
     moveY(sprite, direction, scale){
-        if(direction){
-            sprite.setVelocityY(-this.speed * scale / 6);
-        }else{
-            sprite.setVelocityY(this.speed * scale / 6);
+        if(this.mayMove()){
+            if(direction){
+                sprite.setVelocityY(-this.speed * scale / 6);
+            }else{
+                sprite.setVelocityY(this.speed * scale / 6);
+            }
         }
     }
 
     moveX(sprite, direction, scale){
-        if(direction){
-            sprite.setVelocityX(this.speed * scale / 6);
-        }else{
-            sprite.setVelocityX(-this.speed * scale / 6);
+        if(this.mayMove()){
+            if(direction){
+                sprite.setVelocityX(this.speed * scale / 6);
+            }else{
+                sprite.setVelocityX(-this.speed * scale / 6);
+            }
         }
     }
 
-    moveDirection(sprite, direction, alteredSpeed, scale){
-        //ángulo debe venir en radianes
-        var deltaX = 0;
-        var deltaY = 0;
+    moveDirection(sprite, direction, alteredSpeed, scale, induced){
+        if(this.mayMove() || (!this.mayMove() && induced)){
+            //ángulo debe venir en radianes
+            var deltaX = 0;
+            var deltaY = 0;
 
-        if(direction > Math.PI){
-            direction -= Math.PI;
-        }else if(direction < -Math.PI){
-            direction += Math.PI;
+            /*while(direction > Math.PI){
+                direction -= Math.PI;
+            }
+            while(direction < -Math.PI){
+                direction += Math.PI;
+            }*/
+
+            if(alteredSpeed != 0){
+                deltaX = alteredSpeed * Math.cos(direction);
+                deltaY = alteredSpeed * Math.sin(direction);
+            }else{
+                deltaX = this.speed * Math.cos(direction);
+                deltaY = this.speed * Math.sin(direction);
+            }
+            sprite.setVelocity(deltaX * scale / 6, deltaY * scale / 6);
         }
+    }
 
-        if(alteredSpeed != 0){
-            deltaX = alteredSpeed * Math.cos(direction);
-            deltaY = alteredSpeed * Math.sin(direction);
-        }else{
-            deltaX = this.speed * Math.cos(direction);
-            deltaY = this.speed * Math.sin(direction);
-        }
+    moveForward(sprite, scale, induced){
+        this.moveDirection(sprite, sprite.rotation + (Math.PI / 2), 0, scale, induced);
+    }
 
-        sprite.setAngle(direction * 180 / Math.PI);
-        sprite.setVelocity(deltaX * scale / 6, deltaY * scale / 6);
+    lookAtDirection(sprite, direction){
+        sprite.setAngle(direction);
     }
 
     commitSpellq(animation, frame, gameObject) {

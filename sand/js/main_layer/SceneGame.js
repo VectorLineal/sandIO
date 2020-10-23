@@ -409,18 +409,13 @@ export default class SceneGame extends Phaser.Scene {
       if (!this.teamAHeroManager.getPlayer(this.teamASprites).anims.isPlaying) {
         switch (this.lastKeyPressed) {
           case "q":
-            if (
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
-              40 + 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
-            ) {
-              this.teamAHeroManager.getPlayer(this.teamASprites).play(
-                "spellq_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name
-              );
+            if (this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >= 40 + 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level) {
+              this.teamAHeroManager.getPlayer(this.teamASprites).play("spellq_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name);
               this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
                 scene: this,
                 amount: -40 - 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
               });
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.singleEffects.damageInmune = 12 + Math.ceil(1.92 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level);
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.singleEffects.damageInmune = 60 + Math.ceil(1.92 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level);
             } else {
               this.lastKeyPressed = "";
             }
@@ -475,11 +470,14 @@ export default class SceneGame extends Phaser.Scene {
             }
             break;
           default:
-            this.teamAHeroManager.getPlayer(this.teamASprites).play("attack_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name);
+            this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").castAttack(this.teamAHeroManager.getPlayer(this.teamASprites));
             break;
         }
         for(var i = 0; i< this.neutralSprites.children.getArray().length; i++){
-          this.neutralSprites.children.getArray()[i].play("attack_" + this.neutralSprites.children.getArray()[i].getData("backend").name);
+          this.neutralSprites.children.getArray()[i].getData("backend").castAttack(this.neutralSprites.children.getArray()[i]);
+        }
+        for(var i = 0; i< this.teamBSprites.children.getArray().length; i++){
+          this.teamBSprites.children.getArray()[i].getData("backend").castAttack(this.teamBSprites.children.getArray()[i]);
         }
       }
     }
@@ -511,11 +509,7 @@ export default class SceneGame extends Phaser.Scene {
     this.onBuildingsUpdate();
 
     //se limpian los collision box inutiles
-    for (
-      var index = 0;
-      index < this.matter.world.getAllBodies().length;
-      index++
-    ) {
+    for (var index = 0; index < this.matter.world.getAllBodies().length; index++) {
       let labelReader = RegExp(/^(area|bounty|projectile)Box\.\w+(\#\d+)?$/);
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
         if(this.matter.world.getAllBodies()[index].timer > 0){
@@ -532,11 +526,7 @@ export default class SceneGame extends Phaser.Scene {
     }
 
     //se limpiam las box de area
-    /*for (
-      var index = 0;
-      index < this.matter.world.getAllBodies().length;
-      index++
-    ) {
+    /*for (var index = 0; index < this.matter.world.getAllBodies().length; index++) {
       let labelReader = RegExp(/^(bounty|area)Box\.\w+(\#\d+)?$/);
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
         this.matter.world.getAllBodies()[index].label = "usedBox." + this.matter.world.getAllBodies()[index].label.split(".")[1];
@@ -739,17 +729,12 @@ export default class SceneGame extends Phaser.Scene {
   }
 
   adjustPlayerRotation(pointer) {
-    var camera = this.cameras.main;
-    var angle =
-      -90 +
-      Phaser.Math.RAD_TO_DEG *
-        Phaser.Math.Angle.Between(
-          this.teamAHeroManager.getPlayer(this.teamASprites).x,
-          this.teamAHeroManager.getPlayer(this.teamASprites).y,
-          pointer.x + camera.scrollX,
-          pointer.y + camera.scrollY
-        );
-        this.teamAHeroManager.getPlayer(this.teamASprites).setAngle(angle);
+    if(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").mayRotate()){
+      var camera = this.cameras.main;
+      var angle = -90 + Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.teamAHeroManager.getPlayer(this.teamASprites).x, this.teamAHeroManager.getPlayer(this.teamASprites).y, pointer.x + camera.scrollX, pointer.y + camera.scrollY);
+      this.teamAHeroManager.getPlayer(this.teamASprites).setAngle(angle);
+    }
+    
   }
 
   setBuildingSprite(params, group, category, mask, coords) {

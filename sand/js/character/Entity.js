@@ -119,10 +119,17 @@ export default class Entity{
     
         gameObject.play("attack_" + gameObject.getData("backend").name + "_end");
         console.log("bodies in world:", gameObject.scene.matter.world.getAllBodies());
-      }
+    }
 
     distributeXp(scene, group){
 
+    }
+
+    castAttack(sprite){
+        if(this.mayAttack() && !sprite.anims.isPlaying){
+            sprite.play("attack_" + this.name);
+            this.statusManager.makeVisible();
+        }
     }
 
     //funciones no gráficas
@@ -189,21 +196,27 @@ export default class Entity{
     }
 
     dealDamage(amount, type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
-        if(!this.statusManager.isDamageInmune()){
-            if(type == 0){
-                this.curHealth -=  this.shieldDamage(amount);
-                return amount;
-            }else if(type == 1){
-                this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(false)));
-                return amount * (1 - this.getArmorMultiplier(false));
-            }else if(type == 2){
-                this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(true)));
-                return amount * (1 - this.getArmorMultiplier(true));
-            }else{
-                console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic")
-            }
-        }else{
+        if(!this.mayTakeDamage(type)){
             return 0;
+        }else{
+            var totalDamage = 0;
+            switch(type){
+                case 0:
+                    this.curHealth -=  this.shieldDamage(amount);
+                    totalDamage = amount;
+                case 1:
+                    this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(false)));
+                    totalDamage = amount * (1 - this.getArmorMultiplier(false));
+                case 2:
+                    this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(true)));
+                    totalDamage = amount * (1 - this.getArmorMultiplier(true));
+                default:
+                    console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic");
+            }
+            if(this.isInmortal() && this.curHealth <= 0){
+                this.curHealth = 1;
+            }
+            return totalDamage;
         }
     }
 
@@ -281,6 +294,9 @@ export default class Entity{
             params.sprite.getData("displayDamage").setVisible(true);
             console.log(this.name, "got hit by", this.lastHitBy);
         }
+        if(finalDamage > 0){
+            this.statusManager.awake();
+        }
         return {amount: finalDamage, isCrit: crit};
     }
 
@@ -290,6 +306,64 @@ export default class Entity{
     
     restoreHealth(){
         this.curHealth = this.maxHealth;
+    }
+
+    //funciones que indican posibilidad de ejecutar acciones según cambios de estado
+    mayRotate(){
+        return !(this.statusManager.isStunt() || this.statusManager.isSlept() || this.statusManager.isFeared() || this.statusManager.isHypnotized());
+    }
+
+    mayMove(){
+        return !(this.statusManager.isSlept() || this.statusManager.isStunt() || this.statusManager.isCrppled() || this.statusManager.isFrozen() || this.statusManager.isFeared() || this.statusManager.isHypnotized());
+    }
+    onlyMovingForward(){
+        return this.statusManager.isFeared() || this.statusManager.isHypnotized();
+    }
+    mayAttack(){
+        return !(this.statusManager.isSlept() || this.statusManager.isStunt() || this.statusManager.isFrozen() || this.statusManager.isFeared() || this.statusManager.isHypnotized() || this.statusManager.isMorphed() || this.statusManager.isDisarmed());
+    }
+    mayUsePasives(){ //pendiente implementación
+        return !(this.statusManager.isDecimated() || this.statusManager.isFrozen());
+    }
+    mayCastSpells(){ //pendiente implementación
+        return !(this.statusManager.isSlept() || this.statusManager.isStunt() || this.statusManager.isMuted() || this.statusManager.isMorphed() || this.statusManager.isFeared() || this.statusManager.isHypnotized());
+    }
+    mayTakeDamage(type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
+        switch(type){
+            case 0:
+                return !this.statusManager.isDamageInmune();
+            case 1:
+                return !this.statusManager.isDamageInmune();
+            case 2:
+                return !(this.statusManager.isDamageInmune() || this.statusManager.isSpellInmune());
+            default:
+                return !this.statusManager.isDamageInmune();
+        }
+    }
+    mayBeDisabled(){ //pendiente implementación
+        return !(this.statusManager.isSpellInmune() || this.statusManager.isCCInmune());
+    }
+    mayBeDebuffed(){ //pendiente implementación
+        return !this.statusManager.isSpellInmune();
+    }
+    isMarked(){ //pendiente implementación
+        return this.statusManager.isMarked();
+    }
+    isInmortal(){
+        return this.statusManager.isInmortal();
+    }
+    flies(){ //pendiente implementación
+        return this.statusManager.flies();
+    }
+
+    getVisibility(){
+        if(this.statusManager.isInvisible() && !this.statusManager.isMarked()){
+            return 0;
+        }else if(this.statusManager.isInvisible() && this.statusManager.isMarked()){
+            return 1;
+        }else{
+            return 2;
+        }
     }
 
     //funciones sobre eventos

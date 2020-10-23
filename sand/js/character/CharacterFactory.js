@@ -173,6 +173,37 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
               entity.getData('backend').applyHealthRegen({scene: scene});
               entity.getData('backend').applyManaRegen({scene: scene});
               entity.getData('backend').statusManager.onUpdate(scene, entity.getData('backend'));
+              if(entity.getData('backend').onlyMovingForward()){
+                entity.getData('backend').moveForward(entity, scaleRatio, true);
+              }
+
+              switch(entity.getData('backend').getVisibility()){
+                case 0:
+                  /*if(entity.getData("backend") instanceof Playable){
+                    if(entity.alpha != 0.6){
+                      entity.setAlpha(0.6);
+                    }
+                  }else{*/
+                    if(entity.alpha != 0){
+                      entity.setAlpha(0);
+                    }
+                  //}
+                  break;
+                case 1:
+                  if(entity.alpha != 0.6){
+                    entity.setAlpha(0.6);
+                  }
+                  break;
+                case 2:
+                  if(entity.alpha != 1){
+                    entity.setAlpha(1);
+                  }
+                  break;
+                default:
+                  entity.setAlpha(1);
+                  break;
+              }
+              //se actualizan las barras de vida y escudo
               entity.getData('underBar').x = entity.x;
               entity.getData('underBar').y = entity.y;
               entity.getData('healthBar').x = entity.x;
@@ -181,7 +212,6 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
               entity.getData('shieldBar').x = entity.x + entity.getData('healthBar').width;
               entity.getData('shieldBar').y = entity.y;
               entity.getData('shieldBar').width = (entity.getData("backend").shield / (entity.getData("backend").maxHealth + entity.getData("backend").shield)) * entity.body.shape.width * scaleRatio;;
-              
             }
             
             //entity.setVelocity(0);
