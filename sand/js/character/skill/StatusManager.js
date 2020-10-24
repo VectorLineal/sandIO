@@ -1,4 +1,4 @@
-export default class StatusManager{
+export default class{
     constructor(){
         //hashtable
        this.singleEffects = {
@@ -36,13 +36,7 @@ export default class StatusManager{
        }; //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster}
     }
 
-    //funciones no gráficas
-    awake(){
-        this.singleEffects.sleep = 0;
-    }
-    makeVisible(){
-        this.singleEffects.invisibility = 0;
-    }
+    //funciones de checkeo, queries, etc.
     isStunt(){
         return this.singleEffects.stun != 0;
     }
@@ -96,6 +90,52 @@ export default class StatusManager{
     }
     isMarkedForDeath(){
         return this.singleEffects.markedForDeath != 0;
+    }
+
+    //queries compuestas
+    mayRotate(){
+        return !(this.isStunt() || this.isSlept() || this.isFeared() || this.isHypnotized());
+    }
+
+    mayMove(){
+        return !(this.isSlept() || this.isStunt() || this.isCrppled() || this.isFrozen() || this.isFeared() || this.isHypnotized());
+    }
+    onlyMovingForward(){
+        return this.isFeared() || this.isHypnotized();
+    }
+    mayAttack(){
+        return !(this.isSlept() || this.isStunt() || this.isFrozen() || this.isFeared() || this.isHypnotized() || this.isMorphed() || this.isDisarmed());
+    }
+    mayUsePasives(){
+        return !(this.isDecimated() || this.isFrozen());
+    }
+    mayCastSpells(){
+        return !(this.isSlept() || this.isStunt() || this.isMuted() || this.isMorphed() || this.isFeared() || this.isHypnotized());
+    }
+    mayTakeDamage(type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
+        switch(type){
+            case 0:
+                return !this.isDamageInmune();
+            case 1:
+                return !this.isDamageInmune();
+            case 2:
+                return !(this.isDamageInmune() || this.isSpellInmune());
+            default:
+                return !this.isDamageInmune();
+        }
+    }
+    mayBeDisabled(){
+        return !(this.isSpellInmune() || this.isCCInmune());
+    }
+
+    getVisibility(){
+        if(this.isInvisible() && !this.isMarked()){
+            return 0;
+        }else if(this.isInvisible() && this.isMarked()){
+            return 1;
+        }else{
+            return 2;
+        }
     }
 
     queryStat(entity, attribute){
@@ -188,6 +228,14 @@ export default class StatusManager{
         }
     }
 
+    //funciones para añadir o remover cambios de estado
+    awake(){
+        this.singleEffects.sleep = 0;
+    }
+    makeVisible(){
+        this.singleEffects.invisibility = 0;
+    }
+
     purge(positive){
         if(positive){
             this.singleEffects.invisibility = 0;
@@ -248,8 +296,63 @@ export default class StatusManager{
         }
     }
 
+    stun(amount){
+        this.singleEffects.stun = Math.max(this.singleEffects.stun, amount);
+    }
+    disarm(amount){
+        this.singleEffects.disarm = Math.max(this.singleEffects.disarm, amount);
+    }
+    cripple(amount){
+        this.singleEffects.cripple = Math.max(this.singleEffects.cripple, amount);
+    }
+    mute(amount){
+        this.singleEffects.mute = Math.max(this.singleEffects.mute, amount);
+    }
+    sleep(amount){
+        this.singleEffects.sleep = Math.max(this.singleEffects.sleep, amount);
+    }
+    freeze(amount){
+        this.singleEffects.freeze = Math.max(this.singleEffects.freeze, amount);
+    }
+    mark(amount){
+        this.singleEffects.mark = Math.max(this.singleEffects.mark, amount);
+    }
+    morph(amount){
+        this.singleEffects.polymorph = Math.max(this.singleEffects.polymorph, amount);
+    }
+    decimate(amount){
+        this.singleEffects.decimate = Math.max(this.singleEffects.decimate, amount);
+    }
+    becomeInvisible(amount){
+        this.singleEffects.invisibility = Math.max(this.singleEffects.invisibility, amount);
+    }
+    becomeInmortal(amount){
+        this.singleEffects.inmortality = Math.max(this.singleEffects.inmortality, amount);
+    }
+    hypnotize(amount){
+        this.singleEffects.hypnosis = Math.max(this.singleEffects.hypnosis, amount);
+    }
+    becomeFeared(amount){
+        this.singleEffects.fear= Math.max(this.singleEffects.fear, amount);
+    }
+    becomeCCInmune(amount){
+        this.singleEffects.CCInmune = Math.max(this.singleEffects.CCInmune, amount);
+    }
+    fly(amount){
+        this.singleEffects.fly = Math.max(this.singleEffects.fly, amount);
+    }
+    becomeSpellInmune(amount){
+        this.singleEffects.spellInmune = Math.max(this.singleEffects.spellInmune, amount);
+    }
+    becomeDamageInmune(amount){
+        this.singleEffects.damageInmune = Math.max(this.singleEffects.damageInmune, amount);
+    }
+    markForDeath(amount){
+        this.singleEffects.markedForDeath = Math.max(this.singleEffects.markedForDeath, amount);
+    }
+
     //funciones sobre eventos
-    onUpdate(scene, entity){
+    onUpdate(scene, entity, sprite, scaleRatio){
         //se actualizan timers de todos los efectos de un solo parametro
         if(this.singleEffects.stun > 0){
             this.singleEffects.stun--;
@@ -378,5 +481,37 @@ export default class StatusManager{
                 this.alterStat(entity, "atSpeed", -status[0].debuffAmount);
             }
         }
+
+        //se ejecutan condiciones especiales de los cambios de estado
+        if(this.onlyMovingForward()){
+            entity.moveForward(sprite, scaleRatio, true);
+          }
+
+          switch(this.getVisibility()){
+            case 0:
+              /*if(entity instanceof Playable){
+                if(sprite.alpha != 0.6){
+                  sprite.setAlpha(0.6);
+                }
+              }else{*/
+                if(sprite.alpha != 0){
+                  sprite.setAlpha(0);
+                }
+              //}
+              break;
+            case 1:
+              if(sprite.alpha != 0.6){
+                sprite.setAlpha(0.6);
+              }
+              break;
+            case 2:
+              if(sprite.alpha != 1){
+                sprite.setAlpha(1);
+              }
+              break;
+            default:
+              sprite.setAlpha(1);
+              break;
+          }
     }
 }

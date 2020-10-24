@@ -415,7 +415,7 @@ export default class SceneGame extends Phaser.Scene {
                 scene: this,
                 amount: -40 - 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
               });
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.singleEffects.damageInmune = 60 + Math.ceil(1.92 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level);
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.becomeDamageInmune(60 + Math.ceil(1.92 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level));
             } else {
               this.lastKeyPressed = "";
             }
@@ -436,6 +436,7 @@ export default class SceneGame extends Phaser.Scene {
             } else {
               this.lastKeyPressed = "";
             }
+            //this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.becomeInvisible(120);
             break;
           case "f":
             if (
@@ -452,6 +453,7 @@ export default class SceneGame extends Phaser.Scene {
             } else {
               this.lastKeyPressed = "";
             }
+            //this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.hypnotize(180);
             break;
           case "r":
             if (
@@ -468,6 +470,7 @@ export default class SceneGame extends Phaser.Scene {
             } else {
               this.lastKeyPressed = "";
             }
+            //this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.sleep(240);
             break;
           default:
             this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").castAttack(this.teamAHeroManager.getPlayer(this.teamASprites));

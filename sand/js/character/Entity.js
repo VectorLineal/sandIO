@@ -310,38 +310,28 @@ export default class Entity{
 
     //funciones que indican posibilidad de ejecutar acciones según cambios de estado
     mayRotate(){
-        return !(this.statusManager.isStunt() || this.statusManager.isSlept() || this.statusManager.isFeared() || this.statusManager.isHypnotized());
+        return this.statusManager.mayRotate();
     }
-
     mayMove(){
-        return !(this.statusManager.isSlept() || this.statusManager.isStunt() || this.statusManager.isCrppled() || this.statusManager.isFrozen() || this.statusManager.isFeared() || this.statusManager.isHypnotized());
+        return this.statusManager.mayMove();
     }
     onlyMovingForward(){
-        return this.statusManager.isFeared() || this.statusManager.isHypnotized();
+        return this.statusManager.onlyMovingForward();
     }
     mayAttack(){
-        return !(this.statusManager.isSlept() || this.statusManager.isStunt() || this.statusManager.isFrozen() || this.statusManager.isFeared() || this.statusManager.isHypnotized() || this.statusManager.isMorphed() || this.statusManager.isDisarmed());
+        return this.statusManager.mayAttack();
     }
     mayUsePasives(){ //pendiente implementación
-        return !(this.statusManager.isDecimated() || this.statusManager.isFrozen());
+        return this.statusManager.mayUsePasives();
     }
     mayCastSpells(){ //pendiente implementación
-        return !(this.statusManager.isSlept() || this.statusManager.isStunt() || this.statusManager.isMuted() || this.statusManager.isMorphed() || this.statusManager.isFeared() || this.statusManager.isHypnotized());
+        return this.statusManager.mayCastSpells();
     }
     mayTakeDamage(type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
-        switch(type){
-            case 0:
-                return !this.statusManager.isDamageInmune();
-            case 1:
-                return !this.statusManager.isDamageInmune();
-            case 2:
-                return !(this.statusManager.isDamageInmune() || this.statusManager.isSpellInmune());
-            default:
-                return !this.statusManager.isDamageInmune();
-        }
+        return this.statusManager.mayTakeDamage(type);
     }
     mayBeDisabled(){ //pendiente implementación
-        return !(this.statusManager.isSpellInmune() || this.statusManager.isCCInmune());
+        return this.statusManager.mayBeDisabled();
     }
     mayBeDebuffed(){ //pendiente implementación
         return !this.statusManager.isSpellInmune();
@@ -357,13 +347,7 @@ export default class Entity{
     }
 
     getVisibility(){
-        if(this.statusManager.isInvisible() && !this.statusManager.isMarked()){
-            return 0;
-        }else if(this.statusManager.isInvisible() && this.statusManager.isMarked()){
-            return 1;
-        }else{
-            return 2;
-        }
+        return this.statusManager.getVisibility();
     }
 
     //funciones sobre eventos
