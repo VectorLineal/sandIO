@@ -27,6 +27,7 @@ export default class Entity{
 
         //stats adicionales de efectos, poderes o que son constantes para todos, etc.
         this.shield = 0;
+        this.maxShield = 0;
         this.fov = 10;
         this.cauterize = 0;
 

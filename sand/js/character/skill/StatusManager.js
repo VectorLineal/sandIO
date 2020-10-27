@@ -187,44 +187,80 @@ export default class{
         switch(attribute){
             case "damage":
                 entity.damage += amount;
+                break;
             case "armor":
                 entity.armor += amount;
+                break;
             case  "evasion":
                 entity.evasion += amount;
+                break;
             case "health":
+                let percentualChange = amount / entity.maxHealth;
                 entity.maxHealth += amount;
+                entity.curHealth += entity.curHealth * percentualChange;
+                if(entity.maxHealth < entity.curHealth){
+                    entity.curHealth = entity.maxHealth;
+                }
+                break;
             case "healthRegen":
                 entity.healthRegen += amount;
+                break;
             case "atSpeed":
                 entity.atSpeed += amount;
+                break;
             case "accuracy":
                 entity.accuracy += amount;
+                break;
             case "magicArmor":
                 entity.magicArmor += amount;
+                break;
             case "fortitude":
                 entity.fortitude += amount;
+                break;
             case "speed":
                 entity.speed += amount;
+                break;
             case "crit":
                 entity.crit += amount;
+                break;
             case "maxMana":
+                let percentualChange = amount / entity.maxMana;
                 entity.maxMana += amount;
+                entity.curMana += entity.curMana * percentualChange;
+                if(entity.maxMana < entity.curMana){
+                    entity.curMana = entity.maxMana;
+                }
+                break;
             case "manaRegen":
                 entity.manaRegen += amount;
+                break;
             case "spellPower":
                 entity.spellPower += amount;
+                break;
             case "will":
                 entity.will += amount;
+                break;
             case "concentration":
                 entity.concentration += amount;
+                break;
             case "critMultiplier": //atributos no básicos
                 entity.critMultiplier += amount;
+                break;
             case "shield":
-                entity.shield += amount;
+                entity.maxShield += amount;
+                if(amount > 0){
+                    entity.shield += amount;
+                }
+                if(entity.maxHealth < entity.curHealth){
+                    entity.curHealth = entity.maxHealth;
+                }
+                break;
             case "FOV":
                 entity.fov += amount;
+                break;
             case "cauterize":
                 entity.cauterize += amount;
+                break;
         }
     }
 
@@ -236,7 +272,7 @@ export default class{
         this.singleEffects.invisibility = 0;
     }
 
-    purge(positive){
+    purge(entity, positive){
         if(positive){
             this.singleEffects.invisibility = 0;
             this.singleEffects.inmortality = 0;
@@ -248,6 +284,7 @@ export default class{
             for(var i = this.buffs.length; i >= 0; i--){
                 if(this.buffs[i].amount >= 0 && this.buffs[i].timer > 0){
                     buff = this.buffs.splice(i, 1);
+                    this.alterStat(entity, buff[0].attribute, -buff[0].amount);
                 }
             }
         }else{
@@ -266,6 +303,7 @@ export default class{
             for(var i = this.buffs.length; i >= 0; i--){
                 if(this.buffs[i].amount <= 0 && this.buffs[i].timer > 0){
                     buff = this.buffs.splice(i, 1);
+                    this.alterStat(entity, buff[0].attribute, -buff[0].amount);
                 }
             }
 
@@ -351,6 +389,86 @@ export default class{
         this.singleEffects.markedForDeath = Math.max(this.singleEffects.markedForDeath, amount);
     }
 
+    getListIndex(list, id){
+        for(var i = 0; i < list.length; i++){
+            if(list[i].name == id){
+                return i;
+            }
+        }
+        return -1; //en caso que el elemento no esté en la lista
+    }
+
+    pushBuff(entity, element){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
+        let posibleIndex = this.getListIndex(this.buffs, element.name);
+        if(posibleIndex != -1){
+            if(this.buffs[posibleIndex].stackable > this.buffs[posibleIndex].stacks){
+                this.buffs[posibleIndex].stacks++;
+                this.alterStat(entity, element.attribute, element.amount);
+            }else{
+                this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
+            }
+        }else{
+            this.buffs.push(element);
+            this.alterStat(entity, element.attribute, element.amount);
+        }
+    }
+    
+    pushDamageOnTime(entity, element, type){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster} donde caster es un puntero al lanzador del hechizo
+        let posibleIndex = this.getListIndex(this.damageOnTime[type], element.name);
+        if(posibleIndex != -1){
+            if(this.damageOnTime[type][posibleIndex].stackable > this.damageOnTime[type][posibleIndex].stacks){
+                this.damageOnTime[type][posibleIndex].stacks++;
+                switch(type){
+                    case "burn":
+                        this.alterStat(entity, "armor", element.debuffAmount);
+                        this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
+                        break;
+                    case "bleed":
+                        this.alterStat(entity, "cauterize", element.debuffAmount);
+                        this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
+                        break;
+                    case "poison":
+                        this.alterStat(entity, "speed", element.debuffAmount);
+                        this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
+                        break;
+                    case "curse":
+                        this.alterStat(entity, "magicArmor", element.debuffAmount);
+                        this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
+                        break;
+                    case "illness":
+                        this.alterStat(entity, "atSpeed", element.debuffAmount);
+                        this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
+                        break;
+                    default:
+                        break;
+                }
+            }else{
+                this.damageOnTime[type][posibleIndex].timer = Math.max(this.damageOnTime[type][posibleIndex].timer, element.timer);
+            }
+        }else{
+            this.damageOnTime[type].push(element);
+            switch(type){
+                case "burn":
+                    this.alterStat(entity, "armor", element.debuffAmount);
+                    break;
+                case "bleed":
+                    this.alterStat(entity, "cauterize", element.debuffAmount);
+                    break;
+                case "poison":
+                    this.alterStat(entity, "speed", element.debuffAmount);
+                    break;
+                case "curse":
+                    this.alterStat(entity, "magicArmor", element.debuffAmount);
+                    break;
+                case "illness":
+                    this.alterStat(entity, "atSpeed", element.debuffAmount);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     //funciones sobre eventos
     onUpdate(scene, entity, sprite, scaleRatio){
         //se actualizan timers de todos los efectos de un solo parametro
@@ -413,7 +531,7 @@ export default class{
         for(var i = this.buffs.length - 1; i >= 0; i--){
             this.buffs[i].timer--;
             //se limpian los debuffs cuyo tiempo haya expirado
-            if(this.buffs[i].timer == 0 || (this.buffs[i].clearAtZero && this.queryStat(entity, this.buffs[i].attribute) == 0)){
+            if(this.buffs[i].timer == 0 || (this.buffs[i].clearAtZero && this.queryStat(entity, this.buffs[i].attribute) == 0) || this.buffs[i].amount == 0){
                 buff = this.buffs.splice(i, 1);
                 this.alterStat(entity, buff[0].attribute, -buff[0].amount);
             }
