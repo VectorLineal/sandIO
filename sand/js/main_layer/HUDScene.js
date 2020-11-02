@@ -83,7 +83,7 @@ export default class HUDGame extends Phaser.Scene {
                 x: width / 10.5,
                 y: (height - (height / 6.9)),
                 stepY: (height / 39)
-                },
+            },
             setScale: { 
                 x: 3.28 / scaleRatio,
                 y: 3.28 / scaleRatio

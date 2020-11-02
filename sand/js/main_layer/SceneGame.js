@@ -89,6 +89,11 @@ export default class SceneGame extends Phaser.Scene {
   preload() {
     //scene.load.spritesheet(name, path, {frameWidth: width, frameHeight: height});
     this.load.spritesheet(
+      "status_icons",
+      "assets/status_icons.png",
+      { frameWidth: 16, frameHeight: 16 }
+    );
+    this.load.spritesheet(
       "minotaur_warrior",
       "assets/warrior_minotaur_test.png",
       { frameWidth: 60, frameHeight: 76 }
@@ -436,7 +441,7 @@ export default class SceneGame extends Phaser.Scene {
             } else {
               this.lastKeyPressed = "";
             }
-            //this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.becomeInvisible(120);
+            this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.pushBuff(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend"), {name:"demon_buff2", attribute: "damageAmplification", amount: 0.3, timer: 180, stacks: 1, stackable: 2, clearAtZero: false}, this);
             break;
           case "f":
             if (
@@ -453,7 +458,7 @@ export default class SceneGame extends Phaser.Scene {
             } else {
               this.lastKeyPressed = "";
             }
-            //this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.hypnotize(180);
+            this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.pushDamageOnTime(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend"), {name:"chimera_burn1", damageType: 2, amount: 0.5, debuffAmount: -12, timer: 240, stacks: 1, stackable: 4, caster: null}, "illness", this);
             break;
           case "r":
             if (
@@ -470,7 +475,7 @@ export default class SceneGame extends Phaser.Scene {
             } else {
               this.lastKeyPressed = "";
             }
-            //this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.sleep(240);
+            this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.pushDamageOnTime(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend"), {name:"chimera_burn1", damageType: 2, amount: 0.3, debuffAmount: -2, timer: 240, stacks: 1, stackable: 3, caster: null}, "electric", this);
             break;
           default:
             this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").castAttack(this.teamAHeroManager.getPlayer(this.teamASprites));

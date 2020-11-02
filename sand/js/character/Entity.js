@@ -29,7 +29,8 @@ export default class Entity{
         this.shield = 0;
         this.maxShield = 0;
         this.fov = 10;
-        this.cauterize = 0;
+        this.cauterize = 0; //positivo aumenta efectos curativos, negativo los disminuye [-1, inf]
+        this.damageAmplification = 0; //positivo reduce el daño de todo tipo porcentualmente, negativo lo amplifica [-inf, 1]
 
         //character's body
         this.atFrames = [];
@@ -197,22 +198,27 @@ export default class Entity{
     }
 
     dealDamage(amount, type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
+        var fixedAmount = amount * (1 - this.damageAmplification);
         if(!this.mayTakeDamage(type)){
             return 0;
         }else{
             var totalDamage = 0;
             switch(type){
                 case 0:
-                    this.curHealth -=  this.shieldDamage(amount);
-                    totalDamage = amount;
+                    this.curHealth -=  this.shieldDamage(fixedAmount);
+                    totalDamage = fixedAmount;
+                    break;
                 case 1:
-                    this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(false)));
-                    totalDamage = amount * (1 - this.getArmorMultiplier(false));
+                    this.curHealth -=  this.shieldDamage(fixedAmount * (1 - this.getArmorMultiplier(false)));
+                    totalDamage = fixedAmount * (1 - this.getArmorMultiplier(false));
+                    break;
                 case 2:
-                    this.curHealth -=  this.shieldDamage(amount * (1 - this.getArmorMultiplier(true)));
-                    totalDamage = amount * (1 - this.getArmorMultiplier(true));
+                    this.curHealth -=  this.shieldDamage(fixedAmount * (1 - this.getArmorMultiplier(true)));
+                    totalDamage = fixedAmount * (1 - this.getArmorMultiplier(true));
+                    break;
                 default:
                     console.log("unvalid damage type, must be either 0 for pure, 1 for physic or 2 for magic");
+                    break;
             }
             if(this.isInmortal() && this.curHealth <= 0){
                 this.curHealth = 1;
@@ -222,7 +228,7 @@ export default class Entity{
     }
 
     heal(amount){
-        this.curHealth += amount;
+        this.curHealth += amount * (1 + this.cauterize);
         if(this.curHealth >= this.maxHealth){
             this.curHealth = this.maxHealth;
         }
@@ -281,6 +287,9 @@ export default class Entity{
             var color = "#eeeeee";
             if (finalDamage == 0) {
               damageMessage = "missed";
+              if(!this.mayTakeDamage(params.type)){
+                damageMessage = "blocked";
+              }
             }else{
               damageMessage = finalDamage.toString();
             }

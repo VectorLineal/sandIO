@@ -1,3 +1,6 @@
+import {randomFloat} from "../../main_layer/MathUtils.js";
+import Hero from "../Hero.js";
+
 export default class{
     constructor(){
         //hashtable
@@ -19,6 +22,7 @@ export default class{
            fly: 0,
            spellInmune: 0,
            damageInmune: 0,
+           banish: 0,
            markedForDeath: -1 //(no purgable)indica si algun personaje morira en dado tiempo (se usa sobre todo en criaturas invocadas por x tiempo) default -1
        };
        //lista
@@ -88,44 +92,104 @@ export default class{
     isDamageInmune(){
         return this.singleEffects.damageInmune != 0;
     }
+    isBanished(){
+        return this.singleEffects.banish != 0;
+    }
     isMarkedForDeath(){
         return this.singleEffects.markedForDeath != 0;
+    }
+    isBuffed(){
+        for(var i = 0; i < this.buffs.length; i++){
+            if(this.buffs[i].amount > 0){
+                return true;
+            }
+        }
+        return false;
+    }
+    isDebuffed(){
+        for(var i = 0; i < this.buffs.length; i++){
+            if(this.buffs[i].amount < 0 && this.buffs[i].attribute != "cauterize" && this.buffs[i].attribute != "damageAmplification"){
+                return true;
+            }
+        }
+        return false;
+    }
+    //casos especiales de debuff
+    isCauterized(){
+        for(var i = 0; i < this.buffs.length; i++){
+            if(this.buffs[i].amount < 0 && this.buffs[i].attribute == "cauterize"){
+                return true;
+            }
+        }
+        return false;
+    }
+    isVulnerable(){
+        for(var i = 0; i < this.buffs.length; i++){
+            if(this.buffs[i].amount < 0 && this.buffs[i].attribute == "damageAmplification"){
+                return true;
+            }
+        }
+        return false;
+    }
+    isTakingDamage(){
+        return this.damageOnTime.rawDamage.length > 0;
+    }
+    isBurnt(){
+        return this.damageOnTime.burn.length > 0;
+    }
+    isBleeding(){
+        return this.damageOnTime.bleed.length > 0;
+    }
+    isPoisoned(){
+        return this.damageOnTime.poison.length > 0;
+    }
+    isCursed(){
+        return this.damageOnTime.curse.length > 0;
+    }
+    isShocked(){
+        return this.damageOnTime.electric.length > 0;
+    }
+    isParasited(){
+        return this.damageOnTime.parasite.length > 0;
+    }
+    isIll(){
+        return this.damageOnTime.illness.length > 0;
     }
 
     //queries compuestas
     mayRotate(){
-        return !(this.isStunt() || this.isSlept() || this.isFeared() || this.isHypnotized());
+        return !(this.isStunt() || this.isSlept() || this.isFeared() || this.isHypnotized() || this.isBanished());
     }
 
     mayMove(){
-        return !(this.isSlept() || this.isStunt() || this.isCrppled() || this.isFrozen() || this.isFeared() || this.isHypnotized());
+        return !(this.isSlept() || this.isStunt() || this.isCrppled() || this.isFrozen() || this.isFeared() || this.isHypnotized() || this.isBanished());
     }
     onlyMovingForward(){
         return this.isFeared() || this.isHypnotized();
     }
     mayAttack(){
-        return !(this.isSlept() || this.isStunt() || this.isFrozen() || this.isFeared() || this.isHypnotized() || this.isMorphed() || this.isDisarmed());
+        return !(this.isSlept() || this.isStunt() || this.isFrozen() || this.isFeared() || this.isHypnotized() || this.isMorphed() || this.isDisarmed() || this.isBanished());
     }
     mayUsePasives(){
         return !(this.isDecimated() || this.isFrozen());
     }
     mayCastSpells(){
-        return !(this.isSlept() || this.isStunt() || this.isMuted() || this.isMorphed() || this.isFeared() || this.isHypnotized());
+        return !(this.isSlept() || this.isStunt() || this.isMuted() || this.isMorphed() || this.isFeared() || this.isHypnotized() || this.isBanished());
     }
     mayTakeDamage(type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
         switch(type){
             case 0:
-                return !this.isDamageInmune();
+                return !(this.isDamageInmune() || this.isBanished());
             case 1:
-                return !this.isDamageInmune();
+                return !(this.isDamageInmune() || this.isBanished());
             case 2:
-                return !(this.isDamageInmune() || this.isSpellInmune());
+                return !(this.isDamageInmune() || this.isSpellInmune() || this.isBanished());
             default:
-                return !this.isDamageInmune();
+                return !(this.isDamageInmune() || this.isBanished());
         }
     }
     mayBeDisabled(){
-        return !(this.isSpellInmune() || this.isCCInmune());
+        return !(this.isSpellInmune() || this.isCCInmune() || this.isBanished());
     }
 
     getVisibility(){
@@ -180,10 +244,13 @@ export default class{
                 return entity.fov;
             case "cauterize":
                 return entity.cauterize;
+            case "damageAmplification":
+                return entity.damageAmplification;
         }
     }
 
-    alterStat(entity, attribute, amount){
+    alterStat(entity, attribute, amount, scene){
+        let percentualChange = 0;
         switch(attribute){
             case "damage":
                 entity.damage += amount;
@@ -195,7 +262,7 @@ export default class{
                 entity.evasion += amount;
                 break;
             case "health":
-                let percentualChange = amount / entity.maxHealth;
+                percentualChange = amount / entity.maxHealth;
                 entity.maxHealth += amount;
                 entity.curHealth += entity.curHealth * percentualChange;
                 if(entity.maxHealth < entity.curHealth){
@@ -207,6 +274,7 @@ export default class{
                 break;
             case "atSpeed":
                 entity.atSpeed += amount;
+                entity.rebalanceAttackAnimations(scene);
                 break;
             case "accuracy":
                 entity.accuracy += amount;
@@ -224,7 +292,7 @@ export default class{
                 entity.crit += amount;
                 break;
             case "maxMana":
-                let percentualChange = amount / entity.maxMana;
+                percentualChange = amount / entity.maxMana;
                 entity.maxMana += amount;
                 entity.curMana += entity.curMana * percentualChange;
                 if(entity.maxMana < entity.curMana){
@@ -261,6 +329,18 @@ export default class{
             case "cauterize":
                 entity.cauterize += amount;
                 break;
+            case "damageAmplification":
+                entity.damageAmplification += amount;
+                break;
+        }
+        if(entity instanceof Hero){
+            scene.events.emit('updateStats');
+            scene.events.emit('updateMaxHealth');
+            scene.events.emit('updateHealth');
+            scene.events.emit('updateHealthRegen');
+            scene.events.emit('updateMaxMana');
+            scene.events.emit('updateMana');
+            scene.events.emit('updateManaRegen');
         }
     }
 
@@ -272,19 +352,20 @@ export default class{
         this.singleEffects.invisibility = 0;
     }
 
-    purge(entity, positive){
+    purge(entity, positive, scene){
         if(positive){
             this.singleEffects.invisibility = 0;
             this.singleEffects.inmortality = 0;
             this.singleEffects.CCInmune = 0;
+            this.singleEffects.banish = 0;
             this.singleEffects.fly = 0;
             this.singleEffects.spellInmune = 0;
             this.singleEffects.damageInmune = 0;
 
-            for(var i = this.buffs.length; i >= 0; i--){
+            for(var i = this.buffs.length - 1; i >= 0; i--){
                 if(this.buffs[i].amount >= 0 && this.buffs[i].timer > 0){
-                    buff = this.buffs.splice(i, 1);
-                    this.alterStat(entity, buff[0].attribute, -buff[0].amount);
+                    let buff = this.buffs.splice(i, 1);
+                    this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
                 }
             }
         }else{
@@ -299,11 +380,12 @@ export default class{
             this.singleEffects.decimate = 0;
             this.singleEffects.hypnosis = 0;
             this.singleEffects.fear = 0;
+            this.singleEffects.banish = 0;
 
-            for(var i = this.buffs.length; i >= 0; i--){
+            for(var i = this.buffs.length - 1; i >= 0; i--){
                 if(this.buffs[i].amount <= 0 && this.buffs[i].timer > 0){
-                    buff = this.buffs.splice(i, 1);
-                    this.alterStat(entity, buff[0].attribute, -buff[0].amount);
+                    let buff = this.buffs.splice(i, 1);
+                    this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
                 }
             }
 
@@ -312,24 +394,24 @@ export default class{
             this.damageOnTime.parasite = [];
 
             for(var i = this.damageOnTime.burn.length - 1; i >= 0; i--){
-                var status = this.damageOnTime.burn.length.splice(i, 1);
-                this.alterStat(entity, "armor", -status[0].debuffAmount);
+                var status = this.damageOnTime.burn.splice(i, 1);
+                this.alterStat(entity, "armor", -status[0].debuffAmount, scene);
             }
             for(var i = this.damageOnTime.bleed.length - 1; i >= 0; i--){
-                var status = this.damageOnTime.bleed.length.splice(i, 1);
-                this.alterStat(entity, "cauterize", -status[0].debuffAmount);
+                var status = this.damageOnTime.bleed.splice(i, 1);
+                this.alterStat(entity, "cauterize", -status[0].debuffAmount, scene);
             }
             for(var i = this.damageOnTime.poison.length - 1; i >= 0; i--){
-                var status = this.damageOnTime.poison.length.splice(i, 1);
-                this.alterStat(entity, "speed", -status[0].debuffAmount);
+                var status = this.damageOnTime.poison.splice(i, 1);
+                this.alterStat(entity, "speed", -status[0].debuffAmount, scene);
             }
             for(var i = this.damageOnTime.curse.length - 1; i >= 0; i--){
-                var status = this.damageOnTime.curse.length.splice(i, 1);
-                this.alterStat(entity, "magicArmor", -status[0].debuffAmount);
+                var status = this.damageOnTime.curse.splice(i, 1);
+                this.alterStat(entity, "magicArmor", -status[0].debuffAmount, scene);
             }
             for(var i = this.damageOnTime.illness.length - 1; i >= 0; i--){
-                var status = this.damageOnTime.illness.length.splice(i, 1);
-                this.alterStat(entity, "atSpeed", -status[0].debuffAmount);
+                var status = this.damageOnTime.illness.splice(i, 1);
+                this.alterStat(entity, "atSpeed", -status[0].debuffAmount, scene);
             }
         }
     }
@@ -370,7 +452,8 @@ export default class{
     hypnotize(amount){
         this.singleEffects.hypnosis = Math.max(this.singleEffects.hypnosis, amount);
     }
-    becomeFeared(amount){
+    becomeFeared(amount, sprite){
+        sprite.setAngle(randomFloat(360));
         this.singleEffects.fear= Math.max(this.singleEffects.fear, amount);
     }
     becomeCCInmune(amount){
@@ -385,6 +468,9 @@ export default class{
     becomeDamageInmune(amount){
         this.singleEffects.damageInmune = Math.max(this.singleEffects.damageInmune, amount);
     }
+    banish(amount){
+        this.singleEffects.banish = Math.max(this.singleEffects.banish, amount);
+    }
     markForDeath(amount){
         this.singleEffects.markedForDeath = Math.max(this.singleEffects.markedForDeath, amount);
     }
@@ -398,45 +484,45 @@ export default class{
         return -1; //en caso que el elemento no esté en la lista
     }
 
-    pushBuff(entity, element){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
+    pushBuff(entity, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
         let posibleIndex = this.getListIndex(this.buffs, element.name);
         if(posibleIndex != -1){
             if(this.buffs[posibleIndex].stackable > this.buffs[posibleIndex].stacks){
                 this.buffs[posibleIndex].stacks++;
-                this.alterStat(entity, element.attribute, element.amount);
+                this.alterStat(entity, element.attribute, element.amount, scene);
             }else{
                 this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
             }
         }else{
             this.buffs.push(element);
-            this.alterStat(entity, element.attribute, element.amount);
+            this.alterStat(entity, element.attribute, element.amount, scene);
         }
     }
     
-    pushDamageOnTime(entity, element, type){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster} donde caster es un puntero al lanzador del hechizo
+    pushDamageOnTime(entity, element, type, scene){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster} donde caster es un puntero al lanzador del hechizo
         let posibleIndex = this.getListIndex(this.damageOnTime[type], element.name);
         if(posibleIndex != -1){
             if(this.damageOnTime[type][posibleIndex].stackable > this.damageOnTime[type][posibleIndex].stacks){
                 this.damageOnTime[type][posibleIndex].stacks++;
                 switch(type){
                     case "burn":
-                        this.alterStat(entity, "armor", element.debuffAmount);
+                        this.alterStat(entity, "armor", element.debuffAmount, scene);
                         this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
                         break;
                     case "bleed":
-                        this.alterStat(entity, "cauterize", element.debuffAmount);
+                        this.alterStat(entity, "cauterize", element.debuffAmount, scene);
                         this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
                         break;
                     case "poison":
-                        this.alterStat(entity, "speed", element.debuffAmount);
+                        this.alterStat(entity, "speed", element.debuffAmount, scene);
                         this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
                         break;
                     case "curse":
-                        this.alterStat(entity, "magicArmor", element.debuffAmount);
+                        this.alterStat(entity, "magicArmor", element.debuffAmount, scene);
                         this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
                         break;
                     case "illness":
-                        this.alterStat(entity, "atSpeed", element.debuffAmount);
+                        this.alterStat(entity, "atSpeed", element.debuffAmount, scene);
                         this.damageOnTime[type][posibleIndex].debuffAmount += element.debuffAmount;
                         break;
                     default:
@@ -449,19 +535,19 @@ export default class{
             this.damageOnTime[type].push(element);
             switch(type){
                 case "burn":
-                    this.alterStat(entity, "armor", element.debuffAmount);
+                    this.alterStat(entity, "armor", element.debuffAmount, scene);
                     break;
                 case "bleed":
-                    this.alterStat(entity, "cauterize", element.debuffAmount);
+                    this.alterStat(entity, "cauterize", element.debuffAmount, scene);
                     break;
                 case "poison":
-                    this.alterStat(entity, "speed", element.debuffAmount);
+                    this.alterStat(entity, "speed", element.debuffAmount, scene);
                     break;
                 case "curse":
-                    this.alterStat(entity, "magicArmor", element.debuffAmount);
+                    this.alterStat(entity, "magicArmor", element.debuffAmount, scene);
                     break;
                 case "illness":
-                    this.alterStat(entity, "atSpeed", element.debuffAmount);
+                    this.alterStat(entity, "atSpeed", element.debuffAmount, scene);
                     break;
                 default:
                     break;
@@ -469,8 +555,18 @@ export default class{
         }
     }
 
+    //funciones de utilidades
+    groupFrameIndex(group, frameCode){
+        for(var i = 0; i < group.children.entries.length; i++){
+            if(parseInt(group.children.entries[i].frame.name) == frameCode){
+                return i;
+            }
+        }
+        return -1;
+    }
+
     //funciones sobre eventos
-    onUpdate(scene, entity, sprite, scaleRatio){
+    onUpdate(params){
         //se actualizan timers de todos los efectos de un solo parametro
         if(this.singleEffects.stun > 0){
             this.singleEffects.stun--;
@@ -523,6 +619,9 @@ export default class{
         if(this.singleEffects.damageInmune > 0){
             this.singleEffects.damageInmune--;
         }
+        if(this.singleEffects.banish > 0){
+            this.singleEffects.banish--;
+        }
         if(this.singleEffects.markedForDeath > 0){
             this.singleEffects.markedForDeath--;
         }
@@ -531,105 +630,196 @@ export default class{
         for(var i = this.buffs.length - 1; i >= 0; i--){
             this.buffs[i].timer--;
             //se limpian los debuffs cuyo tiempo haya expirado
-            if(this.buffs[i].timer == 0 || (this.buffs[i].clearAtZero && this.queryStat(entity, this.buffs[i].attribute) == 0) || this.buffs[i].amount == 0){
-                buff = this.buffs.splice(i, 1);
-                this.alterStat(entity, buff[0].attribute, -buff[0].amount);
+            if(this.buffs[i].timer == 0 || (this.buffs[i].clearAtZero && this.queryStat(params.entity, this.buffs[i].attribute) == 0) || this.buffs[i].amount == 0){
+                let buff = this.buffs.splice(i, 1);
+                this.alterStat(params.entity, buff[0].attribute, -buff[0].amount * buff[0].stacks, params.scene);
             }
         }
 
         //se actualizan contadores de quemadura
         for(var i = this.damageOnTime.rawDamage.length - 1; i >= 0 ; i--){
             this.damageOnTime.rawDamage[i].timer --;
-            entity.dealDamage(this.damageOnTime.rawDamage[i].amount * this.damageOnTime.rawDamage[i].stacks, this.damageOnTime.rawDamage[i].damageType);
-            if(this.damageOnTime.rawDamage.length[i].amount == 0){
-                this.damageOnTime.rawDamage.length.splice(i, 1);
+            params.entity.dealDamage(this.damageOnTime.rawDamage[i].amount * this.damageOnTime.rawDamage[i].stacks, this.damageOnTime.rawDamage[i].damageType);
+            if(params.entity.curHealth <= 0){
+                params.entity.onDeath(params);
+                return;
+            }
+            if(this.damageOnTime.rawDamage[i].timer == 0){
+                this.damageOnTime.rawDamage.splice(i, 1);
             }
         }
         for(var i = this.damageOnTime.burn.length - 1; i >= 0; i--){
             this.damageOnTime.burn[i].timer --;
-            entity.dealDamage(this.damageOnTime.burn[i].amount * this.damageOnTime.burn[i].stacks, this.damageOnTime.burn[i].damageType);
-            if(this.damageOnTime.burn.length[i].amount == 0){
-                var status = this.damageOnTime.burn.length.splice(i, 1);
-                this.alterStat(entity, "armor", -status[0].debuffAmount); //para evitar inconsistencias con daños porcentuales, cada vez que se sume un stack, la cantidad e debuff se suma en dicha variable.
+            params.entity.dealDamage(this.damageOnTime.burn[i].amount * this.damageOnTime.burn[i].stacks, this.damageOnTime.burn[i].damageType);
+            if(params.entity.curHealth <= 0){
+                params.entity.onDeath(params);
+                return;
+            }
+            if(this.damageOnTime.burn[i].timer == 0){
+                var status = this.damageOnTime.burn.splice(i, 1);
+                this.alterStat(params.entity, "armor", -status[0].debuffAmount, params.scene); //para evitar inconsistencias con daños porcentuales, cada vez que se sume un stack, la cantidad e debuff se suma en dicha variable.
             }
         }
         for(var i = this.damageOnTime.bleed.length - 1; i >= 0; i--){
             this.damageOnTime.bleed[i].timer --;
-            entity.dealDamage(this.damageOnTime.bleed[i].amount * this.damageOnTime.bleed[i].stacks, this.damageOnTime.bleed[i].damageType);
-            if(this.damageOnTime.bleed.length[i].amount == 0){
-                var status = this.damageOnTime.bleed.length.splice(i, 1);
-                this.alterStat(entity, "cauterize", -status[0].debuffAmount); 
+            params.entity.dealDamage(this.damageOnTime.bleed[i].amount * this.damageOnTime.bleed[i].stacks, this.damageOnTime.bleed[i].damageType);
+            if(params.entity.curHealth <= 0){
+                params.entity.onDeath(params);
+                return;
+            }
+            if(this.damageOnTime.bleed[i].timer == 0){
+                var status = this.damageOnTime.bleed.splice(i, 1);
+                this.alterStat(params.entity, "cauterize", -status[0].debuffAmount, params.scene); 
             }
         }
         for(var i = this.damageOnTime.poison.length - 1; i >= 0; i--){
             this.damageOnTime.poison[i].timer --;
-            entity.dealDamage(this.damageOnTime.poison[i].amount * this.damageOnTime.poison[i].stacks, this.damageOnTime.poison[i].damageType);
-            if(this.damageOnTime.poison.length[i].amount == 0){
-                var status = this.damageOnTime.poison.length.splice(i, 1);
-                this.alterStat(entity, "speed", -status[0].debuffAmount);
+            params.entity.dealDamage(this.damageOnTime.poison[i].amount * this.damageOnTime.poison[i].stacks, this.damageOnTime.poison[i].damageType);
+            if(params.entity.curHealth <= 0){
+                params.entity.onDeath(params);
+                return;
+            }
+            if(this.damageOnTime.poison[i].timer == 0){
+                var status = this.damageOnTime.poison.splice(i, 1);
+                this.alterStat(params.entity, "speed", -status[0].debuffAmount, params.scene);
             }
         }
         for(var i = this.damageOnTime.curse.length - 1; i >= 0; i--){
             this.damageOnTime.curse[i].timer --;
-            entity.dealDamage(this.damageOnTime.curse[i].amount * this.damageOnTime.curse[i].stacks, this.damageOnTime.curse[i].damageType);
-            if(this.damageOnTime.curse.length[i].amount == 0){
-                var status = this.damageOnTime.curse.length.splice(i, 1);
-                this.alterStat(entity, "magicArmor", -status[0].debuffAmount); 
+            params.entity.dealDamage(this.damageOnTime.curse[i].amount * this.damageOnTime.curse[i].stacks, this.damageOnTime.curse[i].damageType);
+            if(params.entity.curHealth <= 0){
+                params.entity.onDeath(params);
+                return;
+            }
+            if(this.damageOnTime.curse[i].timer == 0){
+                var status = this.damageOnTime.curse.splice(i, 1);
+                this.alterStat(params.entity, "magicArmor", -status[0].debuffAmount, params.scene); 
             }
         }
         for(var i = this.damageOnTime.electric.length - 1; i >= 0; i--){
             this.damageOnTime.electric[i].timer --;
-            entity.spendMana({scene: scene, amount: 0.25 * entity.dealDamage(this.damageOnTime.electric[i].amount * this.damageOnTime.electric[i].stacks, this.damageOnTime.electric[i].damageType)});
-            if(this.damageOnTime.electric.length[i].amount == 0){
-                this.damageOnTime.electric.length.splice(i, 1);
+            params.entity.spendMana({scene: params.scene, amount: -0.25 * params.entity.dealDamage(this.damageOnTime.electric[i].amount * this.damageOnTime.electric[i].stacks, this.damageOnTime.electric[i].damageType)});
+            if(params.entity.curHealth <= 0){
+                params.entity.onDeath(params);
+                return;
+            }
+            if(this.damageOnTime.electric[i].timer == 0){
+                this.damageOnTime.electric.splice(i, 1);
             }
         }
         for(var i = this.damageOnTime.parasite.length - 1; i >= 0; i--){
             this.damageOnTime.parasite[i].timer --;
-            this.damageOnTime.parasite[i].caster.heal(entity.dealDamage(this.damageOnTime.parasite[i].amount * this.damageOnTime.parasite[i].stacks, this.damageOnTime.parasite[i].damageType));
-            if(this.damageOnTime.parasite.length[i].amount == 0){
-                this.damageOnTime.parasite.length.splice(i, 1);
+            this.damageOnTime.parasite[i].caster.heal(params.entity.dealDamage(this.damageOnTime.parasite[i].amount * this.damageOnTime.parasite[i].stacks, this.damageOnTime.parasite[i].damageType));
+            if(params.entity.curHealth <= 0){
+                params.entity.onDeath(params);
+                return;
+            }
+            if(this.damageOnTime.parasite[i].timer == 0){
+                this.damageOnTime.parasite.splice(i, 1);
             }
         }
         for(var i = this.damageOnTime.illness.length - 1; i >= 0; i--){
             this.damageOnTime.illness[i].timer --;
-            entity.dealDamage(this.damageOnTime.illness[i].amount * this.damageOnTime.illness[i].stacks, this.damageOnTime.illness[i].damageType);
-            if(this.damageOnTime.illness.length[i].amount == 0){
-                var status = this.damageOnTime.illness.length.splice(i, 1);
-                this.alterStat(entity, "atSpeed", -status[0].debuffAmount);
+            params.entity.dealDamage(this.damageOnTime.illness[i].amount * this.damageOnTime.illness[i].stacks, this.damageOnTime.illness[i].damageType);
+            if(params.entity.curHealth <= 0){
+                params.entity.onDeath(params);
+                return;
+            }
+            if(this.damageOnTime.illness[i].timer == 0){
+                var status = this.damageOnTime.illness.splice(i, 1);
+                this.alterStat(params.entity, "atSpeed", -status[0].debuffAmount, params.scene);
+            }
+        }
+        //se maneja el dibujado de iconos de cambios de estado
+        let zeroX = params.sprite.getData("underBar").x - (params.sprite.getData("underBar").width / 2);
+        let zeroY = params.sprite.getData("underBar").y + (6 * params.scaleRatio);
+        let conditions = [
+            {value: this.isStunt(), code: 16},
+            {value: this.isDisarmed(), code: 10},
+            {value: this.isCrppled(), code: 13},
+            {value: this.isMuted(), code: 14},
+            {value: this.isSlept(), code: 12},
+            {value: this.isFrozen(), code: 15},
+            {value: this.isMarked(), code: 11},
+            {value: this.isMorphed(), code: 17},
+            {value: this.isDecimated(), code: 22},
+            {value: this.isInmortal(), code: 25},
+            {value: this.isHypnotized(), code: 21},
+            {value: this.isFeared(), code: 19},
+            {value: this.isCCInmune(), code: 28},
+            {value: this.flies(), code: 3},
+            {value: this.isSpellInmune(), code: 24},
+            {value: this.isDamageInmune(), code: 26},
+            {value: this.isBuffed(), code: 0},
+            {value: this.isDebuffed(), code: 1},
+            {value: this.isCauterized(), code: 2},
+            {value: this.isVulnerable(), code: 23},
+            {value: this.isBurnt(), code: 4},
+            {value: this.isBleeding(), code: 7},
+            {value: this.isPoisoned(), code: 5},
+            {value: this.isCursed(), code: 6},
+            {value: this.isShocked(), code: 8},
+            {value: this.isParasited(), code: 20},
+            {value: this.isIll(), code: 9}];
+        
+        for(var i = 0; i < conditions.length; i++){
+            let currentIndex = this.groupFrameIndex(params.sprite.getData("status"), conditions[i].code);
+            if(conditions[i].value && currentIndex == -1){
+                var image = params.scene.add.image(zeroX + (params.sprite.getData("status").children.size * 6 * params.scaleRatio), zeroY, "status_icons", conditions[i].code).setScale(params.scaleRatio / 3).setDepth(1);
+                params.sprite.getData("status").add(image);
+            }else if(!conditions[i].value && currentIndex != -1){
+                params.sprite.getData("status").remove(params.sprite.getData("status").children.entries[currentIndex], true, true);
+                for(var i = currentIndex; i < params.sprite.getData("status").children.size; i++){
+                    params.sprite.getData("status").children.entries[i].x -= 6 * params.scaleRatio;
+                }
             }
         }
 
         //se ejecutan condiciones especiales de los cambios de estado
         if(this.onlyMovingForward()){
-            entity.moveForward(sprite, scaleRatio, true);
+            params.entity.moveForward(params.sprite, params.scaleRatio, true);
+          }
+
+          if(this.isBanished()){
+              if(!params.sprite.isTinted){
+                params.sprite.setTintFill(0xd4af37);
+              }
+          }else{
+            if(params.sprite.isTinted){
+                params.sprite.clearTint();
+            }
           }
 
           switch(this.getVisibility()){
             case 0:
-              /*if(entity instanceof Playable){
-                if(sprite.alpha != 0.6){
-                  sprite.setAlpha(0.6);
+              /*if(params.entity instanceof Playable){
+                if(params.sprite.alpha != 0.6){
+                  params.sprite.setAlpha(0.6);
                 }
               }else{*/
-                if(sprite.alpha != 0){
-                  sprite.setAlpha(0);
+                if(params.sprite.alpha != 0){
+                    params.sprite.setAlpha(0);
                 }
               //}
               break;
             case 1:
-              if(sprite.alpha != 0.6){
-                sprite.setAlpha(0.6);
+              if(params.sprite.alpha != 0.6){
+                params.sprite.setAlpha(0.6);
               }
               break;
             case 2:
-              if(sprite.alpha != 1){
-                sprite.setAlpha(1);
+              if(params.sprite.alpha != 1){
+                params.sprite.setAlpha(1);
               }
               break;
             default:
-              sprite.setAlpha(1);
+              params.sprite.setAlpha(1);
               break;
+          }
+          //actualizar pocisiones de los iconos
+          for(var i = 0; i < params.sprite.getData("status").children.size; i++){
+            params.sprite.getData("status").children.entries[i].x = zeroX + (i * 6 * params.scaleRatio);
+            params.sprite.getData("status").children.entries[i].y = zeroY;
           }
     }
 }

@@ -221,6 +221,8 @@ export default class Hero extends Character {
     params.sprite.getData("underBar").setVisible(false);
     params.sprite.getData("healthBar").setVisible(false);
     params.sprite.getData("shieldBar").setVisible(false);
+    this.statusManager.purge(this, true, params.scene);
+    this.statusManager.purge(this, false, params.scene);
     params.factory.kill({x: this.spawnX, y: this.spawnY}, this.calculateSpawnTime(params.factory.respawnMeanTime), 0);
     params.scene.matter.world.remove(params.sprite.body);
     this.curHealth = 0;
