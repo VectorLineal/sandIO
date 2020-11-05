@@ -134,7 +134,80 @@ export default class Entity{
         }
     }
 
-    //funciones no gráficas
+    //getter y setter
+    getDamage(){
+        if(this.damage <= 0){
+            return 0;
+        }else{
+            return this.damage;
+        }
+    }
+    getArmor(){
+        return this.armor;
+    }
+    getEvasion(){
+        return this.evasion;
+    }
+    getMaxHealth(){
+        if(this.maxhealth <= 1){
+            return 1;
+        }else{
+            return this.maxHealth;
+        }
+    }
+    getCurHealth(){
+        if(this.curHealth <= 0){
+            return 0;
+        }else{
+            return this.curHealth;
+        }
+    }
+    getHealthRegen(){
+        if(this.healthRegen <= 0){
+            return 0;
+        }else{
+            return this.healthRegen;
+        }
+    }
+    getAtSpeed(){
+        if(this.atSpeed <= 0){
+            return 0;
+        }else{
+            return this.atSpeed;
+        }
+    }
+    getAccuracy(){
+        return this.accuracy;
+    }
+    getMagicArmor(){
+        return this.magicArmor;
+    }
+    //stats adicionales.
+    getShield(){
+        return this.shield;
+    }
+    getFOV(){
+        if(this.fov <= 1){
+            return 1;
+        }else{
+            return this.fov;
+        }
+    }
+    getCauterize(){
+        if(this.cauterize <= -1){
+            return -1;
+        }else{
+            return this.cauterize;
+        }
+    }
+    getDamageAmp(){
+        if(this.damageAmplification <= -1){
+            return -1;
+        }else{
+            return this.damageAmplification;
+        }
+    }
+        
     getRange(){
         return this.range;
     }
@@ -158,7 +231,7 @@ export default class Entity{
             return transformArmorToPercentage(this.armor);
         }
     }
-    
+    //funciones no gráficas
     calculateNextLevelXp(){
         if(this.level >= 1 && this.level <= 24){
             return (1 + (this.level * 0.5)) * this.xpFactor;
@@ -198,7 +271,7 @@ export default class Entity{
     }
 
     dealDamage(amount, type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
-        var fixedAmount = amount * (1 - this.damageAmplification);
+        var fixedAmount = amount * (1 - this.getDamageAmp());
         if(!this.mayTakeDamage(type)){
             return 0;
         }else{
@@ -228,21 +301,21 @@ export default class Entity{
     }
 
     heal(amount){
-        this.curHealth += amount * (1 + this.cauterize);
-        if(this.curHealth >= this.maxHealth){
-            this.curHealth = this.maxHealth;
+        this.curHealth += amount * (1 + this.getCauterize());
+        if(this.getCurHealth() > this.getMaxHealth()){
+            this.curHealth = this.getMaxHealth();
         }
     }
     
     takeDamage(params){ //scene, sprite, body, group, factory, scaleRatio, type, avoidable, critable, attacker, attackerLabel
         //type 0 es puro, 1 físico y 2 mágico
-        var rawDamage = params.attacker.damage;
+        var rawDamage = params.attacker.getDamage();
         var crit = false;
         var finalDamage = 0;
 
         if(!params.avoidable){
             if(params.critable){
-                if(randomFloat(101) <= params.attacker.crit){
+                if(randomFloat(101) <= params.attacker.getCrit()){
                     rawDamage *= params.attacker.getCritMultiplier();
                     crit = true;
                 }
@@ -259,10 +332,10 @@ export default class Entity{
                 this.onDeath(params);
             }
         }else{
-            var hitChance = params.attacker.accuracy - this.evasion;
+            var hitChance = params.attacker.getAccuracy() - this.getEvasion();
             if(randomFloat(101) <= hitChance){
                 if(params.critable){
-                    if(randomFloat(101) <= params.attacker.crit){
+                    if(randomFloat(101) <= params.attacker.getCrit()){
                         rawDamage *= params.attacker.getCritMultiplier();
                         crit = true;
                     }
@@ -311,11 +384,11 @@ export default class Entity{
     }
 
     applyHealthRegen(params){
-        this.heal(this.healthRegen / 60);
+        this.heal(this.getHealthRegen() / 60);
     }
     
     restoreHealth(){
-        this.curHealth = this.maxHealth;
+        this.curHealth = this.getMaxHealth();
     }
 
     //funciones que indican posibilidad de ejecutar acciones según cambios de estado

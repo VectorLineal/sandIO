@@ -1,6 +1,6 @@
-class Pasive extends Skill{
-    constructor(name, effect, damageType, range, forEnemy){
-        super(name, effect, damageType, range, forEnemy);
+export default class Pasive extends Skill{
+    constructor(params){
+        super(params);
     }
 
     isAura(){

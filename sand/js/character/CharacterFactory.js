@@ -111,7 +111,7 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
           underColor = 0x00ffff;
         }
         sprite.setData("underBar", scene.add.rectangle(sprite.x, sprite.y - (scaleRatio * sprite.body.shape.width / 2), sprite.body.shape.width * scaleRatio, 6 * scaleRatio, underColor).setDepth(1).setAlpha(0.2));
-        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y - (scaleRatio * sprite.body.shape.width / 2), (sprite.getData("backend").curHealth / sprite.getData("backend").maxHealth * sprite.body.shape.width) * scaleRatio, 6 * scaleRatio, color).setDepth(1).setAlpha(0.4));
+        sprite.setData("healthBar", scene.add.rectangle(sprite.x, sprite.y - (scaleRatio * sprite.body.shape.width / 2), (sprite.getData("backend").getCurHealth() / sprite.getData("backend").getMaxHealth() * sprite.body.shape.width) * scaleRatio, 6 * scaleRatio, color).setDepth(1).setAlpha(0.4));
         sprite.setData("shieldBar", scene.add.rectangle(sprite.x + sprite.getData("healthBar").width, sprite.y - (scaleRatio * sprite.body.shape.width / 2), sprite.getData("healthBar").width, 6 * scaleRatio, 0xaaaaaa).setDepth(1).setAlpha(0.4));
         sprite.setData("displayDamage", scene.add.text(sprite.x, sprite.y, "", { font: '48px Arial', fill: '#eeeeee' }).setDepth(1).setData("timer", 0).setScale(0.2 * scaleRatio));
         sprite.setData("status", scene.add.group());
@@ -171,19 +171,19 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
         let fact = this;
         group.children.each(function(entity){
             //se actualiza la regeneración de salud y mana
-            if(!entity.getData('backend').isDead()){
-              entity.getData('backend').applyHealthRegen({scene: scene});
-              entity.getData('backend').applyManaRegen({scene: scene});
+            if(!entity.getData("backend").isDead()){
+              entity.getData("backend").applyHealthRegen({scene: scene});
+              entity.getData("backend").applyManaRegen({scene: scene});
               //se actualizan las barras de vida, escudo e íconos de cmaibo de estado
               entity.getData('underBar').x = entity.x;
               entity.getData('underBar').y = entity.y - (scaleRatio * entity.body.shape.width / 2);
               entity.getData('healthBar').x = entity.x;
               entity.getData('healthBar').y = entity.y - (scaleRatio * entity.body.shape.width / 2);
-              entity.getData('healthBar').width = (entity.getData("backend").curHealth / (entity.getData("backend").maxHealth + entity.getData("backend").shield)) * entity.body.shape.width * scaleRatio;
+              entity.getData('healthBar').width = (entity.getData("backend").getCurHealth() / (entity.getData("backend").getMaxHealth() + entity.getData("backend").getShield())) * entity.body.shape.width * scaleRatio;
               entity.getData('shieldBar').x = entity.x + entity.getData('healthBar').width;
               entity.getData('shieldBar').y = entity.y - (scaleRatio * entity.body.shape.width / 2);
-              entity.getData('shieldBar').width = (entity.getData("backend").shield / (entity.getData("backend").maxHealth + entity.getData("backend").shield)) * entity.body.shape.width * scaleRatio;
-              entity.getData('backend').statusManager.onUpdate({scene: scene, entity: entity.getData('backend'), sprite: entity, scaleRatio: scaleRatio, factory: fact});
+              entity.getData('shieldBar').width = (entity.getData("backend").getShield() / (entity.getData("backend").getMaxHealth() + entity.getData("backend").getShield())) * entity.body.shape.width * scaleRatio;
+              entity.getData("backend").statusManager.onUpdate({scene: scene, entity: entity.getData("backend"), sprite: entity, body: entity.body, scaleRatio: scaleRatio, factory: fact});
             }
             
             //entity.setVelocity(0);

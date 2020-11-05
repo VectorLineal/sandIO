@@ -2,13 +2,14 @@ import Entity from "./Entity.js";
 import Hero from "./Hero.js";
 
 export default class Character extends Entity{
-    constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, critMultiplier, ranged, range){
+    constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, critMultiplier, ranged, range, skills){
         super(name, level, xpFactor, bountyFactor, damage, armor, evasion, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range);
         this.race = race;
         this.isBoss = false;
 
-        //referente a poderes, buffs y debuffs
-        this.skills = {};
+        //referente a poderes e items
+        this.pasives = skills.pasives;
+        this.skills = skills.spells;
         this.items = [];
         
         //stats del personaje como tal
@@ -28,21 +29,85 @@ export default class Character extends Entity{
         this.spawnY = spawnPoint.y;
     }
 
+    //getter y setter
+    getFortitude(){
+        if(this.fortitude >= 100){
+            return 100;
+        }else{
+            return this.fortitude;
+        }
+    }
+    getSpeed(){
+        if(this.speed <= 0){
+            return 0;
+        }else{
+            return this.speed;
+        }
+    }
+    getCrit(){
+        return this.crit;
+    }
+    getMaxMana(){
+        if(this.maxMana <= 1){
+            return 1;
+        }else{
+            return this.maxMana;
+        }
+    }
+    getCurMana(){
+        if(this.curMana <= 0){
+            return 0;
+        }else{
+            return this.curMana;
+        }
+    }
+    getManaRegen(){
+        if(this.manaRegen <= 0){
+            return 0;
+        }else{
+            return this.manaRegen;
+        }
+    }
+    getSpellPower(){
+        if(this.spellPower <= -100){
+            return -100;
+        }else{
+            return this.spellPower;
+        }
+    }
+    getWill(){
+        if(this.will >= 100){
+            return 100;
+        }else{
+            return this.will;
+        }
+    }
+    getSpellPower(){
+        if(this.concentration <= -100){
+            return -100;
+        }else{
+            return this.concentration;
+        }
+    }
+
     //funciones no gráficas
     spendMana(params){
       this.curMana += params.amount;
+      if(this.curMana < 0){
+        this.curMana = 0;
+      }
     }
 
     applyManaRegen(params){
-      if(this.curMana >= this.maxMana){
-          this.curMana = this.maxMana;
+      if(this.curMana >= this.getMaxMana()){
+          this.curMana = this.getMaxMana();
       }else{
-          this.curMana += (this.manaRegen / 60);
+          this.curMana += (this.getManaRegen() / 60);
       }
     }
 
     restoreMana(){
-      this.curMana = this.maxMana;
+      this.curMana = this.getMaxMana();
     }
 
     //funciones sobre eventos
@@ -89,9 +154,9 @@ export default class Character extends Entity{
     moveY(sprite, direction, scale){
         if(this.mayMove()){
             if(direction){
-                sprite.setVelocityY(-this.speed * scale / 6);
+                sprite.setVelocityY(-this.getSpeed() * scale / 6);
             }else{
-                sprite.setVelocityY(this.speed * scale / 6);
+                sprite.setVelocityY(this.getSpeed() * scale / 6);
             }
         }
     }
@@ -99,9 +164,9 @@ export default class Character extends Entity{
     moveX(sprite, direction, scale){
         if(this.mayMove()){
             if(direction){
-                sprite.setVelocityX(this.speed * scale / 6);
+                sprite.setVelocityX(this.getSpeed() * scale / 6);
             }else{
-                sprite.setVelocityX(-this.speed * scale / 6);
+                sprite.setVelocityX(-this.getSpeed() * scale / 6);
             }
         }
     }
@@ -112,19 +177,12 @@ export default class Character extends Entity{
             var deltaX = 0;
             var deltaY = 0;
 
-            /*while(direction > Math.PI){
-                direction -= Math.PI;
-            }
-            while(direction < -Math.PI){
-                direction += Math.PI;
-            }*/
-
             if(alteredSpeed != 0){
                 deltaX = alteredSpeed * Math.cos(direction);
                 deltaY = alteredSpeed * Math.sin(direction);
             }else{
-                deltaX = this.speed * Math.cos(direction);
-                deltaY = this.speed * Math.sin(direction);
+                deltaX = this.getSpeed() * Math.cos(direction);
+                deltaY = this.getSpeed() * Math.sin(direction);
             }
             sprite.setVelocity(deltaX * scale / 6, deltaY * scale / 6);
         }

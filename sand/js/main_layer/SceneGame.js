@@ -390,20 +390,15 @@ export default class SceneGame extends Phaser.Scene {
     var pointer = this.input.activePointer;
 
     if (this.left.isDown) {
-      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend")
-        .moveX(this.teamAHeroManager.getPlayer(this.teamASprites), false, 9.84 / this.scaleRatio);
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").moveX(this.teamAHeroManager.getPlayer(this.teamASprites), false, 9.84 / this.scaleRatio);
     } else if (this.right.isDown) {
-      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend")
-        .moveX(this.teamAHeroManager.getPlayer(this.teamASprites), true, 9.84 / this.scaleRatio);
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").moveX(this.teamAHeroManager.getPlayer(this.teamASprites), true, 9.84 / this.scaleRatio);
     }
 
     if (this.up.isDown) {
-      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend")
-        .moveY(this.teamAHeroManager.getPlayer(this.teamASprites), true, 9.84 / this.scaleRatio);
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").moveY(this.teamAHeroManager.getPlayer(this.teamASprites), true, 9.84 / this.scaleRatio);
     } else if (this.down.isDown) {
-      this.teamAHeroManager.getPlayer(this.teamASprites)
-        .getData("backend")
-        .moveY(this.teamAHeroManager.getPlayer(this.teamASprites), false, 9.84 / this.scaleRatio);
+      this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").moveY(this.teamAHeroManager.getPlayer(this.teamASprites), false, 9.84 / this.scaleRatio);
     }
 
     if (this.cancel.isDown) {
@@ -414,7 +409,7 @@ export default class SceneGame extends Phaser.Scene {
       if (!this.teamAHeroManager.getPlayer(this.teamASprites).anims.isPlaying) {
         switch (this.lastKeyPressed) {
           case "q":
-            if (this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >= 40 + 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level) {
+            if (this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCurMana() >= 40 + 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level) {
               this.teamAHeroManager.getPlayer(this.teamASprites).play("spellq_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name);
               this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
                 scene: this,
@@ -427,7 +422,7 @@ export default class SceneGame extends Phaser.Scene {
             break;
           case "e":
             if (
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCurMana() >=
               30 + 3 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
             ) {
               this.teamAHeroManager.getPlayer(this.teamASprites).play(
@@ -445,7 +440,7 @@ export default class SceneGame extends Phaser.Scene {
             break;
           case "f":
             if (
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCurMana() >=
               30 + 6 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
             ) {
               this.teamAHeroManager.getPlayer(this.teamASprites).play(
@@ -462,7 +457,7 @@ export default class SceneGame extends Phaser.Scene {
             break;
           case "r":
             if (
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").curMana >=
+              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCurMana() >=
               45 + 5 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
             ) {
               this.teamAHeroManager.getPlayer(this.teamASprites).play(
@@ -682,7 +677,7 @@ export default class SceneGame extends Phaser.Scene {
     var group = this.getRelatedGroup(parseInt(label.split("#")[1]));
     var sprite = {};
     group.children.each(function(entity){
-      if(entity.getData('backend').name == label.split("#")[0]){
+      if(entity.getData("backend").name == label.split("#")[0]){
         sprite = entity;
         return;
       }

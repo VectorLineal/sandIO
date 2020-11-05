@@ -36,6 +36,7 @@ export default class NPCFactory extends CharacterFactory{
       propertie.character.critMultiplier,
       propertie.character.ranged,
       propertie.character.range,
+      propertie.character.skills,
       propertie.character.detectionRange,
       propertie.character.behavour,
       propertie.character.isBoss
@@ -44,6 +45,8 @@ export default class NPCFactory extends CharacterFactory{
 
   onUpdate(scene, group, scaleRatio, clock){
     super.onUpdate(scene, group, scaleRatio);
-    this.level = 1 + Math.floor(clock/2160);
+    if(this.level < 25){
+      this.level = 1 + Math.floor(clock/2160);
+    }
   }
 }

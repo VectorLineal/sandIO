@@ -58,6 +58,7 @@ export default class Herofactory extends CharacterFactory {
             getInlineLinearFunction(propertie.character.Det),
             1,
             propertie.character.xpFactor,
+            propertie.character.skills,
             propertie.character.bodyArmor,
             propertie.character.weapon,
             spawnPoint
@@ -76,6 +77,7 @@ export default class Herofactory extends CharacterFactory {
           getInlineLinearFunction(propertie.character.Det),
           1,
           propertie.character.xpFactor,
+          propertie.character.skills,
           propertie.character.bodyArmor,
           propertie.character.weapon,
           spawnPoint
@@ -120,8 +122,8 @@ export default class Herofactory extends CharacterFactory {
                   body.gameObject = params.group.children.entries[i];
                   params.group.children.entries[i].body = body;
                   console.log(params.group.children.entries[i].getData('backend').name,"body is", params.group.children.entries[i].body);
-                  params.group.children.entries[i].getData("backend").restoreHealth();
-                  params.group.children.entries[i].getData("backend").restoreMana();
+                  params.group.children.entries[i].getData('backend').restoreHealth();
+                  params.group.children.entries[i].getData('backend').restoreMana();
                   params.group.children.entries[i].getData("underBar").setVisible(true);
                   params.group.children.entries[i].getData("healthBar").setVisible(true);
                   params.group.children.entries[i].getData("shieldBar").setVisible(true);
@@ -135,11 +137,11 @@ export default class Herofactory extends CharacterFactory {
     onUpdate(scene, group, scaleRatio){
       super.onUpdate(scene, group, scaleRatio);
       group.children.each(function(entity){
-        entity.getData("backend").gold += 1/60;
+        entity.getData('backend').gold += 1/60;
       });
 
       if(this.getPlayer(group) != null){
-        if(this.getPlayer(group).getData("backend").isDead() && this.getPlayerTimer() % 60 == 0){
+        if(this.getPlayer(group).getData('backend').isDead() && this.getPlayerTimer() % 60 == 0){
           scene.events.emit('updateRespawn');
         }
         if(scene.clock % 60 == 0){

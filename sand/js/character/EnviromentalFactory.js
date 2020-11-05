@@ -39,7 +39,7 @@ export default class EnviromentalFactory {
             )
             body.gameObject = entity;
             entity.body = body;
-            entity.getData("backend").curHealth = entity.getData("backend").maxHealth;
+            entity.getData('backend').curHealth = entity.getData('backend').getMaxHealth();
             entity.setCollisionGroup(cGroup);
             entity.setCollidesWith(mask);
             entity.setDepth(0.8);

@@ -11,6 +11,7 @@ export default class Hero extends Character {
     race,Str, Res, Agi, Per, Int, Det,
     level,
     xpFactor,
+    skills,
     bodyArmor,
     weapon,
     spawnPoint
@@ -40,7 +41,8 @@ export default class Hero extends Character {
       spawnPoint,
       0,
       false,
-      0
+      0,
+      skills
     );
     this.type = type;
     this.xp = 0;
@@ -117,7 +119,7 @@ export default class Hero extends Character {
     this.concentration = this.det.getStat3();
   }
 
-  //funciones no gráficas
+  //getter y setter
   getOnCrit() {
     return this.weapon.onCrit;
   }
@@ -133,7 +135,7 @@ export default class Hero extends Character {
   getRanged() {
     return this.weapon.ranged;
   }
-
+//funciones no gráficas
   takeDamage(params){
     let damageStatus = super.takeDamage(params);
     //se actualizan las puntuaciones
@@ -212,9 +214,6 @@ export default class Hero extends Character {
 
   //funciones sobre eventos
   onDeath(params){
-    //limpiar todas las alteraciones de stats y cambios de estado
-    this.shield = 0;
-    
     //resetear animaciones a estado idle
     params.sprite.anims.stopOnFrame(0);
     params.sprite.setVisible(false);
