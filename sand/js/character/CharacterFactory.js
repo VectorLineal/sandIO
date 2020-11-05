@@ -174,6 +174,7 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
             if(!entity.getData("backend").isDead()){
               entity.getData("backend").applyHealthRegen({scene: scene});
               entity.getData("backend").applyManaRegen({scene: scene});
+              entity.getData("backend").updateCooldowns({scene: scene});
               //se actualizan las barras de vida, escudo e íconos de cmaibo de estado
               entity.getData('underBar').x = entity.x;
               entity.getData('underBar').y = entity.y - (scaleRatio * entity.body.shape.width / 2);

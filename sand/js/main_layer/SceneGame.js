@@ -224,7 +224,9 @@ export default class SceneGame extends Phaser.Scene {
       ],
       [{ x: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].x, y: this.cache.json.get("mapEnvironment").team1.spawnPoints[0].y, spawns: [0] }],
       this.groups[0],
-      this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, 360
+      this.categories[1] ^ this.categories[2] ^ this.categories[4] ^ 1, 360,
+      this.cache.json.get("entities").classes,
+      this.cache.json.get("entities").races
     );
     this.teamAHeroManager.generateInitialSet(
       this,
@@ -239,7 +241,9 @@ export default class SceneGame extends Phaser.Scene {
       ],
       [{ x: this.cache.json.get("mapEnvironment").team2.spawnPoints[0].x, y: this.cache.json.get("mapEnvironment").team2.spawnPoints[0].y, spawns: [0] }],
       this.groups[1],
-      this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, 360
+      this.categories[0] ^ this.categories[3] ^ this.categories[4] ^ 1, 360,
+      this.cache.json.get("entities").classes,
+      this.cache.json.get("entities").races
     );
     this.teamBHeroManager.generateInitialSet(
       this,
@@ -379,6 +383,28 @@ export default class SceneGame extends Phaser.Scene {
       this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").stop(this.teamAHeroManager.getPlayer(this.teamASprites),"y");
     }, this);
 
+    //hechizos
+    this.input.keyboard.on('keydown-Q', function(event){
+      if(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").mayCastSpell("q")){
+        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").setUpSpell(this, this.teamAHeroManager.getPlayer(this.teamASprites), "q");
+      }
+    }, this);
+    this.input.keyboard.on('keydown-E', function(event){
+      if(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").mayCastSpell("e")){
+        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").setUpSpell(this, this.teamAHeroManager.getPlayer(this.teamASprites), "e");
+      }
+    }, this);
+    this.input.keyboard.on('keydown-F', function(event){
+      if(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").mayCastSpell("f")){
+        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").setUpSpell(this, this.teamAHeroManager.getPlayer(this.teamASprites), "f");
+      }
+    }, this);
+    this.input.keyboard.on('keydown-R', function(event){
+      if(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").mayCastSpell("r")){
+        this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").setUpSpell(this, this.teamAHeroManager.getPlayer(this.teamASprites), "r");
+      }
+    }, this);
+
     //camera
     this.cameras.main.startFollow(this.teamAHeroManager.getPlayer(this.teamASprites), true, 1, 1);
     this.cameras.main.roundPixels = true;
@@ -407,74 +433,10 @@ export default class SceneGame extends Phaser.Scene {
 
     if (pointer.isDown) {
       if (!this.teamAHeroManager.getPlayer(this.teamASprites).anims.isPlaying) {
-        switch (this.lastKeyPressed) {
-          case "q":
-            if (this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCurMana() >= 40 + 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level) {
-              this.teamAHeroManager.getPlayer(this.teamASprites).play("spellq_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name);
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
-                scene: this,
-                amount: -40 - 4 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
-              });
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.becomeDamageInmune(60 + Math.ceil(1.92 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level));
-            } else {
-              this.lastKeyPressed = "";
-            }
-            break;
-          case "e":
-            if (
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCurMana() >=
-              30 + 3 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
-            ) {
-              this.teamAHeroManager.getPlayer(this.teamASprites).play(
-                "spelle_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name
-              );
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
-                scene: this,
-                amount: -30 - 3 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
-              });
-              this.lastKeyPressed = "";
-            } else {
-              this.lastKeyPressed = "";
-            }
-            this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.pushBuff(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend"), {name:"demon_buff2", attribute: "damageAmplification", amount: 0.3, timer: 180, stacks: 1, stackable: 2, clearAtZero: false}, this);
-            break;
-          case "f":
-            if (
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCurMana() >=
-              30 + 6 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
-            ) {
-              this.teamAHeroManager.getPlayer(this.teamASprites).play(
-                "spellf_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name
-              );
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
-                scene: this,
-                amount: -30 - 6 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
-              });
-            } else {
-              this.lastKeyPressed = "";
-            }
-            this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.pushDamageOnTime(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend"), {name:"chimera_burn1", damageType: 2, amount: 0.5, debuffAmount: -12, timer: 240, stacks: 1, stackable: 4, caster: null}, "illness", this);
-            break;
-          case "r":
-            if (
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").getCurMana() >=
-              45 + 5 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level
-            ) {
-              this.teamAHeroManager.getPlayer(this.teamASprites).play(
-                "spellr_" + this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").name
-              );
-              this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").spendMana({
-                scene: this,
-                amount: -45 - 5 * this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").level,
-              });
-            } else {
-              this.lastKeyPressed = "";
-            }
-            this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").statusManager.pushDamageOnTime(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend"), {name:"chimera_burn1", damageType: 2, amount: 0.3, debuffAmount: -2, timer: 240, stacks: 1, stackable: 3, caster: null}, "electric", this);
-            break;
-          default:
-            this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").castAttack(this.teamAHeroManager.getPlayer(this.teamASprites));
-            break;
+        if(this.lastKeyPressed == ""){
+          this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").castAttack(this.teamAHeroManager.getPlayer(this.teamASprites));
+        }else{
+          this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").castSpell(this, this.teamAHeroManager.getPlayer(this.teamASprites), this.lastKeyPressed);
         }
         for(var i = 0; i< this.neutralSprites.children.getArray().length; i++){
           this.neutralSprites.children.getArray()[i].getData("backend").castAttack(this.neutralSprites.children.getArray()[i]);
@@ -483,16 +445,6 @@ export default class SceneGame extends Phaser.Scene {
           this.teamBSprites.children.getArray()[i].getData("backend").castAttack(this.teamBSprites.children.getArray()[i]);
         }
       }
-    }
-
-    if (this.spell1.isDown) {
-      this.lastKeyPressed = "q";
-    } else if (this.spell2.isDown) {
-      this.lastKeyPressed = "e";
-    } else if (this.spell3.isDown) {
-      this.lastKeyPressed = "f";
-    } else if (this.spell4.isDown) {
-      this.lastKeyPressed = "r";
     }
 
     //se actualizan todas las entidades

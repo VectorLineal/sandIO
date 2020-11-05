@@ -36,7 +36,6 @@ export default class Building extends Entity {
       range
     );
     this.type = type; //0: enviromental element (árboles, piedras, etc), renovable, 1: torres o demás edificios no renovables, 2: puerta, elemento no renovable e interactivo, 3: objetivo del juego
-    console.log("type", type);
     switch (type) {
       case 0:
         this.onDeath = function (params) {
@@ -67,7 +66,7 @@ export default class Building extends Entity {
         }
         };
         break;
-      case (1, 2):
+      case 1:
         this.onDeath = function (params) {
           //params.sprite.getData("healthBar").destroy();
           params.sprite.getData("displayDamage").destroy();

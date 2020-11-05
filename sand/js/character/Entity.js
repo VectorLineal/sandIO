@@ -41,12 +41,16 @@ export default class Entity{
     //funciones sobre sprites
     addAnimation(scene, animationName, frames){
         var animationSpeed = this.calculateAttackRate();
-        if(animationName != "attack_" + this.name && animationName != "attack_" + this.name + "_end"){
-            animationSpeed = 500/*this.skills[animationName].castPoint*/;
+        if(animationName != "attack_" + this.name && animationName != "attack_" + this.name + "_end" && this.skills[animationName.substr(5, 1)].type != "modifier"){
+            animationSpeed = this.skills[animationName.substr(5, 1)].castpoint;
         }else if(animationName == "attack_" + this.name){
             this.atFrames[0] = frames;
         }else if(animationName == "attack_" + this.name + "_end"){
             this.atFrames[1] = frames;
+        }else if(this.skills[animationName.substr(5, 1)].type == "modifier" && animationName.substr(animationName.length - 3) != "end"){
+            this.atFrames[2] = frames;
+        }else if(this.skills[animationName.substr(5, 1)].type == "modifier" && animationName.substr(animationName.length - 3) == "end"){
+            this.atFrames[3] = frames;
         }
 
         scene.anims.create({
@@ -58,19 +62,38 @@ export default class Entity{
 
     rebalanceAttackAnimations(scene){
         let totalFrames = this.atFrames[0].length +  this.atFrames[1].length;
-            scene.anims.remove("attack_" + this.name);
-            scene.anims.create({
-                key: "attack_" + this.name,
-                frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames[0] }),
-                duration: this.calculateAttackRate() * this.atFrames[0].length / totalFrames
-            });
+        scene.anims.remove("attack_" + this.name);
+        scene.anims.create({
+            key: "attack_" + this.name,
+            frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames[0] }),
+            duration: this.calculateAttackRate() * this.atFrames[0].length / totalFrames
+        });
 
-            scene.anims.remove("attack_" + this.name + "_end");
-            scene.anims.create({
-                key: "attack_" + this.name + "_end",
-                frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames[1] }),
-                duration: this.calculateAttackRate() * this.atFrames[1].length / totalFrames
-            });
+        scene.anims.remove("attack_" + this.name + "_end");
+        scene.anims.create({
+            key: "attack_" + this.name + "_end",
+            frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames[1] }),
+            duration: this.calculateAttackRate() * this.atFrames[1].length / totalFrames
+        });
+        if(this.skills.e != null){
+            if(this.skills.e.type == "modifier"){
+                scene.anims.remove("spelle_" + this.name);
+                scene.anims.create({
+                    key: "spelle_" + this.name,
+                    frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames[2] }),
+                    duration: this.calculateAttackRate() * this.atFrames[2].length / totalFrames
+                });
+            }
+        }else if(this.skills.r != null){
+            if(this.skills.r.type == "modifier"){
+                scene.anims.remove("spellr_" + this.name);
+                scene.anims.create({
+                    key: "spellr_" + this.name,
+                    frames: scene.anims.generateFrameNumbers(this.name, { frames: this.atFrames[2] }),
+                    duration: this.calculateAttackRate() * this.atFrames[2].length / totalFrames
+                });
+            }
+        }
     }
 
     commitAttack(animation, frame, gameObject) {

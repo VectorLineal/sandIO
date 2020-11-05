@@ -4,10 +4,12 @@ import CharacterFactory from "./CharacterFactory.js";
 import {getInlineLinearFunction} from "../main_layer/MathUtils.js";
 
 export default class Herofactory extends CharacterFactory {
-  constructor(properties, spawnProperties, group, mask, respawnMeanTime) {
+  constructor(properties, spawnProperties, group, mask, respawnMeanTime, classes, races) {
     super(properties, spawnProperties, group, mask, respawnMeanTime);
     this.playerIndex = -1;
     this.playerSpawnIndex = -1;
+    this.classes = classes;
+    this.races = races;
     for(var i = 0; i< this.spriteProperties.length; i++){
       if(this.spriteProperties[i].player){
         for(var j = 0; j< this.spawnProperties.length; j++){
@@ -44,6 +46,16 @@ export default class Herofactory extends CharacterFactory {
   }
 
   generateLogic(propertie, spawnPoint) {
+    propertie.character.skills.pasives.push({
+      name: propertie.character.type,
+      effect: this.classes[propertie.character.type].effect,
+      forEnemy: this.classes[propertie.character.type].forEnemy
+    });
+    propertie.character.skills.pasives.push({
+      name: propertie.character.race,
+      effect: this.races[propertie.character.race].effect,
+      forEnemy: this.races[propertie.character.race].forEnemy
+    });
       if(propertie.player){
         return new Playable(
             propertie.name,

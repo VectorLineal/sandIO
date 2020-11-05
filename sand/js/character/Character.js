@@ -1,5 +1,7 @@
 import Entity from "./Entity.js";
 import Hero from "./Hero.js";
+import Pasive from "./skill/Pasive.js";
+import Spell from "./skill/Spell.js";
 
 export default class Character extends Entity{
     constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, critMultiplier, ranged, range, skills){
@@ -8,8 +10,22 @@ export default class Character extends Entity{
         this.isBoss = false;
 
         //referente a poderes e items
-        this.pasives = skills.pasives;
-        this.skills = skills.spells;
+        for(var i = 0; i < skills.pasives.length; i++){
+            this.pasives.push(new Pasive(skills.pasives[i]));
+        }
+        this.skills = {};
+        if(skills.spells["q"] != null){
+            this.skills.q = new Spell(skills.spells["q"]);
+        }
+        if(skills.spells["e"] != null){
+            this.skills.e = new Spell(skills.spells["e"]);
+        }
+        if(skills.spells["f"] != null){
+            this.skills.f = new Spell(skills.spells["f"]);
+        }
+        if(skills.spells["r"] != null){
+            this.skills.r = new Spell(skills.spells["r"]);
+        }
         this.items = [];
         
         //stats del personaje como tal
@@ -110,6 +126,8 @@ export default class Character extends Entity{
       this.curMana = this.getMaxMana();
     }
 
+
+
     //funciones sobre eventos
     onDeath(params){
         //si el último que dio el golpe es una criatura neutral, no se reparte ni xp ni oro por lo que la función termina su ejecución acá
@@ -196,14 +214,87 @@ export default class Character extends Entity{
         sprite.setAngle(direction);
     }
 
+    //funciones de hechizos
+    updateCooldowns(params){
+        if(this.skills["q"] != null){
+            if(this.skills["q"].curCooldown > 0){
+                this.skills["q"].curCooldown--;
+            }
+        }
+        if(this.skills["e"] != null){
+            if(this.skills["e"].curCooldown > 0){
+                this.skills["e"].curCooldown--;
+            }
+        }
+        if(this.skills["f"] != null){
+            if(this.skills["f"].curCooldown > 0){
+                this.skills["f"].curCooldown--;
+            }
+        }
+        if(this.skills["r"] != null){
+            if(this.skills["r"].curCooldown > 0){
+                this.skills["r"].curCooldown--;
+            }
+        }
+    }
+
+    checkCooldown(key){
+        if(this.skills[key] == null){
+            return false;
+        }else{
+            return this.skills[key].curCooldown == 0;
+        }
+    }
+
+    mayCastSpell(key){
+        if(this.skills[key] == null){
+            return false;
+        }else{
+            return this.checkCooldown(key) && this.mayCastSpells();
+        }
+    }
+
+    setUpSpell(scene, sprite, key){//self, projectile, conic_projectile, modifier, area, area_point, direction
+        //se supone que para este punto ya se ha checkeado si el hechizo existe por lo que se omite checkeo
+        if(this.skills[key].type == "self" || this.skills[key].type == "direction" || this.skills[key].type == "area"){
+            this.castSpell(scene, sprite, key);
+        }else{
+            scene.lastKeyPressed = key;
+        }
+    }
+
+    castSpell(scene, sprite, key){
+        //se supone que para este punto ya se ha checkeado si el hechizo existe por lo que se omite checkeo
+        if (this.getCurMana() >= this.skills[key].getManaCost(this.level)) {
+            this.spendMana({scene: scene, amount: - this.skills[key].getManaCost(this.level)});
+            sprite.play("spell" + key + "_" + this.name);
+            this.skills[key].curCooldown = this.skills[key].getCooldown(this.level);
+        }else{
+            console.log("not enough mana");
+        }
+        sprite.scene.lastKeyPressed = "";
+    }
+
     commitSpellq(animation, frame, gameObject) {
         gameObject.scene.lastKeyPressed = "";
+        //debe reemplazarse por una función que interprete el effect a código js
+        gameObject.getData("backend").statusManager.becomeDamageInmune(60 + Math.ceil(1.92 * gameObject.getData("backend").level));
     }
     commitSpelle(animation, frame, gameObject) {
-        gameObject.scene.lastKeyPressed = "";
+        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"),{
+            name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.e.name,
+            attribute: "damage",
+            amount: gameObject.getData("backend").damage * (0.02 * gameObject.getData("backend").level + 0.15),
+            timer: 1,
+            stacks: 1,
+            stackable: 1,
+            clearAtZero: false
+        }, gameObject.scene);
+        gameObject.getData("backend").commitAttack(animation, frame, gameObject);
     }
     commitSpellf(animation, frame, gameObject) {
         gameObject.scene.lastKeyPressed = "";
+        gameObject.getData("backend").statusManager.hypnotize(60);
     }
     commitSpellr(animation, frame, gameObject) {
         gameObject.scene.lastKeyPressed = "";

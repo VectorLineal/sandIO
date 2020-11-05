@@ -483,7 +483,6 @@ export default class{
         }
         return -1; //en caso que el elemento no esté en la lista
     }
-
     pushBuff(entity, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
         let posibleIndex = this.getListIndex(this.buffs, element.name);
         if(posibleIndex != -1){

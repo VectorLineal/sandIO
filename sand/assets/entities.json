@@ -43,7 +43,7 @@
                     },
                     "forEnemy": true,
                     "isPhysical": true,
-                    "cooldown": "4",
+                    "cooldown": "240",
                     "castpoint": 670,
                     "manaCost": "2x+35",
                     "type": "area_point"
@@ -52,21 +52,21 @@
                     "name": "colossal_strength",
                     "effect": "damageChange(3x+32, 300) fortitudeChange(1.6x+5, 300)",
                     "isPhysical": true,
-                    "cooldown": "-0.4x+20",
+                    "cooldown": "-24x+1200",
                     "castpoint": 500,
-                    "manaCost": "2x+35",
+                    "manaCost": "7x+45",
                     "type": "self"
                   },
                   "r":{
                     "name": "rancorous_charge",
-                    "effect": "self.hypno(-3) self.speedChange(30, -3) onBodyCollision(self.clearhypno self.resetspeed target.dealDamage(self.damage*(0.04x+1), 0, 1) target.stun(0.04x+1) target.push(50) self.resetOnBodyCollision)",
+                    "effect": "self.hypno(-3) self.speedChange(30, -3) onBodyCollision(self.clearhypno self.resetspeed target.dealDamage(self.damage*(0.04x+1), 0, 1) target.stun(2.4x+60) target.push(50) self.resetOnBodyCollision)",
                     "isUlti": true,
                     "damageType": 2,
                     "forEnemy": true,
                     "isPhysical": true,
-                    "cooldown": "4",
+                    "cooldown": "480",
                     "castpoint": 40,
-                    "manaCost": "2x+35",
+                    "manaCost": "5x+45",
                     "type": "direction"
                   }
                 }
@@ -128,6 +128,17 @@
                 ],
                 "spells":{
                   "q":{
+                    "name": "creepers_trap",
+                    "effect": "createEntity()",
+                    "range": {
+                      "reach": 40
+                    },
+                    "cooldown": "300",
+                    "castpoint": 800,
+                    "manaCost": "6x+40",
+                    "type": "area_point"
+                  },
+                  "e":{
                     "name": "freezing_projectiles",
                     "effect": "self.damageChange(x+15, 1) target.speedChange((-x-8)%, 60)",
                     "cooldown": "0",
@@ -135,30 +146,19 @@
                     "manaCost": "2x+5",
                     "type": "modifier"
                   },
-                  "e":{
-                    "name": "creepers_trap",
-                    "effect": "createEntity()",
-                    "range": {
-                      "reach": 40
-                    },
-                    "cooldown": "5",
-                    "castpoint": 800,
-                    "manaCost": "6x+40",
-                    "type": "area_point"
-                  },
                   "f":{
                     "name": "camouflage",
-                    "effect": "invis(0.4x+5) y speedChange(0.16x+2, -3)",
-                    "cooldown": "10",
+                    "effect": "invis(24x+300) y speedChange(0.16x+2, -3)",
+                    "cooldown": "600",
                     "castpoint": 600,
                     "manaCost": "4x+40",
                     "type": "self"
                   },
                   "r":{
                     "name": "genocide",
-                    "effect": "dealDamage(0.3*curHealth, 0, 0) damageChange(3x+32, 0.2x+3) critChange(x+10, 0.2x+3) lifestealChange(0.4, 0.2x+3) armorChange(-4x-30, 0.2x+3) mute(0.2x+3)",
+                    "effect": "dealDamage(0.3*curHealth, 0, 0) damageChange(3x+32, 12x+180) critChange(x+10, 12x+180) lifestealChange(0.4, 12x+180) armorChange(-4x-30, 12x+180) mute(12x+180)",
                     "isUlti": true,
-                    "cooldown": "-0.8x+45",
+                    "cooldown": "-48x+2700",
                     "castpoint": 500,
                     "manaCost": "14x+40",
                     "type": "self"
@@ -225,30 +225,30 @@
                 "spells":{
                   "q":{
                     "name": "parry",
-                    "effect": "undamageable(0.032x+0.2)",
-                    "cooldown": "5",
+                    "effect": "undamageable(1.92x+12)",
+                    "cooldown": "300",
                     "castpoint": 700,
-                    "manaCost": "4x+30",
+                    "manaCost": "4x+45",
                     "type": "self"
                   },
                   "e":{
                     "name": "coup_de_grace",
-                    "effect": " self.damageChange((2x+15)%, 11) target.disarm(0.02x+0.5) y target.speedChange(0.12x+2, 0.02x+0.5)",
+                    "effect": " self.damageChange((2x+15)%, 1) target.disarm(1.2x+30) y target.speedChange(0.12x+2, 1.2x+30)",
                     "isPhysical": true,
-                    "cooldown": "4",
+                    "cooldown": "240",
                     "castpoint": 0,
                     "manaCost": "3x+30",
                     "type": "modifier"
                   },
                   "f":{
                     "name": "nigth_assault",
-                    "effect": "self.hypno(60) timer(self.resetOnBodyCollision, 60) onBodyCollision(self.clearhypno target.dealDamage(3x+30, 0, 2) target.armorChange(2x+18, 0.04x+1) target.accuracyChange(3x+18, 0.04x+1) self.resetOnBodyCollision)",
+                    "effect": "self.hypno(60) timer(self.resetOnBodyCollision, 60) onBodyCollision(self.clearhypno target.dealDamage(3x+30, 0, 2) target.armorChange(2x+18, 2.4x+60) target.accuracyChange(3x+18, 2.4x+60) self.resetOnBodyCollision)",
                     "damageType": 2,
                     "forEnemy": true,
                     "isPhysical": true,
-                    "cooldown": "5",
+                    "cooldown": "300",
                     "castpoint": 100,
-                    "manaCost": "6x+30",
+                    "manaCost": "6x+60",
                     "type": "direction"
                   }
                 }
@@ -331,7 +331,7 @@
                     },
                     "forEnemy": true,
                     "isPhysical": true,
-                    "cooldown": "6",
+                    "cooldown": "360",
                     "castpoint": 650,
                     "manaCost": "5x+80",
                     "type": "projectile"
@@ -347,7 +347,7 @@
                     },
                     "forEnemy": true,
                     "isPhysical": true,
-                    "cooldown": "12",
+                    "cooldown": "720",
                     "castpoint": 650,
                     "manaCost": "5x+120",
                     "type": "projectile"
