@@ -135,6 +135,50 @@ export default class Hero extends Character {
   getRanged() {
     return this.weapon.ranged;
   }
+
+  getUserData(){
+    let spells = {};
+    if(this.skills.q  != null){
+        spells.q = {mana: this.skills.q.getManaCost(this.level), curCooldown: this.skills.q.curCooldown, cooldown: this.skills.q.getCooldown(this.level)};
+    }
+    if(this.skills.e != null){
+        spells.e = {mana: this.skills.e.getManaCost(this.level), curCooldown: this.skills.e.curCooldown,cooldown: this.skills.e.getCooldown(this.level)};
+    }
+    if(this.skills.f  != null){
+        spells.f = {mana: this.skills.f.getManaCost(this.level), curCooldown: this.skills.f.curCooldown,cooldown: this.skills.f.getCooldown(this.level)};
+    }
+    if(this.skills.r != null){
+        spells.r = {mana: this.skills.r.getManaCost(this.level), curCooldown: this.skills.r.curCooldown,cooldown: this.skills.r.getCooldown(this.level)};
+    }
+    return {
+      health: this.getCurHealth(),
+      maxHealth: this.getMaxHealth(),
+      regenH: this.getHealthRegen(),
+      shield: this.getShield(),
+      mana: this.getCurMana(),
+      maxMana: this.getMaxMana(),
+      regenM: this.getManaRegen(),
+      damage: this.getDamage(),
+      spellPower: this.getSpellPower(),
+      magicArm: this.getMagicArmor(),
+      arm: this.getArmor(),
+      vel: this.getSpeed(),
+      atS: this.getAtSpeed(),
+      atRate: this.calculateAttackRate() / 1000,
+      level: this.level,
+      xp: this.xp,
+      xpNext: this.calculateNextLevelXp(),
+      gold: this.gold,
+      evasion: this.getEvasion(),
+      acc: this.getAccuracy(),
+      fortitude : this.getFortitude(),
+      crit: this.getCrit(),
+      will: this.getWill(),
+      concentration: this.getConcentration(),
+      critMultiplier: this.getCritMultiplier(),
+      skills: spells
+    };
+  }
 //funciones no gráficas
   takeDamage(params){
     let damageStatus = super.takeDamage(params);

@@ -6,28 +6,17 @@ export default class HUDGame extends Phaser.Scene {
     constructor () {
         super({key: 'HUDScene', active: true});
         //variables que guardan datos de HUD
-        this.health = 0;
-        this.maxHealth = 0;
-        this.regenH = 0;
-        this.shield = 0;
-        this.mana = 0;
-        this.maxMana = 0;
-        this.regenM = 0;
-        this.damage = 0;
-        this.spellPower = 0;
-        this.magicArm = 0;
-        this.arm = 0;
-        this.vel = 0;
-        this.atS = 0;
-        this.level = 1;
-        this.xp = 0;
-        this.xpNext = 0;
+        this.userData;
         this.clock = 0;
-        this.gold = 0;
         this.respawnTime = 0;
         this.percentual = false;
+        this.displayData = false;
 
-        //elementos gráficos
+        //elementos gráficos estáticos
+        this.punctuationTable;
+        this.dataTable;
+
+        //elementos gráficos dinámicos
         this.namesTable;
         this.heroesTable;
         this.killsTable;
@@ -39,6 +28,7 @@ export default class HUDGame extends Phaser.Scene {
         this.GPMTable;
         this.XPMTable;
         this.lstHitsTable;
+        this.userStats;
     }
 
     preload() {
@@ -52,26 +42,12 @@ export default class HUDGame extends Phaser.Scene {
         let game = this.scene.get('GameScene');
         
         //elementos dinámincos
-        this.health = game.initialData().curHealth;
-        this.maxHealth = game.initialData().maxHealth;
-        this.regenH = game.initialData().healthRegen;
-        this.mana = game.initialData().curMana;
-        this.maxMana = game.initialData().maxMana;
-        this.regenM = game.initialData().manaRegen;
-        this.damage = game.initialData().damage;
-        this.spellPower = game.initialData().spellPower;
-        this.magicArm = game.initialData().magicArmor;
-        this.arm = game.initialData().armor;
-        this.vel = game.initialData().speed;
-        this.atS = game.initialData().atSpeed;
-        this.level = game.initialData().level;
-        this.xp = game.initialData().xp;
-        this.xpNext = game.initialData().xpNext;
+        this.userData = game.initialData();
         this.clock = game.clock;
-        this.gold = game.initialData().gold;
         
         //elementos gráficos estáticos
         this.punctuationTable = this.add.rectangle(width / 2, height / 2, 3 * width / 4, height / 2, 0x28195c).setAlpha(0.4).setVisible(false);
+        this.dataTable = this.add.rectangle(width / 7, 5 * height / 12, width / 4, 5 * height / 6, 0x28348d).setAlpha(0.4).setVisible(false);
         var UnderBar = this.add.rectangle(width / 2, (height - (height / 12)), width, height / 6, 0x090909);
         let levelFrame = this.add.rectangle(5 * width / 28, (height - (height / 7)), width / 14, height / 30, 0xefb810);
         var hudIcons = this.add.group();
@@ -105,10 +81,10 @@ export default class HUDGame extends Phaser.Scene {
         });
 
         //elementos gráficos dinámicos
-        var healthBar = this.add.rectangle(width / 2, (height - (3 * height / 28)), (this.health / (this.maxHealth + this.shield)) * (width / 3), height / 20, 0xff0000);
-        var shieldBar = this.add.rectangle((width / 2) + healthBar.width, (height - (3 * height / 28)), (this.shield / (this.maxHealth + this.shield)) * (width / 3), height / 20, 0xaaaaaa);
-        var manaBar = this.add.rectangle(width / 2, (height - (height / 28)), (this.health / this.maxHealth) * (width / 3), height / 20, 0x0000ff);
-        var xpBar = this.add.rectangle(3 * width / 14, (height - (height / 7)), (this.xp / this.xpNext) * (width / 12), height / 60, 0xdddddd);
+        var healthBar = this.add.rectangle(width / 2, (height - (3 * height / 28)), (this.userData.health / (this.userData.maxHealth + this.userData.shield)) * (width / 3), height / 20, 0xff0000);
+        var shieldBar = this.add.rectangle((width / 2) + healthBar.width, (height - (3 * height / 28)), (this.userData.shield / (this.userData.maxHealth + this.userData.shield)) * (width / 3), height / 20, 0xaaaaaa);
+        var manaBar = this.add.rectangle(width / 2, (height - (height / 28)), (this.userData.health / this.userData.maxHealth) * (width / 3), height / 20, 0x0000ff);
+        var xpBar = this.add.rectangle(3 * width / 14, (height - (height / 7)), (this.userData.xp / this.userData.xpNext) * (width / 12), height / 60, 0xdddddd);
         
         //elementos de texto dinámicos
         this.namesTable = this.add.text(width / 8, (height / 3), 'player\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
@@ -123,33 +99,19 @@ export default class HUDGame extends Phaser.Scene {
         this.XPMTable = this.add.text(67 * width / 88, (height / 3), 'XPM\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
         this.lstHitsTable= this.add.text(71 * width / 88, (height / 3), 'LH\n\n', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.4);
 
-        var healthText = this.add.text(width / 3, (height - (67 * height / 560)), '0/0 + 0', { font: '48px Arial', fill: '#eeeeee' });
-        var manaText = this.add.text(width / 3, (height - (27 * height / 560)), '0/0 + 0', { font: '48px Arial', fill: '#eeeeee' });
-        var statsText = this.add.text(width / 10, (height - (height / 6.3)), '0', { font: '48px Arial', fill: '#eeeeee' });
-        var levelText = this.add.text(width / 7, (height - (67 * height / 420)), 'level: 1', { font: '48px Arial', fill: '#eeeeee' });
-        var envinromentText = this.add.text(width / 6.5, (height - (height / 7.8)), '0\n00:00', { font: '48px Arial', fill: '#eeeeee' });
-        var respawnText = this.add.text(width / 2, height / 8, 'respawning in... 0 seconds', { font: '48px Arial', fill: '#eeeeee' });
+        var healthText = this.add.text(width / 3, (height - (67 * height / 560)), '0/0 + 0', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.8 / scaleRatio).setScrollFactor(1);
+        var manaText = this.add.text(width / 3, (height - (27 * height / 560)), '0/0 + 0', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.8 / scaleRatio).setScrollFactor(1);
+        var statsText = this.add.text(width / 10, (height - (height / 6.3)), '0', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1);
+        var levelText = this.add.text(width / 7, (height - (67 * height / 420)), 'level: 1', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.8 / scaleRatio).setScrollFactor(1);
+        var envinromentText = this.add.text(width / 6.5, (height - (height / 7.8)), '0\n00:00', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1);
+        var respawnText = this.add.text(width / 2, height / 8, 'respawning in... 0 seconds', { font: '48px Arial', fill: '#eeeeee' }).setScale(2.4 / scaleRatio).setScrollFactor(1).setVisible(false);
+        var userDataText = this.add.text(width / 20, height / 16, 'Level: 1\n\nOFENSIVE\n\tDamage: 36\n\tAttack Speed: 100, Time per Attack: 2s\n\tAccuracy: 100%\n\tCritical Chance: 0%\n\tCritical Multiplier: 0%\nMAGICAL\n\tSpell Power: 0%\n\tConcentration: 0%\nDEFENSIVE\n\tMagic Armor: 0%\n\tArmor: 0%\n\tSpeed: 28\n\tevasion: 0%\n\tFortitude 0%\n\tWill: 0%', { font: '48px Arial', fill: '#eeeeee' }).setScale(1.35 / scaleRatio).setScrollFactor(1).setVisible(false).setAlpha(0.75);
 
-        healthText.setText(fitNumber(this.health, 2) + '/' + fitNumber(this.maxHealth, 2) + ' + ' + fitNumber(this.regenH, 2));
-        manaText.setText(fitNumber(this.mana, 2) + '/' + fitNumber(this.maxMana, 2) + ' + ' + fitNumber(this.regenM, 2));
-        statsText.setText(fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower / 100, 2) + '%\n' + fitNumber(this.arm, 0) + '\n' + fitNumber(this.magicArm, 0) + '\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0));
-        envinromentText.setText(fitNumber(this.gold, 0) + '\n' + clockFormat(this.clock));
+        healthText.setText(fitNumber(this.userData.health, 2) + '/' + fitNumber(this.userData.maxHealth, 2) + ' + ' + fitNumber(this.userData.regenH, 2));
+        manaText.setText(fitNumber(this.userData.mana, 2) + '/' + fitNumber(this.userData.maxMana, 2) + ' + ' + fitNumber(this.userData.regenM, 2));
+        statsText.setText(fitNumber(this.userData.damage, 2) + '\n' + fitNumber(this.userData.spellPower / 100, 2) + '%\n' + fitNumber(this.userData.arm, 0) + '\n' + fitNumber(this.userData.magicArm, 0) + '\n' + fitNumber(this.userData.vel, 0) + '\n' + fitNumber(this.userData.atS, 0));
+        envinromentText.setText(fitNumber(this.userData.gold, 0) + '\n' + clockFormat(this.clock));
         respawnText.setText('respawning in... ' + fitNumber(this.respawnTime / 60, 0) + ' seconds');
-        
-        healthText.setScale(1.8 / scaleRatio);
-        manaText.setScale(1.8 / scaleRatio);
-        statsText.setScale(1.35 / scaleRatio);
-        levelText.setScale(1.8 / scaleRatio);
-        envinromentText.setScale(1.35 / scaleRatio);
-        respawnText.setScale(2.4 / scaleRatio);
-
-        healthText.setScrollFactor(1);
-        statsText.setScrollFactor(1);
-        levelText.setScrollFactor(1);
-        envinromentText.setScrollFactor(1);
-        respawnText.setScrollFactor(1);
-
-        respawnText.setVisible(false);
 
         //eventos de modificación de valores HUD
         game.events.on('updateRespawn', function () {
@@ -163,69 +125,62 @@ export default class HUDGame extends Phaser.Scene {
         }, this);
 
         game.events.on('updateLevel', function () {
-            this.level = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').level;
-            levelText.setText('level: ' + fitNumber(this.level, 0));
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
+            userDataText.setText(this.totalStatsFormatedText());
+            levelText.setText('level: ' + fitNumber(this.userData.level, 0));
         }, this);
 
         game.events.on('updateXP', function () {
-            this.xp = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').xp;
-            this.xpNext = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').calculateNextLevelXp();
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             xpBar.width = (this.xp / this.xpNext) * (width / 12);
         }, this);
 
         game.events.on('updateStats', function () {
-            this.damage = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').damage;
-            this.spellPower = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').spellPower;
-            this.magicArm = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').magicArmor;
-            this.arm = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').armor;
-            this.vel = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').speed;
-            this.atS = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').atSpeed;
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
+            userDataText.setText(this.totalStatsFormatedText());
             statsText.setText(this.statsFormatedText());
         }, this);
 
         game.events.on('updateHealth', function () {
-            this.health = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').curHealth;
-            this.shield = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').shield;
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             healthText.setText(this.healthFormatedText());
-            healthBar.width = (this.health / (this.maxHealth + this.shield)) * (width / 3);
-            shieldBar.x = (2 * healthBar.width) + (((this.shield / (this.maxHealth + this.shield)) * (width / 3)));
-            shieldBar.width = (this.shield / (this.maxHealth + this.shield)) * (width / 3);
+            healthBar.width = (this.userData.health / (this.userData.maxHealth + this.userData.shield)) * (width / 3);
+            shieldBar.x = (2 * healthBar.width) + (((this.userData.shield / (this.userData.maxHealth + this.userData.shield)) * (width / 3)));
+            shieldBar.width = (this.userData.shield / (this.userData.maxHealth + this.userData.shield)) * (width / 3);
         }, this);
 
         game.events.on('updateMaxHealth', function () {
-            this.maxHealth = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').maxHealth;
-            this.shield = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').shield;
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             healthText.setText(this.healthFormatedText());
-            healthBar.width = (this.health / (this.maxHealth + this.shield)) * (width / 3);
-            shieldBar.x = (2 * healthBar.width) + (((this.shield / (this.maxHealth + this.shield)) * (width / 3)));
-            shieldBar.width = (this.shield / (this.maxHealth + this.shield)) * (width / 3)
+            healthBar.width = (this.userData.health / (this.userData.maxHealth + this.userData.shield)) * (width / 3);
+            shieldBar.x = (2 * healthBar.width) + (((this.userData.shield / (this.userData.maxHealth + this.userData.shield)) * (width / 3)));
+            shieldBar.width = (this.userData.shield / (this.userData.maxHealth + this.userData.shield)) * (width / 3);
         }, this);
 
         game.events.on('updateHealthRegen', function () {
-            this.regenH = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').healthRegen;
-            this.shield = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').shield;
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             healthText.setText(this.healthFormatedText());
         }, this);
 
         game.events.on('updateMana', function () {
-            this.mana = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').curMana;
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             manaText.setText(this.manaFormatedText());
-            manaBar.width = (this.mana/this.maxMana) * (width / 3);
+            manaBar.width = (this.userData.mana / this.userData.maxMana) * (width / 3);
         }, this);
 
         game.events.on('updateMaxMana', function () {
-            this.maxMana = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').maxMana;
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             manaText.setText(this.manaFormatedText());
-            manaBar.width = (this.mana/this.maxMana) * (width / 3);
+            manaBar.width = (this.userData.mana / this.userData.maxMana) * (width / 3);
         }, this);
 
         game.events.on('updateManaRegen', function () {
-            this.regenM = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').manaRegen;
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             manaText.setText(this.manaFormatedText());
         }, this);
 
         game.events.on('updateGold', function () {
-            this.gold = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').gold;
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             envinromentText.setText(this.clockText());
         }, this);
 
@@ -242,6 +197,12 @@ export default class HUDGame extends Phaser.Scene {
         //our controls
         this.input.keyboard.on('keydown-SPACE', function(event){
             this.percentual = !this.percentual;
+            statsText.setText(this.statsFormatedText());
+        }, this);
+        this.input.keyboard.on('keydown-I', function(event){
+            this.dataTable.setVisible(!this.dataTable.visible);
+            userDataText.setVisible(!userDataText.visible);
+            userDataText.setText(this.totalStatsFormatedText());
             statsText.setText(this.statsFormatedText());
         }, this);
         this.input.keyboard.on('keydown-P', function(event){
@@ -317,27 +278,31 @@ export default class HUDGame extends Phaser.Scene {
         return message;
     }
 
+    totalStatsFormatedText(){
+        return 'Level: ' + this.userData.level + '\n\n\nOFENSIVE\n\tDamage: ' + fitNumber(this.userData.damage, 2) + '\n\tAttack Speed: ' + fitNumber(this.userData.atS, 0) + ', Time per Attack: ' + fitNumber(this.userData.atRate, 4) + 's\n\tAccuracy: ' + fitNumber(this.userData.acc, 1) + '%\n\tCritical Chance: ' + fitNumber(this.userData.crit, 2) + '%\n\tCritical Multiplier: ' + fitNumber(this.userData.critMultiplier, 2) + '\n\nMAGICAL\n\tSpell Power: ' + fitNumber(this.userData.spellPower, 2) + '%\n\tConcentration: ' + fitNumber(this.userData.concentration, 2) + '%\n\nDEFENSIVE\n\tMagic Armor: ' + fitNumber(transformArmorToPercentage(this.userData.magicArm) * 100, 2) + '%\n\tArmor: ' + fitNumber(transformArmorToPercentage(this.userData.arm) * 100, 2) + '%\n\tSpeed: ' + fitNumber(this.userData.vel, 0) + '\n\tevasion: ' + fitNumber(this.userData.evasion, 1) + '%\n\tFortitude ' + fitNumber(this.userData.fortitude, 2) + '%\n\tWill: ' + fitNumber(this.userData.will, 2) + '%';
+    }
+
     statsFormatedText(){
         if(!this.percentual){
-            return fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower, 2) + '%\n' + fitNumber(this.arm, 0) + '\n' + fitNumber(this.magicArm, 0) + '\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0);
+            return fitNumber(this.userData.damage, 2) + '\n' + fitNumber(this.userData.spellPower, 2) + '%\n' + fitNumber(this.userData.arm, 0) + '\n' + fitNumber(this.userData.magicArm, 0) + '\n' + fitNumber(this.userData.vel, 0) + '\n' + fitNumber(this.userData.atS, 0);
         }else{
-            return fitNumber(this.damage, 2) + '\n' + fitNumber(this.spellPower, 2) + '%\n' + fitNumber(transformArmorToPercentage(this.arm) * 100, 2) + '%\n' + fitNumber(transformArmorToPercentage(this.magicArm) * 100, 2) + '%\n' + fitNumber(this.vel, 0) + '\n' + fitNumber(this.atS, 0);
+            return fitNumber(this.userData.damage, 2) + '\n' + fitNumber(this.userData.spellPower, 2) + '%\n' + fitNumber(transformArmorToPercentage(this.userData.arm) * 100, 2) + '%\n' + fitNumber(transformArmorToPercentage(this.userData.magicArm) * 100, 2) + '%\n' + fitNumber(this.userData.vel, 0) + '\n' + fitNumber(this.userData.atS, 0);
         }
     }
 
     healthFormatedText(){
         var shield = ""
-        if(this.shield > 0){
-            shield = "+" + fitNumber(this.shield, 0);
+        if(this.userData.shield > 0){
+            shield = "+" + fitNumber(this.userData.shield, 0);
         }
-        return fitNumber(this.health, 0) + shield + '/' + fitNumber(this.maxHealth + this.shield, 0) + ' + ' + fitNumber(this.regenH, 2)
+        return fitNumber(this.userData.health, 0) + shield + '/' + fitNumber(this.userData.maxHealth + this.userData.shield, 0) + ' + ' + fitNumber(this.userData.regenH, 2)
     }
 
     manaFormatedText(){
-        return fitNumber(this.mana, 0) + '/' + fitNumber(this.maxMana, 0) + ' + ' + fitNumber(this.regenM, 2)
+        return fitNumber(this.userData.mana, 0) + '/' + fitNumber(this.userData.maxMana, 0) + ' + ' + fitNumber(this.userData.regenM, 2)
     }
 
     clockText(){
-        return fitNumber(this.gold, 0) + '\n' + clockFormat(this.clock);
+        return fitNumber(this.userData.gold, 0) + '\n' + clockFormat(this.clock);
     }
 }

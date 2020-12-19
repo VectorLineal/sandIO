@@ -499,22 +499,32 @@ export default class SceneGame extends Phaser.Scene {
   //funciones no heredadas de la esca
 
   initialData(){
-    return {curHealth: 200,
+    return {
+      health: 200,
       maxHealth: 200,
-      healthRegen: 0.2,
-      curMana: 75,
+      regenH: 0.2,
+      shield: 0,
+      mana: 75,
       maxMana: 75, 
-      manaRegen: 0.1,
+      regenM: 0.1,
       damage: 36,
       spellPower: 0,
-      magicArmor: 0,
-      armor: 0,
-      speed: 28,
-      atSpeed: 100,
+      magicArm: 0,
+      arm: 0,
+      vel: 28,
+      atS: 100,
+      atRate: 2,
       level: 0,
       xp: 0,
       xpNext: 100,
-      gold: 0
+      gold: 0,
+      acc: 100,
+      fortitude : 0,
+      crit: 0,
+      will: 0,
+      concentration: 0,
+      critMultiplier: 0,
+      skills: {}
     }
   }
 

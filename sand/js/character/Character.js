@@ -98,7 +98,7 @@ export default class Character extends Entity{
             return this.will;
         }
     }
-    getSpellPower(){
+    getConcentration(){
         if(this.concentration <= -100){
             return -100;
         }else{
