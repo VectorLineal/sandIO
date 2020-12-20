@@ -14,6 +14,12 @@ export default class Playable extends Hero{
         scene.events.emit('updateMaxMana');
         scene.events.emit('updateMana');
         scene.events.emit('updateManaRegen');
+        scene.events.emit('updateCooldowns');
+    }
+
+    updateCooldowns(params){
+        super.updateCooldowns(params);
+        params.scene.events.emit('updateCooldowns');
     }
 
     takeDamage(params){ //scene, amount, type, accuracy, critChance, critMultiplier, avoidable, critable, ranged

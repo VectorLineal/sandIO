@@ -1,10 +1,10 @@
 import "./phaser.js";
-import {fitNumber, clockFormat, transformArmorToPercentage} from "./MathUtils.js";
+import {fitNumber, clockFormat, transformArmorToPercentage, generateSet} from "./MathUtils.js";
 
 export default class HUDGame extends Phaser.Scene {
 
     constructor () {
-        super({key: 'HUDScene', active: true});
+        super({key: 'HUDScene', active: false});
         //variables que guardan datos de HUD
         this.userData;
         this.clock = 0;
@@ -29,9 +29,15 @@ export default class HUDGame extends Phaser.Scene {
         this.XPMTable;
         this.lstHitsTable;
         this.userStats;
+
+        //elementos auxiliares
+        this.spellCodes = [];
     }
 
     preload() {
+        let game = this.scene.get('GameScene');
+        let name = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').name;
+        this.load.spritesheet('skill', 'assets/' + name + '_spells.png', {frameWidth: 32, frameHeight: 32});
         this.load.spritesheet('hud', 'assets/HUDicons.png', {frameWidth: 16, frameHeight: 16});
     
     }
@@ -42,7 +48,7 @@ export default class HUDGame extends Phaser.Scene {
         let game = this.scene.get('GameScene');
         
         //elementos dinámincos
-        this.userData = game.initialData();
+        this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
         this.clock = game.clock;
         
         //elementos gráficos estáticos
@@ -79,6 +85,67 @@ export default class HUDGame extends Phaser.Scene {
                 y: 3.28 / scaleRatio
             }
         });
+
+        //HUD sobre hechizos
+        var skillsIcons = this.add.group();
+        let frames = generateSet(game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getSkillsAmount());
+        for(var i = 0; i < frames.length; i++){
+            let underSquare = this.add.rectangle((2 * width / 3) + (264 * (i + 1) / scaleRatio), height - (height / 20), 305 / scaleRatio, 305 / scaleRatio, 0x298d4a);
+            skillsIcons.add(underSquare);
+        }
+        skillsIcons.createMultiple({
+            key: 'skill',
+            frame: frames,
+            setXY: {
+                x: (2 * width / 3) + (264 / scaleRatio),
+                y: height - (height / 20),
+                stepX: 264 / scaleRatio
+            },
+            setScale: { 
+                x: 6.56 / scaleRatio,
+                y: 6.56 / scaleRatio
+            }
+        });
+        for(var i = 0; i < frames.length; i++){
+            let underSquare = this.add.rectangle((2 * width / 3) + (264 * (i + 1) / scaleRatio), height - (height / 20), 210 / scaleRatio, 210 / scaleRatio, 0x222222).setAlpha(0.4);
+            if(i != 3)
+                underSquare.height = 0;
+            skillsIcons.add(underSquare);
+        }
+        for(var i = 0; i < frames.length; i++){
+            var key = 'pasive';
+            var message = '';
+            var color = '#0000ee';
+            switch(i){
+                case 0:
+                    key = 'q';
+                    break;
+                case 1:
+                    key = 'e';
+                    break;
+                case 2:
+                    if(frames.length == 5 || this.userData.skills.f != null)
+                        key = 'f';
+                    else if(this.userData.skills.r != null)
+                        key = 'r';
+                    break;
+                case 3:
+                    if(frames.length == 5 || this.userData.skills.r != null)
+                        key = 'r';
+                    break;
+            }
+            this.spellCodes.push(key);
+            if( key == 'pasive'){
+                message = key;
+            }
+            else{
+                message = key + ": " + fitNumber(this.userData.skills[key].mana, 0);
+                if(this.userData.skills[key].mana > this.userData.mana)
+                    color = '#ee0000';
+            }
+            let spellText = this.add.text((2 * width / 3) + ((165 + (264 * i)) / scaleRatio), height - (height / 20) - (165 / scaleRatio), message, { font: '48px Arial', fill: color }).setScale(1.35 / scaleRatio);
+            skillsIcons.add(spellText);
+        }
 
         //elementos gráficos dinámicos
         var healthBar = this.add.rectangle(width / 2, (height - (3 * height / 28)), (this.userData.health / (this.userData.maxHealth + this.userData.shield)) * (width / 3), height / 20, 0xff0000);
@@ -128,11 +195,51 @@ export default class HUDGame extends Phaser.Scene {
             this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             userDataText.setText(this.totalStatsFormatedText());
             levelText.setText('level: ' + fitNumber(this.userData.level, 0));
+            //update mana costs in spells and descriptions
+            var counter = 0;
+            for(var i = 3 * Math.floor(skillsIcons.children.entries.length / 4); i < skillsIcons.children.entries.length; i++){
+                var key = 'pasive';
+                var message = '';
+                var color = '#0000ee';
+                if(counter < this.spellCodes.length){
+                    key = this.spellCodes[counter];
+                }
+
+                if( key == 'pasive'){
+                    message = key;
+                }
+                else{
+                    message = key + ": " + fitNumber(this.userData.skills[key].mana, 0);
+                    if(this.userData.skills[key].mana > this.userData.mana)
+                        color = '#ee0000';
+                }
+                skillsIcons.children.entries[i].setText(message);
+                skillsIcons.children.entries[i].setColor(color);
+                counter++;
+            }
+            if(this.userData.level == 10){
+                skillsIcons.children.entries[Math.floor(skillsIcons.children.entries.length / 2) + 3].height = 0;
+            }
         }, this);
 
         game.events.on('updateXP', function () {
             this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
-            xpBar.width = (this.xp / this.xpNext) * (width / 12);
+            xpBar.width = (this.userData.xp / this.userData.xpNext) * (width / 12);
+        }, this);
+
+        game.events.on('updateCooldowns', function () {
+            this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
+            var counter = 0;
+            for(var i = Math.floor(skillsIcons.children.entries.length / 2); i < skillsIcons.children.entries.length; i++){
+                var key = 'pasive';
+                if(counter < this.spellCodes.length)
+                    key = this.spellCodes[counter];
+
+                if(key != 'pasive')
+                    skillsIcons.children.entries[i].height = (210 * this.userData.skills[key].curCooldown) / (scaleRatio * this.userData.skills[key].cooldown);
+                
+                counter++;
+            }
         }, this);
 
         game.events.on('updateStats', function () {
@@ -166,6 +273,22 @@ export default class HUDGame extends Phaser.Scene {
             this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             manaText.setText(this.manaFormatedText());
             manaBar.width = (this.userData.mana / this.userData.maxMana) * (width / 3);
+            //actualizar colores en costos de hechizos indicando si hay suficiente mana
+            var counter = 0;
+            for(var i = 3 * Math.floor(skillsIcons.children.entries.length / 4); i < skillsIcons.children.entries.length; i++){
+                var key = 'pasive';
+                var color = '#0000ee';
+                if(counter < this.spellCodes.length)
+                    key = this.spellCodes[counter];
+                else
+                    break;
+                if(key != "pasive")
+                    if(this.userData.skills[key].mana > this.userData.mana)
+                        color = '#ee0000';
+
+                skillsIcons.children.entries[i].setColor(color);
+                counter++;
+            }
         }, this);
 
         game.events.on('updateMaxMana', function () {

@@ -409,6 +409,8 @@ export default class SceneGame extends Phaser.Scene {
     this.cameras.main.startFollow(this.teamAHeroManager.getPlayer(this.teamASprites), true, 1, 1);
     this.cameras.main.roundPixels = true;
     this.matter.world.on("collisionstart", this.dealDamage, this);
+
+    this.scene.run("HUDScene");
   }
 
   update() {

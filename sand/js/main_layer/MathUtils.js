@@ -43,6 +43,14 @@ export function clockFormat(num){
     return time;
 }
 
+export function generateSet(max){
+  var set = [];
+  for(var i = 0; i < max; i++)
+    set.push(i);
+  
+    return set;
+}
+
 export function degToRad(angle) {
     return (angle * Math.PI) / 180;
 }

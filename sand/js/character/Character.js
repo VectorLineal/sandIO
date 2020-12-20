@@ -106,6 +106,20 @@ export default class Character extends Entity{
         }
     }
 
+    getSkillsAmount(){
+        var amount = this.pasives.length;
+        if(this.skills["q"] != null)
+            amount++;
+        if(this.skills["e"] != null)
+            amount++;
+        if(this.skills["f"] != null)
+            amount++;
+        if(this.skills["r"] != null)
+            amount++;
+           
+        return amount - 2;
+    }
+
     //funciones no gráficas
     spendMana(params){
       this.curMana += params.amount;
