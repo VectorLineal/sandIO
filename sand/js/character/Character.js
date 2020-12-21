@@ -8,6 +8,7 @@ export default class Character extends Entity{
         super(name, level, xpFactor, bountyFactor, damage, armor, evasion, maxHealth, healthRegen, atSpeed, accuracy, magicArmor, ranged, range);
         this.race = race;
         this.isBoss = false;
+        this.curKey = "";
 
         //referente a poderes e items
         for(var i = 0; i < skills.pasives.length; i++){
@@ -271,22 +272,30 @@ export default class Character extends Entity{
     setUpSpell(scene, sprite, key){//self, projectile, conic_projectile, modifier, area, area_point, direction
         //se supone que para este punto ya se ha checkeado si el hechizo existe por lo que se omite checkeo
         if(this.skills[key].type == "self" || this.skills[key].type == "direction" || this.skills[key].type == "area"){
-            this.castSpell(scene, sprite, key);
+            this.curKey = key;
+            this.castSpell(scene, sprite);
+        }else if(this.curKey == key){
+            this.curKey = "";
         }else{
-            scene.lastKeyPressed = key;
+            this.curKey = key;
         }
     }
 
-    castSpell(scene, sprite, key){
+    castSpell(scene, sprite){
         //se supone que para este punto ya se ha checkeado si el hechizo existe por lo que se omite checkeo
-        if (this.getCurMana() >= this.skills[key].getManaCost(this.level)) {
-            this.spendMana({scene: scene, amount: - this.skills[key].getManaCost(this.level)});
-            sprite.play("spell" + key + "_" + this.name);
-            this.skills[key].curCooldown = this.skills[key].getCooldown(this.level);
+        if (this.getCurMana() >= this.skills[this.curKey].getManaCost(this.level)) {
+            this.spendMana({scene: scene, amount: - this.skills[this.curKey].getManaCost(this.level)});
+            sprite.play("spell" + this.curKey + "_" + this.name);
+            this.skills[this.curKey].curCooldown = this.skills[this.curKey].getCooldown(this.level);
         }else{
             console.log("not enough mana");
         }
-        sprite.scene.lastKeyPressed = "";
+        if(this.skills[this.curKey].type != "modifier")
+            this.curKey = "";
+    }
+
+    willCastAttack(){
+        return this.curKey == "" || (this.curKey != "" && this.skills[this.curKey].type == "modifier" && this.skills[this.curKey].curCooldown > 0);
     }
 
     commitSpellq(animation, frame, gameObject) {

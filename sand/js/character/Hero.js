@@ -150,6 +150,7 @@ export default class Hero extends Character {
     if(this.skills.r != null){
         spells.r = {mana: this.skills.r.getManaCost(this.level), curCooldown: this.skills.r.curCooldown,cooldown: this.skills.r.getCooldown(this.level)};
     }
+    console.log("last key:", this.curKey);
     return {
       health: this.getCurHealth(),
       maxHealth: this.getMaxHealth(),
@@ -176,6 +177,7 @@ export default class Hero extends Character {
       will: this.getWill(),
       concentration: this.getConcentration(),
       critMultiplier: this.getCritMultiplier(),
+      key: this.curKey,
       skills: spells
     };
   }

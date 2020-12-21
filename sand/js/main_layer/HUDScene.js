@@ -90,16 +90,16 @@ export default class HUDGame extends Phaser.Scene {
         var skillsIcons = this.add.group();
         let frames = generateSet(game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getSkillsAmount());
         for(var i = 0; i < frames.length; i++){
-            let underSquare = this.add.rectangle((2 * width / 3) + (264 * (i + 1) / scaleRatio), height - (height / 20), 305 / scaleRatio, 305 / scaleRatio, 0x298d4a);
+            let underSquare = this.add.rectangle((2 * width / 3) + (305 * (i + 1) / scaleRatio), height - (height / 20), 305 / scaleRatio, 305 / scaleRatio, 0x298d4a);
             skillsIcons.add(underSquare);
         }
         skillsIcons.createMultiple({
             key: 'skill',
             frame: frames,
             setXY: {
-                x: (2 * width / 3) + (264 / scaleRatio),
+                x: (2 * width / 3) + (305 / scaleRatio),
                 y: height - (height / 20),
-                stepX: 264 / scaleRatio
+                stepX: 305 / scaleRatio
             },
             setScale: { 
                 x: 6.56 / scaleRatio,
@@ -107,7 +107,7 @@ export default class HUDGame extends Phaser.Scene {
             }
         });
         for(var i = 0; i < frames.length; i++){
-            let underSquare = this.add.rectangle((2 * width / 3) + (264 * (i + 1) / scaleRatio), height - (height / 20), 210 / scaleRatio, 210 / scaleRatio, 0x222222).setAlpha(0.4);
+            let underSquare = this.add.rectangle((2 * width / 3) + (305 * (i + 1) / scaleRatio), height - (height / 20), 210 / scaleRatio, 210 / scaleRatio, 0x222222).setAlpha(0.4);
             if(i != 3)
                 underSquare.height = 0;
             skillsIcons.add(underSquare);
@@ -134,16 +134,16 @@ export default class HUDGame extends Phaser.Scene {
                         key = 'r';
                     break;
             }
-            this.spellCodes.push(key);
             if( key == 'pasive'){
                 message = key;
             }
             else{
+                this.spellCodes.push(key);
                 message = key + ": " + fitNumber(this.userData.skills[key].mana, 0);
                 if(this.userData.skills[key].mana > this.userData.mana)
                     color = '#ee0000';
             }
-            let spellText = this.add.text((2 * width / 3) + ((165 + (264 * i)) / scaleRatio), height - (height / 20) - (165 / scaleRatio), message, { font: '48px Arial', fill: color }).setScale(1.35 / scaleRatio);
+            let spellText = this.add.text((2 * width / 3) + ((190 + (305 * i)) / scaleRatio), height - (height / 20) - (165 / scaleRatio), message, { font: '48px Arial', fill: color }).setScale(1.35 / scaleRatio);
             skillsIcons.add(spellText);
         }
 
@@ -230,7 +230,7 @@ export default class HUDGame extends Phaser.Scene {
         game.events.on('updateCooldowns', function () {
             this.userData = game.teamAHeroManager.getPlayer(game.teamASprites).getData('backend').getUserData();
             var counter = 0;
-            for(var i = Math.floor(skillsIcons.children.entries.length / 2); i < skillsIcons.children.entries.length; i++){
+            for(var i = Math.floor(skillsIcons.children.entries.length / 2); i < Math.floor(3 * skillsIcons.children.entries.length / 4); i++){
                 var key = 'pasive';
                 if(counter < this.spellCodes.length)
                     key = this.spellCodes[counter];
@@ -238,6 +238,20 @@ export default class HUDGame extends Phaser.Scene {
                 if(key != 'pasive')
                     skillsIcons.children.entries[i].height = (210 * this.userData.skills[key].curCooldown) / (scaleRatio * this.userData.skills[key].cooldown);
                 
+                counter++;
+            }
+            counter = 0;
+            for(var i = 0; i < Math.floor(skillsIcons.children.entries.length / 4); i++){
+                var key = 'pasive';
+                if(counter < this.spellCodes.length)
+                    key = this.spellCodes[counter];
+                if(key == this.userData.key){
+                    //if(skillsIcons.children.entries[i].fillColor == 0x298d4a)
+                        skillsIcons.children.entries[i].setFillStyle(0xad8d10);
+                }else{
+                    //if(skillsIcons.children.entries[i].fillColor == 0xad8d10)
+                        skillsIcons.children.entries[i].setFillStyle(0x298d4a);
+                }
                 counter++;
             }
         }, this);

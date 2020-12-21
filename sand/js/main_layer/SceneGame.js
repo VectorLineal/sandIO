@@ -80,10 +80,6 @@ export default class SceneGame extends Phaser.Scene {
     this.spell5;
     this.consumable1;
     this.consumable2;
-    this.shop;
-    this.cancel;
-
-    this.lastKeyPressed = "";
   }
 
   preload() {
@@ -362,8 +358,6 @@ export default class SceneGame extends Phaser.Scene {
     this.consumable2 = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.TWO
     );
-    this.shop = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I);
-    this.cancel = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G);
 
     //input
     this.input.mouse.disableContextMenu(); //se reactiva en producción
@@ -429,16 +423,12 @@ export default class SceneGame extends Phaser.Scene {
       this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").moveY(this.teamAHeroManager.getPlayer(this.teamASprites), false, 9.84 / this.scaleRatio);
     }
 
-    if (this.cancel.isDown) {
-      this.lastKeyPressed = "";
-    }
-
     if (pointer.isDown) {
       if (!this.teamAHeroManager.getPlayer(this.teamASprites).anims.isPlaying) {
-        if(this.lastKeyPressed == ""){
+        if(this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").willCastAttack()){
           this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").castAttack(this.teamAHeroManager.getPlayer(this.teamASprites));
         }else{
-          this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").castSpell(this, this.teamAHeroManager.getPlayer(this.teamASprites), this.lastKeyPressed);
+          this.teamAHeroManager.getPlayer(this.teamASprites).getData("backend").castSpell(this, this.teamAHeroManager.getPlayer(this.teamASprites));
         }
         for(var i = 0; i< this.neutralSprites.children.getArray().length; i++){
           this.neutralSprites.children.getArray()[i].getData("backend").castAttack(this.neutralSprites.children.getArray()[i]);
@@ -526,6 +516,7 @@ export default class SceneGame extends Phaser.Scene {
       will: 0,
       concentration: 0,
       critMultiplier: 0,
+      key: "",
       skills: {}
     }
   }
