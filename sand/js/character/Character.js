@@ -64,6 +64,9 @@ export default class Character extends Entity{
     getCrit(){
         return this.crit;
     }
+    getCritMultiplier() {
+        return this.critMultiplier;
+    }
     getMaxMana(){
         if(this.maxMana <= 1){
             return 1;
@@ -265,7 +268,7 @@ export default class Character extends Entity{
         if(this.skills[key] == null){
             return false;
         }else{
-            return this.checkCooldown(key) && this.mayCastSpells();
+            return this.checkCooldown(key) && this.mayCastSpells() && this.skills[key].getManaCost(this.level) <= this.curMana;
         }
     }
 
@@ -295,11 +298,11 @@ export default class Character extends Entity{
     }
 
     willCastAttack(){
-        return this.curKey == "" || (this.curKey != "" && this.skills[this.curKey].type == "modifier" && this.skills[this.curKey].curCooldown > 0);
+        return this.curKey == "" || this.skills[this.curKey].getManaCost(this.level) > this.curMana || (this.curKey != "" && this.skills[this.curKey].type == "modifier" && this.skills[this.curKey].curCooldown > 0);
     }
 
     commitSpellq(animation, frame, gameObject) {
-        gameObject.scene.lastKeyPressed = "";
+        this.curKey = "";
         //debe reemplazarse por una función que interprete el effect a código js
         gameObject.getData("backend").statusManager.becomeDamageInmune(60 + Math.ceil(1.92 * gameObject.getData("backend").level));
     }
@@ -313,13 +316,31 @@ export default class Character extends Entity{
             stackable: 1,
             clearAtZero: false
         }, gameObject.scene);
-        gameObject.getData("backend").commitAttack(animation, frame, gameObject);
+        let shot = gameObject.getData("backend").generateProjectile(gameObject, gameObject.getData("backend").skills.e.range);
+        shot.body.attackParams = {
+            caster: gameObject.getData("backend"),
+            type: 1,
+            avoidable: true,
+            critable: true,
+            damage: gameObject.getData("backend").getDamage(),
+            accuracy: gameObject.getData("backend").getAccuracy(),
+            crit: gameObject.getData("backend").getCrit(),
+            critMultiplier: gameObject.getData("backend").getCritMultiplier()
+        }
+        gameObject.play("attack_" + gameObject.getData("backend").name + "_end");
     }
     commitSpellf(animation, frame, gameObject) {
-        gameObject.scene.lastKeyPressed = "";
-        gameObject.getData("backend").statusManager.hypnotize(60);
+        this.curKey = "";
+        gameObject.getData("backend").statusManager.becomeInvisible(300 + 24 * gameObject.getData("backend").level);
     }
     commitSpellr(animation, frame, gameObject) {
-        gameObject.scene.lastKeyPressed = "";
+        gameObject.getData("backend").dealDamage(0.3 * gameObject.getData("backend").getCurHealth(), 0);
+        // damageChange(3x+32, 12x+180) critChange(x+10, 12x+180) lifestealChange(0.4, 12x+180) armorChange(-4x-30, 12x+180) mute(12x+180)
+        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"), {name: "demon_hunter_r1", attribute: "damage", amount: 32 + 3 * gameObject.getData("backend").level, timer: 180 + 12 * gameObject.getData("backend").level, stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"), {name: "demon_hunter_r2", attribute: "crit", amount: 10 + gameObject.getData("backend").level, timer: 180 + 12 * gameObject.getData("backend").level, stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"), {name: "demon_hunter_r3", attribute: "lifesteal", amount: 0.4, timer: 180 + 12 * gameObject.getData("backend").level, stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"), {name: "demon_hunter_r4", attribute: "armor", amount: - 30 - 4 * gameObject.getData("backend").level, timer: 180 + 12 * gameObject.getData("backend").level, stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").statusManager.mute(180 + 12 * gameObject.getData("backend").level);
+        this.curKey = "";
     }
 }

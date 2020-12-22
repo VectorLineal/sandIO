@@ -332,6 +332,12 @@ export default class{
             case "damageAmplification":
                 entity.damageAmplification += amount;
                 break;
+            case "lifesteal":
+                entity.lifesteal += amount;
+                break;
+            case "spellLifesteal":
+                entity.spellLifesteal += amount;
+                break;
         }
         if(entity instanceof Hero){
             scene.events.emit('updateStats');

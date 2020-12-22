@@ -31,6 +31,8 @@ export default class Entity{
         this.fov = 10;
         this.cauterize = 0; //positivo aumenta efectos curativos, negativo los disminuye [-1, inf]
         this.damageAmplification = 0; //positivo reduce el daño de todo tipo porcentualmente, negativo lo amplifica [-inf, 1]
+        this.lifesteal = 0; //[0, inf]
+        this.spellLifesteal = 0; //[0, inf]
 
         //character's body
         this.atFrames = [];
@@ -96,22 +98,20 @@ export default class Entity{
         }
     }
 
-    commitAttack(animation, frame, gameObject) {
-        gameObject.scene.lastKeyPressed = "";
-        if(!gameObject.getData("backend").getRanged()){
-          var xc = gameObject.x;
-          var yc = gameObject.y;
-          var xr = -gameObject.displayWidth / 4;
-          var yr = gameObject.displayHeight / 2;
-          if(gameObject.body.render.sprite.xOffset == 0){
+    generateAttackBox(gameObject){
+        var xc = gameObject.x;
+        var yc = gameObject.y;
+        var xr = -gameObject.displayWidth / 4;
+        var yr = gameObject.displayHeight / 2;
+        if(gameObject.body.render.sprite.xOffset == 0){
             xr = -((gameObject.displayWidth * (1 - ((gameObject.displayWidth - gameObject.body.shape.width * gameObject.scene.scaleRatio / 2 - 1) / gameObject.displayWidth - 0.5))) / 4);
-          }
-          if(gameObject.body.render.sprite.yOffset == 0){
+        }
+        if(gameObject.body.render.sprite.yOffset == 0){
             yr = (gameObject.displayHeight * (1 - ((gameObject.displayHeight - gameObject.body.shape.height * gameObject.scene.scaleRatio - 1) / 2 / gameObject.displayHeight))) / 2;
-          }
+        }
 
-          let magnitude = Math.sqrt(xr * xr + yr * yr);
-          var attackBox = gameObject.scene.matter.add.rectangle(
+        let magnitude = Math.sqrt(xr * xr + yr * yr);
+        var attackBox = gameObject.scene.matter.add.rectangle(
             xc +
               magnitude *
                 Math.cos(
@@ -138,10 +138,77 @@ export default class Entity{
           } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[2]) {
             attackBox.collisionFilter.category = gameObject.scene.categories[4];
           }
-        }else{
-          //crear proyectil para ataque a distancia, pendiente creacion de clase proyectil
+          return attackBox;
+    }
+
+    generateProjectile(gameObject, range){
+        //crear proyectil para ataque a distancia, pendiente creacion de clase proyectil
+        var xc = gameObject.x;
+        var yc = gameObject.y;
+        var xr = 0;
+        var yr = gameObject.displayHeight / 2;
+        let magnitude = Math.sqrt(xr * xr + yr * yr);
+
+        /*if(gameObject.body.render.sprite.xOffset == 0){
+            xr = -((gameObject.displayWidth * (1 - ((gameObject.displayWidth - gameObject.body.shape.width * gameObject.scene.scaleRatio / 2 - 1) / gameObject.displayWidth - 0.5))) / 4);
         }
+        if(gameObject.body.render.sprite.yOffset == 0){
+            yr = (gameObject.displayHeight * (1 - ((gameObject.displayHeight - gameObject.body.shape.height * gameObject.scene.scaleRatio - 1) / 2 / gameObject.displayHeight))) / 2;
+        }*/
+        var shot = gameObject.scene.matter.add.image(
+            xc + magnitude * Math.cos(getRotation(xr, yr) + degToRad(gameObject.angle)),
+            yc + magnitude * Math.sin(getRotation(xr, yr) + degToRad(gameObject.angle)),
+            range.projectile,
+            null).setDepth(0.6);
     
+        shot.setScale(9.84 / gameObject.scene.scaleRatio);
+        shot.setAngle(gameObject.angle);
+        let deltaX = range.speed * Math.cos(gameObject.rotation + (Math.PI / 2));
+        let deltaY = range.speed * Math.sin(gameObject.rotation + (Math.PI / 2));
+        shot.setVelocity(deltaX * (9.84 / gameObject.scene.scaleRatio) / 6, deltaY * (9.84 / gameObject.scene.scaleRatio) / 6);
+        
+        shot.body.isSensor = true;
+        shot.body.timer = range.reach;
+        shot.body.updateSpeed = range.speed;
+        shot.body.label = "projectileBox." + gameObject.getData("backend").name + "#" + gameObject.body.collisionFilter.group;
+        if (gameObject.body.collisionFilter.group == gameObject.scene.groups[0]) {
+            shot.body.collisionFilter.category = gameObject.scene.categories[0];
+        } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[1]) {
+            shot.body.collisionFilter.category = gameObject.scene.categories[2];
+        } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[2]) {
+            shot.body.collisionFilter.category = gameObject.scene.categories[4];
+        }
+        return shot;
+    }
+
+    commitAttack(animation, frame, gameObject) {
+        gameObject.scene.lastKeyPressed = "";
+        if(!gameObject.getData("backend").getRanged()){
+            let box = gameObject.getData("backend").generateAttackBox(gameObject);
+            box.attackParams = {
+                caster: gameObject.getData("backend"),
+                type: 1,
+                avoidable: true,
+                critable: true,
+                damage: gameObject.getData("backend").getDamage(),
+                accuracy: gameObject.getData("backend").getAccuracy(),
+                crit: gameObject.getData("backend").getCrit(),
+                critMultiplier: gameObject.getData("backend").getCritMultiplier()
+            }
+        }else{
+            let projectile = gameObject.getData("backend").generateProjectile(gameObject, gameObject.getData("backend").getRange());
+            projectile.body.attackParams = {
+                caster: gameObject.getData("backend"),
+                type: 1,
+                avoidable: true,
+                critable: true,
+                damage: gameObject.getData("backend").getDamage(),
+                accuracy: gameObject.getData("backend").getAccuracy(),
+                crit: gameObject.getData("backend").getCrit(),
+                critMultiplier: gameObject.getData("backend").getCritMultiplier()
+            }
+        }
+        
         gameObject.play("attack_" + gameObject.getData("backend").name + "_end");
         console.log("bodies in world:", gameObject.scene.matter.world.getAllBodies());
     }
@@ -228,6 +295,20 @@ export default class Entity{
             return -1;
         }else{
             return this.damageAmplification;
+        }
+    }
+    getLifesteal(){
+        if(this.lifesteal <= 0){
+            return 0;
+        }else{
+            return this.lifesteal;
+        }
+    }
+    getSpellLifesteal(){
+        if(this.spellLifesteal <= 0){
+            return 0;
+        }else{
+            return this.spellLifesteal;
         }
     }
         
@@ -330,21 +411,22 @@ export default class Entity{
         }
     }
     
-    takeDamage(params){ //scene, sprite, body, group, factory, scaleRatio, type, avoidable, critable, attacker, attackerLabel
+    takeDamage(params){ //scene, sprite, body, group, factory, scaleRatio, attacker:{caster, type, avoidable, critable, damage, crit, accuracy, critMultiplier}, attackerLabel
         //type 0 es puro, 1 físico y 2 mágico
-        var rawDamage = params.attacker.getDamage();
+        var rawDamage = params.attacker.damage;
         var crit = false;
         var finalDamage = 0;
+        console.log("attacker params:", params.attacker);
 
-        if(!params.avoidable){
-            if(params.critable){
-                if(randomFloat(101) <= params.attacker.getCrit()){
-                    rawDamage *= params.attacker.getCritMultiplier();
+        if(!params.attacker.avoidable){
+            if(params.attacker.critable){
+                if(randomFloat(101) <= params.attacker.crit){
+                    rawDamage *= params.attacker.critMultiplier;
                     crit = true;
                 }
             }
             this.lastHitBy = params.attackerLabel;
-            finalDamage = this.dealDamage(rawDamage, params.type);
+            finalDamage = this.dealDamage(rawDamage, params.attacker.type);
             if(params.attackerLabel.split("#")[1] == params.scene.groups[0] || params.attackerLabel.split("#")[1] == params.scene.groups[1]){
                 let punctuation = params.scene.getPunctuationByHeroAndGroup(params.attackerLabel.split("#")[0], parseInt(params.attackerLabel.split("#")[1]));
                 if(punctuation != null){
@@ -355,16 +437,16 @@ export default class Entity{
                 this.onDeath(params);
             }
         }else{
-            var hitChance = params.attacker.getAccuracy() - this.getEvasion();
-            if(randomFloat(101) <= hitChance){
-                if(params.critable){
-                    if(randomFloat(101) <= params.attacker.getCrit()){
-                        rawDamage *= params.attacker.getCritMultiplier();
+            var hitChance = params.attacker.accuracy - this.getEvasion();
+            if(hitChance >= 100 || randomFloat(101) <= hitChance){
+                if(params.attacker.critable){
+                    if(randomFloat(101) <= params.attacker.crit){
+                        rawDamage *= params.attacker.critMultiplier;
                         crit = true;
                     }
                 }
                 this.lastHitBy = params.attackerLabel;
-                finalDamage = this.dealDamage(rawDamage, params.type);
+                finalDamage = this.dealDamage(rawDamage, params.attacker.type);
                 //se suma el daño hecho a la puntuacion de los jugadores si el atacante es un heroe
                 if(params.attackerLabel.split("#")[1] == params.scene.groups[0] || params.attackerLabel.split("#")[1] == params.scene.groups[1]){
                     let punctuation = params.scene.getPunctuationByHeroAndGroup(params.attackerLabel.split("#")[0], parseInt(params.attackerLabel.split("#")[1]));
@@ -377,13 +459,19 @@ export default class Entity{
                 }
             }
         }
+        //robo de vida
+        if(finalDamage > 0 && params.attacker.type == 1 && params.attacker.caster.getLifesteal() > 0)
+            params.attacker.caster.heal(finalDamage * params.attacker.caster.getLifesteal());
+        else if(finalDamage > 0 && params.attacker.type == 2 && params.attacker.caster.getSpellLifesteal() > 0)
+            params.attacker.caster.heal(finalDamage * params.attacker.caster.getSpellLifesteal());
+
         //mostrar texto de daño
         if(params.sprite != null && params.sprite.body != null){
             var damageMessage = "";
             var color = "#eeeeee";
             if (finalDamage == 0) {
               damageMessage = "missed";
-              if(!this.mayTakeDamage(params.type)){
+              if(!this.mayTakeDamage(params.attacker.type)){
                 damageMessage = "blocked";
               }
             }else{
@@ -457,7 +545,7 @@ export default class Entity{
     }
 
     //funciones sobre eventos
-    onDeath(params){
+    onDeath(params){ //scene, body
         if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
                 for(var i = 0; i < params.scene.teamBSprites.children.getArray().length; i++){

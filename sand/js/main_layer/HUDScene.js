@@ -118,27 +118,28 @@ export default class HUDGame extends Phaser.Scene {
             var color = '#0000ee';
             switch(i){
                 case 0:
-                    key = 'q';
+                    if(this.userData.skills.q != null)
+                        key = 'q';
                     break;
                 case 1:
-                    key = 'e';
+                    if(this.userData.skills.e != null)
+                        key = 'e';
                     break;
                 case 2:
-                    if(frames.length == 5 || this.userData.skills.f != null)
+                    if(this.userData.skills.f != null)
                         key = 'f';
-                    else if(this.userData.skills.r != null)
-                        key = 'r';
                     break;
                 case 3:
-                    if(frames.length == 5 || this.userData.skills.r != null)
+                    if(this.userData.skills.r != null)
                         key = 'r';
                     break;
             }
+            this.spellCodes.push(key);
             if( key == 'pasive'){
                 message = key;
             }
             else{
-                this.spellCodes.push(key);
+                
                 message = key + ": " + fitNumber(this.userData.skills[key].mana, 0);
                 if(this.userData.skills[key].mana > this.userData.mana)
                     color = '#ee0000';
@@ -246,10 +247,10 @@ export default class HUDGame extends Phaser.Scene {
                 if(counter < this.spellCodes.length)
                     key = this.spellCodes[counter];
                 if(key == this.userData.key){
-                    //if(skillsIcons.children.entries[i].fillColor == 0x298d4a)
+                    if(skillsIcons.children.entries[i].fillColor == 0x298d4a)
                         skillsIcons.children.entries[i].setFillStyle(0xad8d10);
                 }else{
-                    //if(skillsIcons.children.entries[i].fillColor == 0xad8d10)
+                    if(skillsIcons.children.entries[i].fillColor == 0xad8d10)
                         skillsIcons.children.entries[i].setFillStyle(0x298d4a);
                 }
                 counter++;

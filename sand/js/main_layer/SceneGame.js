@@ -16,7 +16,7 @@ export default class SceneGame extends Phaser.Scene {
       teamA:[
         {
           name: this.playerName,
-          hero: "demon_rogue",
+          hero: "demon_hunter",
           kills: 0,
           deaths: 0,
           assists: 0,
@@ -99,6 +99,11 @@ export default class SceneGame extends Phaser.Scene {
       "assets/demon_rogue_sheet.png",
       { frameWidth: 137, frameHeight: 137 }
     );
+    this.load.spritesheet(
+      "demon_hunter",
+      "assets/demon_hunter_sheet.png",
+      { frameWidth: 81, frameHeight: 54 }
+    );
     this.load.spritesheet("chimera", "assets/chimera_sheet.png", {
       frameWidth: 92,
       frameHeight: 149,
@@ -111,6 +116,9 @@ export default class SceneGame extends Phaser.Scene {
     this.load.image("gate", "assets/gate.png");
     this.load.image("tower", "assets/tower.png");
     this.load.image("fort", "assets/fort.png");
+
+    this.load.image("arrow", "assets/weapons/projectiles/arrow.png");
+    this.load.image("frozen_arrow", "assets/weapons/projectiles/frozen_arrow.png");
 
     this.load.tilemapTiledJSON("duelMap", "assets/duel_map.json");
     this.load.image("tiles", "assets/maptiles.png");
@@ -212,7 +220,7 @@ export default class SceneGame extends Phaser.Scene {
     );
 
     // The player's team and its settings
-    var picked = this.cache.json.get("entities").hero["demon_rogue"]
+    var picked = this.cache.json.get("entities").hero["demon_hunter"]
     picked.player = true;
     this.teamAHeroManager = new HeroFactory(
       [
@@ -464,10 +472,19 @@ export default class SceneGame extends Phaser.Scene {
         }else{
           this.matter.world.getAllBodies()[index].label = "usedBox." + this.matter.world.getAllBodies()[index].label.split(".")[1];
         }
+        if(this.matter.world.getAllBodies()[index].updateSpeed != null){
+          let deltaX = this.matter.world.getAllBodies()[index].updateSpeed * Math.cos(this.matter.world.getAllBodies()[index].gameObject.rotation + (Math.PI / 2));
+          let deltaY = this.matter.world.getAllBodies()[index].updateSpeed * Math.sin(this.matter.world.getAllBodies()[index].gameObject.rotation + (Math.PI / 2));
+          this.matter.world.getAllBodies()[index].gameObject.setVelocity(deltaX * (9.84 / this.scaleRatio) / 6, deltaY * (9.84 / this.scaleRatio) / 6);
+        }
+
       }
       labelReader = RegExp(/^(used|attack)Box\.\w+(\#\d+)?$/);
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
-        this.matter.world.remove(this.matter.world.getAllBodies()[index]);
+        if(this.matter.world.getAllBodies()[index].gameObject != null)
+          this.matter.world.getAllBodies()[index].gameObject.destroy();
+        else
+          this.matter.world.remove(this.matter.world.getAllBodies()[index]);
       }
       
     }
@@ -488,7 +505,7 @@ export default class SceneGame extends Phaser.Scene {
     
   }
 
-  //funciones no heredadas de la esca
+  //funciones no heredadas de la escena
 
   initialData(){
     return {
@@ -528,6 +545,7 @@ export default class SceneGame extends Phaser.Scene {
     if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null) {
       switch(bodyB.label.split(".")[0]){
         case "attackBox":
+        case "projectileBox":
           let factory = this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero);
           bodyB.gameObject.getData("backend").takeDamage({
             scene: this,
@@ -536,12 +554,11 @@ export default class SceneGame extends Phaser.Scene {
             group: this.getRelatedGroup(bodyB.collisionFilter.group),
             factory: factory,
             scaleRatio: 9.84 / this.scaleRatio,
-            type: 1,
-            avoidable: true,
-            critable: true,
-            attacker: this.querySpriteByLabel(bodyA.label.split(".")[1]).getData("backend"),
+            attacker: bodyA.attackParams,
             attackerLabel: bodyA.label.split(".")[1]
           });
+          if(bodyA.gameObject != null)
+            bodyA.gameObject.destroy();
           this.matter.world.remove(bodyA);
           break;
         case "bountyBox":
@@ -564,12 +581,11 @@ export default class SceneGame extends Phaser.Scene {
           break;
         case "aoeBox":
           break;
-        case "projectileBox":
-          break;
       }
     } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label) && bodyA.gameObject != null) {
       switch(bodyB.label.split(".")[0]){
         case "attackBox":
+        case "projectileBox":
           let factory = this.getRelatedFactory(bodyA.collisionFilter.group, bodyA.gameObject.getData("backend") instanceof Hero);
           bodyA.gameObject.getData("backend").takeDamage({
             scene: this,
@@ -578,12 +594,11 @@ export default class SceneGame extends Phaser.Scene {
             group: this.getRelatedGroup(bodyA.collisionFilter.group),
             factory: factory,
             scaleRatio: 9.84 / this.scaleRatio,
-            type: 1,
-            avoidable: true,
-            critable: true,
-            attacker: this.querySpriteByLabel(bodyB.label.split(".")[1]).getData("backend"),
+            attacker: bodyB.attackParams,
             attackerLabel: bodyB.label.split(".")[1]
           });
+          if(bodyB.gameObject != null)
+            bodyB.gameObject.destroy();
           this.matter.world.remove(bodyB);
           break;
         case "bountyBox":
@@ -604,8 +619,6 @@ export default class SceneGame extends Phaser.Scene {
           bodyB.label = "usedBox." + bodyB.label.split(".")[1];
           break;
         case "aoeBox":
-          break;
-        case "projectileBox":
           break;
       }
       

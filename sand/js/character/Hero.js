@@ -89,7 +89,7 @@ export default class Hero extends Character {
 
     //stats del personaje como tal
     this.fortitude = this.str.getStat1() + this.res.getStat3();
-    this.damage = 36 + this.weapon.getCurrentDamage() + this.str.getStat2();
+    this.damage = 18 + this.weapon.getCurrentDamage() + this.str.getStat2();
     this.armor = this.bodyArmor.getCurrentArmor() + this.str.getStat3();
     this.maxHealth = 200 + this.res.getStat1();
     this.curHealth = this.maxHealth;
@@ -150,7 +150,6 @@ export default class Hero extends Character {
     if(this.skills.r != null){
         spells.r = {mana: this.skills.r.getManaCost(this.level), curCooldown: this.skills.r.curCooldown,cooldown: this.skills.r.getCooldown(this.level)};
     }
-    console.log("last key:", this.curKey);
     return {
       health: this.getCurHealth(),
       maxHealth: this.getMaxHealth(),
