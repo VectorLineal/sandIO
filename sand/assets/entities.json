@@ -147,7 +147,7 @@
                     "type": "modifier",
                     "range": {
                       "reach": 75,
-                      "speed": 20,
+                      "speed": 36,
                       "width": 9,
                       "height": 23,
                       "projectile": "frozen_arrow"
@@ -179,7 +179,7 @@
                 "ranged": true,
                 "range": {
                   "reach": 75,
-                  "speed": 20,
+                  "speed": 36,
                   "width": 9,
                   "height": 23,
                   "projectile": "arrow"

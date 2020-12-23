@@ -40,6 +40,7 @@ export default class Character extends Entity{
         this.will = will;
         this.concentration = concentration;
         this.critMultiplier = critMultiplier;
+        this.spellLifesteal = 0; //[0, inf]
 
         //character's body
         this.spawnX = spawnPoint.x;
@@ -107,6 +108,13 @@ export default class Character extends Entity{
             return -100;
         }else{
             return this.concentration;
+        }
+    }
+    getSpellLifesteal(){
+        if(this.spellLifesteal <= 0){
+            return 0;
+        }else{
+            return this.spellLifesteal;
         }
     }
 
@@ -231,6 +239,84 @@ export default class Character extends Entity{
     lookAtDirection(sprite, direction){
         sprite.setAngle(direction);
     }
+    //revisa si se aplica resistencia mental o física
+    ApplyStatusResistance(amount, physical){
+        if(physical)
+            return Math.ceil(amount * (1 - this.getFortitude() / 100));
+        else
+            return Math.ceil(amount * (1 - this.getWill() / 100));
+    }
+    //funciones sobre el statusManager
+    push(physical, amount, sprite, direction, speed){
+        if(this.mayBeDisabled){
+            amount = this.ApplyStatusResistance(amount, physical);
+            this.moveDirection(sprite, direction, speed, scale, true);
+            this.statusManager.pushBody(amount);
+        }
+    }
+    shuffle(physical, amount, sprite, speed){
+        this.push(physical, amount, sprite, randomFloat(Math.PI * 2), speed);
+    }
+
+    stun(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.stun(physical, amount);
+    }
+    disarm(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.disarm(physical, amount);
+    }
+    cripple(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.cripple(physical, amount);
+    }
+    mute(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.mute(physical, amount);
+    }
+    sleep(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.sleep(physical, amount);
+    }
+    freeze(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.freeze(physical, amount);
+    }
+    mark(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.mark(physical, amount);
+    }
+    morph(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.morph(physical, amount);
+    }
+    decimate(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.decimate(physical, amount);
+    }
+    hypnotize(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.hypnotize(physical, amount);
+    }
+    becomeFeared(physical, amount, sprite){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.becomeFeared(physical, amount, sprite);
+    }
+    banish(physical, amount){
+        amount = this.ApplyStatusResistance(amount, physical);
+        super.banish(physical, amount);
+    }
+
+    pushBuff(physical, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
+        element.timer = this.ApplyStatusResistance(element.timer, physical);
+        super.pushBuff(physical, element, scene);
+    }
+    pushDamageOnTime(physical, element, type, scene){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster}
+        if(this.mayBeDebuffed){
+            element.timer = this.ApplyStatusResistance(element.timer, physical);
+            this.statusManager.pushDamageOnTime(this, element, type, scene);
+        }
+    }
 
     //funciones de hechizos
     updateCooldowns(params){
@@ -302,12 +388,14 @@ export default class Character extends Entity{
     }
 
     commitSpellq(animation, frame, gameObject) {
-        this.curKey = "";
+        gameObject.getData("backend").curKey = "";
+        gameObject.getData("backend").statusManager.makeVisible();
         //debe reemplazarse por una función que interprete el effect a código js
-        gameObject.getData("backend").statusManager.becomeDamageInmune(60 + Math.ceil(1.92 * gameObject.getData("backend").level));
+        gameObject.getData("backend").becomeDamageInmune(60 + Math.ceil(1.92 * gameObject.getData("backend").level));
     }
     commitSpelle(animation, frame, gameObject) {
-        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"),{
+        gameObject.getData("backend").statusManager.makeVisible();
+        gameObject.getData("backend").pushBuff(gameObject.getData("backend"),{
             name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.e.name,
             attribute: "damage",
             amount: gameObject.getData("backend").damage * (0.02 * gameObject.getData("backend").level + 0.15),
@@ -330,17 +418,19 @@ export default class Character extends Entity{
         gameObject.play("attack_" + gameObject.getData("backend").name + "_end");
     }
     commitSpellf(animation, frame, gameObject) {
-        this.curKey = "";
-        gameObject.getData("backend").statusManager.becomeInvisible(300 + 24 * gameObject.getData("backend").level);
+        gameObject.getData("backend").statusManager.makeVisible();
+        gameObject.getData("backend").curKey = "";
+        gameObject.getData("backend").becomeInvisible((300 + 24 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration()));
     }
     commitSpellr(animation, frame, gameObject) {
-        gameObject.getData("backend").dealDamage(0.3 * gameObject.getData("backend").getCurHealth(), 0);
+        gameObject.getData("backend").statusManager.makeVisible();
+        gameObject.getData("backend").curKey = "";
+        gameObject.getData("backend").dealDamage((0.3 * gameObject.getData("backend").getCurHealth())* (1 + gameObject.getData("backend").getSpellPower() / 100), 0);
         // damageChange(3x+32, 12x+180) critChange(x+10, 12x+180) lifestealChange(0.4, 12x+180) armorChange(-4x-30, 12x+180) mute(12x+180)
-        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"), {name: "demon_hunter_r1", attribute: "damage", amount: 32 + 3 * gameObject.getData("backend").level, timer: 180 + 12 * gameObject.getData("backend").level, stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
-        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"), {name: "demon_hunter_r2", attribute: "crit", amount: 10 + gameObject.getData("backend").level, timer: 180 + 12 * gameObject.getData("backend").level, stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
-        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"), {name: "demon_hunter_r3", attribute: "lifesteal", amount: 0.4, timer: 180 + 12 * gameObject.getData("backend").level, stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
-        gameObject.getData("backend").statusManager.pushBuff(gameObject.getData("backend"), {name: "demon_hunter_r4", attribute: "armor", amount: - 30 - 4 * gameObject.getData("backend").level, timer: 180 + 12 * gameObject.getData("backend").level, stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
-        gameObject.getData("backend").statusManager.mute(180 + 12 * gameObject.getData("backend").level);
-        this.curKey = "";
+        gameObject.getData("backend").pushBuff(true, {name: "demon_hunter_r1", attribute: "damage", amount: 32 + 3 * gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").pushBuff(true, {name: "demon_hunter_r2", attribute: "crit", amount: 10 + gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").pushBuff(true, {name: "demon_hunter_r3", attribute: "lifesteal", amount: 0.4, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").pushBuff(true, {name: "demon_hunter_r4", attribute: "armor", amount: - 30 - 4 * gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").mute(true, (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100));
     }
 }

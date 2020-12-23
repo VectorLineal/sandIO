@@ -32,7 +32,6 @@ export default class Entity{
         this.cauterize = 0; //positivo aumenta efectos curativos, negativo los disminuye [-1, inf]
         this.damageAmplification = 0; //positivo reduce el daño de todo tipo porcentualmente, negativo lo amplifica [-inf, 1]
         this.lifesteal = 0; //[0, inf]
-        this.spellLifesteal = 0; //[0, inf]
 
         //character's body
         this.atFrames = [];
@@ -182,7 +181,7 @@ export default class Entity{
     }
 
     commitAttack(animation, frame, gameObject) {
-        gameObject.scene.lastKeyPressed = "";
+        gameObject.getData("backend").statusManager.makeVisible();
         if(!gameObject.getData("backend").getRanged()){
             let box = gameObject.getData("backend").generateAttackBox(gameObject);
             box.attackParams = {
@@ -218,10 +217,8 @@ export default class Entity{
     }
 
     castAttack(sprite){
-        if(this.mayAttack() && !sprite.anims.isPlaying){
+        if(this.mayAttack() && !sprite.anims.isPlaying)
             sprite.play("attack_" + this.name);
-            this.statusManager.makeVisible();
-        }
     }
 
     //getter y setter
@@ -304,13 +301,6 @@ export default class Entity{
             return this.lifesteal;
         }
     }
-    getSpellLifesteal(){
-        if(this.spellLifesteal <= 0){
-            return 0;
-        }else{
-            return this.spellLifesteal;
-        }
-    }
         
     getRange(){
         return this.range;
@@ -358,6 +348,130 @@ export default class Entity{
 
     isDead(){
         return this.curHealth <= 0;
+    }
+
+    //funciones que indican posibilidad de ejecutar acciones según cambios de estado
+    mayRotate(){
+        return this.statusManager.mayRotate();
+    }
+    mayMove(){
+        return this.statusManager.mayMove();
+    }
+    onlyMovingForward(){
+        return this.statusManager.onlyMovingForward();
+    }
+    mayAttack(){
+        return this.statusManager.mayAttack();
+    }
+    mayUsePasives(){ //pendiente implementación
+        return this.statusManager.mayUsePasives();
+    }
+    mayCastSpells(){
+        return this.statusManager.mayCastSpells();
+    }
+    mayTakeDamage(type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
+        return this.statusManager.mayTakeDamage(type);
+    }
+    mayBeDisabled(){
+        return this.statusManager.mayBeDisabled();
+    }
+    mayBeDebuffed(){
+        return !this.statusManager.isSpellInmune();
+    }
+    isMarked(){ //pendiente implementación
+        return this.statusManager.isMarked();
+    }
+    isInmortal(){
+        return this.statusManager.isInmortal();
+    }
+    flies(){ //pendiente implementación
+        return this.statusManager.flies();
+    }
+
+    getVisibility(){
+        return this.statusManager.getVisibility();
+    }
+
+    //funciones sobre el statusManager
+    purge(positive, scene){
+        this.statusManager.purge(this, positive, scene);
+    }
+    stun(physical, amount){
+        if(this.mayBeDisabled())
+            this.statusManager.stun(amount);
+    }
+    disarm(physical, amount){
+        this.statusManager.disarm(amount);
+    }
+    cripple(physical, amount){
+        if(this.mayBeDisabled())
+            this.statusManager.cripple(amount);
+    }
+    mute(physical, amount){
+        if(this.mayBeDisabled())
+            this.statusManager.mute(amount);
+    }
+    sleep(physical, amount){
+        if(this.mayBeDisabled())
+            this.statusManager.sleep(amount);
+    }
+    freeze(physical, amount){
+        if(this.mayBeDisabled())
+            this.statusManager.freeze(amount);
+    }
+    mark(physical, amount){
+        this.statusManager.mark(amount);
+    }
+    morph(physical, amount){
+        if(this.mayBeDisabled())
+            this.statusManager.morph(amount);
+    }
+    decimate(physical, amount){
+        if(this.mayBeDisabled())
+            this.statusManager.decimate(amount);
+    }
+    becomeInvisible(amount){
+        this.statusManager.becomeInvisible(amount);
+    }
+    becomeInmortal(amount){
+        this.statusManager.becomeInmortal(amount);
+    }
+    hypnotize(physical, amount){
+        if(this.mayBeDisabled())
+            this.statusManager.hypnotize(amount);
+    }
+    becomeFeared(physical, amount, sprite){
+        if(this.mayBeDisabled())
+            this.statusManager.becomeFeared(amount, sprite);
+    }
+    becomeCCInmune(amount){
+        this.statusManager.becomeCCInmune(amount);
+    }
+    fly(amount){
+        this.StatusManager.fly(amount);
+    }
+    becomeSpellInmune(amount){
+        this.statusManager.becomeSpellInmune(amount);
+    }
+    becomeDamageInmune(amount){
+        this.statusManager.becomeDamageInmune(amount);
+    }
+    banish(physical, amount){
+        if(this.mayBeDisabled())
+            this.StatusManager.banish(amount);
+    }
+    markForDeath(amount){
+        this.statusManager.markForDeath(amount);
+    }
+
+    pushBuff(physical, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
+        if(this.mayBeDebuffed() || element.amount > 0)
+            this.statusManager.pushBuff(this, element, scene);
+    }
+
+    pushDamageOnTime(physical, element, type, scene){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster}
+        if((type == "rawDamage" || type == "burn" || type == "curse" || type == "parasite") && this.mayBeDebuffed())    
+            this.statusManager.pushDamageOnTime(this, element, type, scene);
     }
 
     shieldDamage(amount){
@@ -500,48 +614,6 @@ export default class Entity{
     
     restoreHealth(){
         this.curHealth = this.getMaxHealth();
-    }
-
-    //funciones que indican posibilidad de ejecutar acciones según cambios de estado
-    mayRotate(){
-        return this.statusManager.mayRotate();
-    }
-    mayMove(){
-        return this.statusManager.mayMove();
-    }
-    onlyMovingForward(){
-        return this.statusManager.onlyMovingForward();
-    }
-    mayAttack(){
-        return this.statusManager.mayAttack();
-    }
-    mayUsePasives(){ //pendiente implementación
-        return this.statusManager.mayUsePasives();
-    }
-    mayCastSpells(){ //pendiente implementación
-        return this.statusManager.mayCastSpells();
-    }
-    mayTakeDamage(type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
-        return this.statusManager.mayTakeDamage(type);
-    }
-    mayBeDisabled(){ //pendiente implementación
-        return this.statusManager.mayBeDisabled();
-    }
-    mayBeDebuffed(){ //pendiente implementación
-        return !this.statusManager.isSpellInmune();
-    }
-    isMarked(){ //pendiente implementación
-        return this.statusManager.isMarked();
-    }
-    isInmortal(){
-        return this.statusManager.isInmortal();
-    }
-    flies(){ //pendiente implementación
-        return this.statusManager.flies();
-    }
-
-    getVisibility(){
-        return this.statusManager.getVisibility();
     }
 
     //funciones sobre eventos

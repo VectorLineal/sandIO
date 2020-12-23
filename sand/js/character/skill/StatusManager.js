@@ -23,6 +23,7 @@ export default class{
            spellInmune: 0,
            damageInmune: 0,
            banish: 0,
+           push: 0, //se usa cuando se aplique efecto de cambios de movimiento (push, pull, shuffle)
            markedForDeath: -1 //(no purgable)indica si algun personaje morira en dado tiempo (se usa sobre todo en criaturas invocadas por x tiempo) default -1
        };
        //lista
@@ -95,6 +96,9 @@ export default class{
     isBanished(){
         return this.singleEffects.banish != 0;
     }
+    isPushed(){
+        return this.singleEffects.push != 0;
+    }
     isMarkedForDeath(){
         return this.singleEffects.markedForDeath != 0;
     }
@@ -158,11 +162,11 @@ export default class{
 
     //queries compuestas
     mayRotate(){
-        return !(this.isStunt() || this.isSlept() || this.isFeared() || this.isHypnotized() || this.isBanished());
+        return !(this.isStunt() || this.isSlept() || this.isFeared() || this.isHypnotized() || this.isBanished() || this.isPushed());
     }
 
     mayMove(){
-        return !(this.isSlept() || this.isStunt() || this.isCrppled() || this.isFrozen() || this.isFeared() || this.isHypnotized() || this.isBanished());
+        return !(this.isSlept() || this.isStunt() || this.isCrppled() || this.isFrozen() || this.isFeared() || this.isHypnotized() || this.isBanished() || this.isPushed());
     }
     onlyMovingForward(){
         return this.isFeared() || this.isHypnotized();
@@ -221,23 +225,32 @@ export default class{
             case "magicArmor":
                 return entity.magicArmor;
             case "fortitude":
-                return entity.fortitude;
+                if(entity.fortitude != null)
+                    return entity.fortitude;
             case "speed":
-                return entity.speed;
+                if(entity.speed != null)
+                    return entity.speed;
             case "crit":
-                return entity.crit;
-            case "maxMana":
-                return entity.maxMana;
+                if(entity.crit != null)
+                    return entity.crit;
+            case "mana":
+                if(entity.maxMana != null)
+                    return entity.maxMana;
             case "manaRegen":
-                return entity.manaRegen;
+                if(entity.manaRegen != null)
+                    return entity.manaRegen;
             case "spellPower":
-                return entity.spellPower;
+                if(entity.spellPower != null)
+                    return entity.spellPower;
             case "will":
-                return entity.will;
+                if(entity.will != null)
+                    return entity.will;
             case "concentration":
-                return entity.concentration;
+                if(entity.concentratione != null)
+                    return entity.concentration;
             case "critMultiplier": //atributos no básicos
-                return entity.critMultiplier;
+                if(entity.critMultiplier != null)
+                    return entity.critMultiplier;
             case "shield":
                 return entity.shield;
             case "FOV":
@@ -246,7 +259,14 @@ export default class{
                 return entity.cauterize;
             case "damageAmplification":
                 return entity.damageAmplification;
+            case "lifesteal":
+                return entity.lifesteal;
+            case "spellLifesteal":
+                if(entity.spellLifesteal != null)
+                    return entity.spellLifesteal;
         }
+        console.log(attribute, "queried attribute not found");
+        return null;
     }
 
     alterStat(entity, attribute, amount, scene){
@@ -283,36 +303,46 @@ export default class{
                 entity.magicArmor += amount;
                 break;
             case "fortitude":
-                entity.fortitude += amount;
+                if(entity.fortitude != null)
+                    entity.fortitude += amount;
                 break;
             case "speed":
-                entity.speed += amount;
+                if(entity.speed != null)
+                    entity.speed += amount;
                 break;
             case "crit":
-                entity.crit += amount;
+                if(entity.crit != null)
+                    entity.crit += amount;
                 break;
-            case "maxMana":
-                percentualChange = amount / entity.maxMana;
-                entity.maxMana += amount;
-                entity.curMana += entity.curMana * percentualChange;
-                if(entity.maxMana < entity.curMana){
-                    entity.curMana = entity.maxMana;
+            case "mana":
+                if(entity.maxMana != null){
+                    percentualChange = amount / entity.maxMana;
+                    entity.maxMana += amount;
+                    entity.curMana += entity.curMana * percentualChange;
+                    if(entity.maxMana < entity.curMana){
+                        entity.curMana = entity.maxMana;
+                    }
                 }
                 break;
             case "manaRegen":
-                entity.manaRegen += amount;
+                if(entity.manaRegen != null)
+                    entity.manaRegen += amount;
                 break;
             case "spellPower":
-                entity.spellPower += amount;
+                if(entity.spellPower != null)
+                    entity.spellPower += amount;
                 break;
             case "will":
-                entity.will += amount;
+                if(entity.will != null)
+                    entity.will += amount;
                 break;
             case "concentration":
-                entity.concentration += amount;
+                if(entity.concentration != null)
+                    entity.concentration += amount;
                 break;
             case "critMultiplier": //atributos no básicos
-                entity.critMultiplier += amount;
+                if(entity.critMultiplier != null)
+                    entity.critMultiplier += amount;
                 break;
             case "shield":
                 entity.maxShield += amount;
@@ -336,7 +366,8 @@ export default class{
                 entity.lifesteal += amount;
                 break;
             case "spellLifesteal":
-                entity.spellLifesteal += amount;
+                if(entity.spellLifesteal != null)
+                    entity.spellLifesteal += amount;
                 break;
         }
         if(entity instanceof Hero){
@@ -476,6 +507,9 @@ export default class{
     }
     banish(amount){
         this.singleEffects.banish = Math.max(this.singleEffects.banish, amount);
+    }
+    pushBody(amount){
+        this.singleEffects.push = Math.max(this.singleEffects.push, amount);
     }
     markForDeath(amount){
         this.singleEffects.markedForDeath = Math.max(this.singleEffects.markedForDeath, amount);
@@ -794,33 +828,29 @@ export default class{
                 params.sprite.clearTint();
             }
           }
-
+          var alpha = 1;
           switch(this.getVisibility()){
             case 0:
-              /*if(params.entity instanceof Playable){
-                if(params.sprite.alpha != 0.6){
-                  params.sprite.setAlpha(0.6);
-                }
-              }else{*/
-                if(params.sprite.alpha != 0){
-                    params.sprite.setAlpha(0);
-                }
-              //}
+              alpha = 0;
               break;
             case 1:
-              if(params.sprite.alpha != 0.6){
-                params.sprite.setAlpha(0.6);
-              }
+              alpha = 0.6;
               break;
             case 2:
-              if(params.sprite.alpha != 1){
-                params.sprite.setAlpha(1);
-              }
-              break;
             default:
-              params.sprite.setAlpha(1);
+              alpha = 1;
               break;
           }
+          if(params.sprite.alpha != alpha){
+            params.sprite.setAlpha(alpha);
+            params.sprite.getData("status").setAlpha(alpha);
+            if(params.sprite.getData("underBar") != null && params.sprite.getData("healthBar") != null && params.sprite.getData("shieldBar")){
+                params.sprite.getData("underBar").setAlpha(0.2 * alpha);
+                params.sprite.getData("healthBar").setAlpha(0.4 * alpha);
+                params.sprite.getData("shieldBar").setAlpha(0.4 * alpha);
+            }
+          }
+            
           //actualizar pocisiones de los iconos
           for(var i = 0; i < params.sprite.getData("status").children.size; i++){
             params.sprite.getData("status").children.entries[i].x = zeroX + (i * 6 * params.scaleRatio);
