@@ -159,6 +159,7 @@ export default class Character extends Entity{
         //si el último que dio el golpe es una criatura neutral, no se reparte ni xp ni oro por lo que la función termina su ejecución acá
         //se reparte oro y xp al último que dio el golpe siemre y cuando sea un heroe
         let category = super.onDeath(params);
+        this.statusManager.onDeath(this, params.scene);
 
         //se reparte oro y xp a los que estaban cerca aquien murió
         var givesGold = "0";
@@ -398,7 +399,7 @@ export default class Character extends Entity{
         gameObject.getData("backend").pushBuff(gameObject.getData("backend"),{
             name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.e.name,
             attribute: "damage",
-            amount: gameObject.getData("backend").damage * (0.02 * gameObject.getData("backend").level + 0.15),
+            amount: 2 * gameObject.getData("backend").level + 20,
             timer: 1,
             stacks: 1,
             stackable: 1,
@@ -415,6 +416,21 @@ export default class Character extends Entity{
             crit: gameObject.getData("backend").getCrit(),
             critMultiplier: gameObject.getData("backend").getCritMultiplier()
         }
+        shot.body.onHit = function(scene, targetBody, originBody, group, factory, scaleRatio){
+            targetBody.gameObject.getData("backend").takeDamage({
+                scene: scene,
+                sprite: targetBody.gameObject,
+                body: targetBody,
+                group: group,
+                factory: factory,
+                scaleRatio: scaleRatio,
+                attacker: originBody.attackParams,
+                attackerLabel: originBody.label.split(".")[1]
+              });
+              if(targetBody.gameObject != null)
+                if(targetBody.gameObject.getData("backend").speed != null)
+                    targetBody.gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.e.name, attribute: "speed", amount: targetBody.gameObject.getData("backend").getSpeed() * (-1 + (0.08 + originBody.attackParams.caster.level / 100)), timer: 60 * (1 + originBody.attackParams.caster.getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, scene)
+        }
         gameObject.play("attack_" + gameObject.getData("backend").name + "_end");
     }
     commitSpellf(animation, frame, gameObject) {
@@ -427,10 +443,10 @@ export default class Character extends Entity{
         gameObject.getData("backend").curKey = "";
         gameObject.getData("backend").dealDamage((0.3 * gameObject.getData("backend").getCurHealth())* (1 + gameObject.getData("backend").getSpellPower() / 100), 0);
         // damageChange(3x+32, 12x+180) critChange(x+10, 12x+180) lifestealChange(0.4, 12x+180) armorChange(-4x-30, 12x+180) mute(12x+180)
-        gameObject.getData("backend").pushBuff(true, {name: "demon_hunter_r1", attribute: "damage", amount: 32 + 3 * gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
-        gameObject.getData("backend").pushBuff(true, {name: "demon_hunter_r2", attribute: "crit", amount: 10 + gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
-        gameObject.getData("backend").pushBuff(true, {name: "demon_hunter_r3", attribute: "lifesteal", amount: 0.4, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
-        gameObject.getData("backend").pushBuff(true, {name: "demon_hunter_r4", attribute: "armor", amount: - 30 - 4 * gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.r.name + "_damage", attribute: "damage", amount: 32 + 3 * gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.r.name+ "_crit", attribute: "crit", amount: 10 + gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.r.name+ "_lifesteal", attribute: "lifesteal", amount: 0.4, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.r.name+ "_armor", attribute: "armor", amount: - 30 - 4 * gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: false, clearAtZero: false}, gameObject.scene);
         gameObject.getData("backend").mute(true, (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100));
     }
 }

@@ -71,6 +71,8 @@ export default class Building extends Entity {
           //params.sprite.getData("healthBar").destroy();
           params.sprite.getData("displayDamage").destroy();
           params.group.remove(params.sprite, true, true);
+          this.purge(true, params.scene);
+          this.purge(false, params.scene);
           if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
             for(var i = 0; i < VREyeParameters.scene.teamBSprites.children.getArray().length; i++){
@@ -111,6 +113,8 @@ export default class Building extends Entity {
           //params.sprite.getData("healthBar").destroy();
           params.sprite.getData("displayDamage").destroy();
           params.group.remove(params.sprite, true, true);
+          this.purge(true, params.scene);
+          this.purge(false, params.scene);
           if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
             for(var i = 0; i < VREyeParameters.scene.teamBSprites.children.getArray().length; i++){

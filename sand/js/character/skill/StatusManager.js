@@ -418,6 +418,7 @@ export default class{
             this.singleEffects.hypnosis = 0;
             this.singleEffects.fear = 0;
             this.singleEffects.banish = 0;
+            this.singleEffects.push = 0;
 
             for(var i = this.buffs.length - 1; i >= 0; i--){
                 if(this.buffs[i].amount <= 0 && this.buffs[i].timer > 0){
@@ -605,6 +606,19 @@ export default class{
     }
 
     //funciones sobre eventos
+    onDeath(entity, scene){
+        //se limpian cambios de estado
+        this.purge(entity, true, scene);
+        this.purge(entity, false, scene);
+
+        //se elminan condiciones que se pierden al morir
+        for(var i = this.buffs.length - 1; i >= 0; i--){
+            if(this.buffs[i].timer == -2){
+                let buff = this.buffs.splice(i, 1);
+                this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
+            }
+        }
+    }
     onUpdate(params){
         //se actualizan timers de todos los efectos de un solo parametro
         if(this.singleEffects.stun > 0){

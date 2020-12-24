@@ -194,6 +194,18 @@ export default class Entity{
                 crit: gameObject.getData("backend").getCrit(),
                 critMultiplier: gameObject.getData("backend").getCritMultiplier()
             }
+            box.onHit = function(scene, targetBody, originBody, group, factory, scaleRatio){
+                targetBody.gameObject.getData("backend").takeDamage({
+                    scene: scene,
+                    sprite: targetBody.gameObject,
+                    body: targetBody,
+                    group: group,
+                    factory: factory,
+                    scaleRatio: scaleRatio,
+                    attacker: originBody.attackParams,
+                    attackerLabel: originBody.label.split(".")[1]
+                  });
+            }
         }else{
             let projectile = gameObject.getData("backend").generateProjectile(gameObject, gameObject.getData("backend").getRange());
             projectile.body.attackParams = {
@@ -205,6 +217,18 @@ export default class Entity{
                 accuracy: gameObject.getData("backend").getAccuracy(),
                 crit: gameObject.getData("backend").getCrit(),
                 critMultiplier: gameObject.getData("backend").getCritMultiplier()
+            }
+            projectile.body.onHit = function(scene, targetBody, originBody, group, factory, scaleRatio){
+                targetBody.gameObject.getData("backend").takeDamage({
+                    scene: scene,
+                    sprite: targetBody.gameObject,
+                    body: targetBody,
+                    group: group,
+                    factory: factory,
+                    scaleRatio: scaleRatio,
+                    attacker: originBody.attackParams,
+                    attackerLabel: originBody.label.split(".")[1]
+                  });
             }
         }
         
@@ -617,6 +641,66 @@ export default class Entity{
     }
 
     //funciones sobre eventos
+    onKillMain(params){ //se activa al matar heroes o jefes
+
+    }
+
+    onKill(params){ //se activa al matar cualquier entidad
+
+    }
+
+    onAttack(params){ //se activa al lanzar un ataque
+
+    }
+
+    onAttackHit(params){ //se activa al acertar un ataque
+
+    }
+
+    onCrit(params){ //se activa al acertar un ataque crítico
+
+    }
+
+    onBodyCollision(params){ //se activa cuando el usuario colisiona con otro
+
+    }
+
+    aura(reach, params){ //genera un aura pasiva que afecta a los que esten dentro de dicha area
+
+    }
+
+    debuffTriggered(params){ //se activa cuando el usuario recibe un debuff
+
+    }
+
+    statusTriggered(params){ //se activa al acertar un ataque
+
+    }
+
+    healthTriggered(treshold, sign, params){ //se activa cuando el usuario obtiene cierto porcentaje de salud
+
+    }
+
+    critTriggered(params){ //se activa cuando se recibe un crítico
+
+    }
+
+    attackTriggered(params){ //se activa cuando el usuario recibe un ataque
+
+    }
+
+    backstabTriggered(params){ //se activa al cuando se recibe un backstab
+
+    }
+
+    spellTriggered(params){ //se activa cuando el usuario es victima de un hechizo
+
+    }
+
+    ccTriggered(params){ //se activa acuando el usuario recibe un efecto d eperdida de control
+
+    }
+
     onDeath(params){ //scene, body
         if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){

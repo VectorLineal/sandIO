@@ -547,16 +547,7 @@ export default class SceneGame extends Phaser.Scene {
         case "attackBox":
         case "projectileBox":
           let factory = this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero);
-          bodyB.gameObject.getData("backend").takeDamage({
-            scene: this,
-            sprite: bodyB.gameObject,
-            body: bodyB,
-            group: this.getRelatedGroup(bodyB.collisionFilter.group),
-            factory: factory,
-            scaleRatio: 9.84 / this.scaleRatio,
-            attacker: bodyA.attackParams,
-            attackerLabel: bodyA.label.split(".")[1]
-          });
+          bodyA.onHit(this, bodyB, bodyA, this.getRelatedGroup(bodyB.collisionFilter.group), factory, 9.84 / this.scaleRatio);
           if(bodyA.gameObject != null)
             bodyA.gameObject.destroy();
           this.matter.world.remove(bodyA);
@@ -587,16 +578,7 @@ export default class SceneGame extends Phaser.Scene {
         case "attackBox":
         case "projectileBox":
           let factory = this.getRelatedFactory(bodyA.collisionFilter.group, bodyA.gameObject.getData("backend") instanceof Hero);
-          bodyA.gameObject.getData("backend").takeDamage({
-            scene: this,
-            sprite: bodyA.gameObject,
-            body: bodyA,
-            group: this.getRelatedGroup(bodyA.collisionFilter.group),
-            factory: factory,
-            scaleRatio: 9.84 / this.scaleRatio,
-            attacker: bodyB.attackParams,
-            attackerLabel: bodyB.label.split(".")[1]
-          });
+          bodyB.onHit(this, bodyA, bodyB, this.getRelatedGroup(bodyA.collisionFilter.group), factory, 9.84 / this.scaleRatio);
           if(bodyB.gameObject != null)
             bodyB.gameObject.destroy();
           this.matter.world.remove(bodyB);

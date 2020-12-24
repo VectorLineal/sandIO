@@ -37,6 +37,7 @@ export default class NonPlayable extends Character{
         params.sprite.getData("underBar").destroy();
         params.sprite.getData("healthBar").destroy();
         params.sprite.getData("shieldBar").destroy();
+        params.sprite.getData("status").destroy(true);
         params.group.remove(params.sprite, true, true);
         super.onDeath(params);
     }

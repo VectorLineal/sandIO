@@ -140,7 +140,7 @@
                   },
                   "e":{
                     "name": "freezing_projectiles",
-                    "effect": "self.damageChange(x+15, 1) target.speedChange((-x-8)%, 60)",
+                    "effect": "self.damageChange(2x+20, 1) target.speedChange((-x-8)%, 60)",
                     "cooldown": "0",
                     "castpoint": 0,
                     "manaCost": "2x+5",
