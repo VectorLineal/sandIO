@@ -180,11 +180,25 @@ export default class Entity{
         return shot;
     }
 
+    generateAreaBox(type, scene, entity, body, category, timer, scaleRatio){
+        let box = scene.matter.add.circle(body.position.x, body.position.y, 150 * scaleRatio, {
+            collisionFilter:{
+                category: category
+            },
+            label: type + entity.name,
+            isSensor: true
+        });
+        box.timer = timer;
+
+        return box;
+    }
+
     commitAttack(animation, frame, gameObject) {
         gameObject.getData("backend").statusManager.makeVisible();
         if(!gameObject.getData("backend").getRanged()){
             let box = gameObject.getData("backend").generateAttackBox(gameObject);
             box.attackParams = {
+                isAttack: true,
                 caster: gameObject.getData("backend"),
                 type: 1,
                 avoidable: true,
@@ -209,6 +223,7 @@ export default class Entity{
         }else{
             let projectile = gameObject.getData("backend").generateProjectile(gameObject, gameObject.getData("backend").getRange());
             projectile.body.attackParams = {
+                isAttack: true,
                 caster: gameObject.getData("backend"),
                 type: 1,
                 avoidable: true,
@@ -640,6 +655,19 @@ export default class Entity{
         this.curHealth = this.getMaxHealth();
     }
 
+    //funciones sobre pasivas
+    buildStatsPasives(){ //funciona para crear pasivas que solo suman stats, esta funciçon se llama al restaurar los efectos de las pasivas cuando s epierden por el status Decimate
+        //se debe hacer la traducción de SDL y sumer stats mediante el status manager con código -3 en el timer
+    }
+
+    removePasiveStats(){
+        this.statusManager.clearPasives(this);
+    }
+
+    buildTriggerPasives(){ //funciona para crear pasivas que otorgan funcionaldades condicionadas
+        //aquí se debe hacer la traducción de SDL y generar las habilidades pasivas
+    }
+
     //funciones sobre eventos
     onKillMain(params){ //se activa al matar heroes o jefes
 
@@ -677,7 +705,7 @@ export default class Entity{
 
     }
 
-    healthTriggered(treshold, sign, params){ //se activa cuando el usuario obtiene cierto porcentaje de salud
+    healthTriggered(treshold, sign, params){ //se activa cuando el usuario obtiene cierto porcentaje de salud (0: =, 1: <, 2: <=, 3: >, 4: >=)
 
     }
 

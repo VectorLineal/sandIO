@@ -155,6 +155,14 @@ export default class Character extends Entity{
 
 
     //funciones sobre eventos
+    onCastSpell(params){ //se activa al lanzar un hechizo
+
+    }
+
+    onHitSpell(params){ //se activa al acertar un hechizo
+
+    }
+
     onDeath(params){
         //si el último que dio el golpe es una criatura neutral, no se reparte ni xp ni oro por lo que la función termina su ejecución acá
         //se reparte oro y xp al último que dio el golpe siemre y cuando sea un heroe
@@ -162,26 +170,14 @@ export default class Character extends Entity{
         this.statusManager.onDeath(this, params.scene);
 
         //se reparte oro y xp a los que estaban cerca aquien murió
-        var givesGold = "0";
-        var bounty=[this.calculateNextLevelXp() * 0.2, 0];
+        var bounty = {xp: this.calculateNextLevelXp() * 0.2, gold: 0};
 
-        if(this.constructor instanceof Hero || this.isBoss){
-            givesGold = "1";
-            bounty[1] = this.calculateBounty() * 0.2;
-        }
+        if(this.constructor instanceof Hero || this.isBoss)
+            bounty.gold = this.calculateBounty() * 0.2;
 
         if(category == params.scene.categories[1] || category == params.scene.categories[3]){
-            let box = params.scene.matter.add.circle(params.body.position.x, params.body.position.y, 150 * params.scaleRatio, {
-                collisionFilter:{
-                    category: category
-                },
-                label: "bountyBox." + this.name + "#" + givesGold,
-                isSensor: true,
-                onCollideEndCallback: function(event, bodyA, bodyB){
-                    return bounty;
-                }
-            });
-            box.timer = 1;
+            let box = this.generateAreaBox("bountyBox.", params.scene, this, params.body, category, 1, params.scaleRatio);
+            box.bounty = bounty;
         }
         return category;
     }
@@ -407,6 +403,7 @@ export default class Character extends Entity{
         }, gameObject.scene);
         let shot = gameObject.getData("backend").generateProjectile(gameObject, gameObject.getData("backend").skills.e.range);
         shot.body.attackParams = {
+            isAttack: true,
             caster: gameObject.getData("backend"),
             type: 1,
             avoidable: true,

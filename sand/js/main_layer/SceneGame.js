@@ -553,17 +553,16 @@ export default class SceneGame extends Phaser.Scene {
           this.matter.world.remove(bodyA);
           break;
         case "bountyBox":
-          console.log("colisionaron:");
           for(var i = 0; i < event.pairs.length; i++){
             if(event.pairs[i].bodyB.gameObject != null){
               console.log(event.pairs[i].bodyB);
               if(event.pairs[i].bodyB.gameObject.getData("backend") instanceof Hero){
                 let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyB.gameObject.getData("backend").name, event.pairs[i].bodyB.collisionFilter.group);
-                event.pairs[i].bodyB.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[0]});
-                punctuation.XPM += event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[0];
+                event.pairs[i].bodyB.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyA.bounty.xp});
+                punctuation.XPM += event.pairs[i].bodyA.bounty.xp;
                 if(event.pairs[i].bodyA.label.split("#")[1] == "1"){
-                  event.pairs[i].bodyB.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[1]});
-                  punctuation.GPM += event.pairs[i].bodyA.onCollideEndCallback(0, 0, 0)[1];
+                  event.pairs[i].bodyB.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyA.bounty.gold});
+                  punctuation.GPM += event.pairs[i].bodyA.bounty.gold;
                 }
               }
             }
@@ -586,14 +585,14 @@ export default class SceneGame extends Phaser.Scene {
         case "bountyBox":
           for(var i = 0; i < event.pairs.length; i++){
             if(event.pairs[i].bodyA.gameObject != null){
-              console.log(event.pairs[i].bodyA);
+              console.log("bounty pairs:",event.pairs[i].bodyA);
               if(event.pairs[i].bodyA.gameObject.getData("backend") instanceof Hero){
                 let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyA.gameObject.getData("backend").name, event.pairs[i].bodyA.collisionFilter.group);
-                event.pairs[i].bodyA.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[0]});
-                punctuation.XPM += event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[0];
+                event.pairs[i].bodyA.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyB.bounty.xp});
+                punctuation.XPM += event.pairs[i].bodyB.bounty.xp;
                 if(event.pairs[i].bodyB.label.split("#")[1] == "1"){
-                  event.pairs[i].bodyA.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[1]});
-                  punctuation.GPM += event.pairs[i].bodyB.onCollideEndCallback(0, 0, 0)[1];
+                  event.pairs[i].bodyA.gameObject.getData("backend").earnGold({scene: this, amount: event.pairs[i].bodyB.bounty.gold});
+                  punctuation.GPM += event.pairs[i].bodyB.bounty.gold;
                 }
               }
             }

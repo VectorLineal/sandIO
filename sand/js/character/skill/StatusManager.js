@@ -524,6 +524,16 @@ export default class{
         }
         return -1; //en caso que el elemento no esté en la lista
     }
+
+    clearPasives(entity){
+        for(var i = this.buffs.length - 1; i >= 0; i--){
+            if(this.buffs[i].timer == -3){
+                let buff = this.buffs.splice(i, 1);
+                this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
+            }
+        }
+    }
+
     pushBuff(entity, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
         let posibleIndex = this.getListIndex(this.buffs, element.name);
         if(posibleIndex != -1){

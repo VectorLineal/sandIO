@@ -124,7 +124,7 @@
               },
               "skills":{
                 "pasives":[
-                  {"name": "survivor", "effect": "onKill(atspeedChange(x+15, -2, 5))"}
+                  {"name": "survivor", "effect": "onKill(atspeedChange(0.6x+10, -3, 5))"}
                 ],
                 "spells":{
                   "q":{
