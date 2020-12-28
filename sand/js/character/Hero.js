@@ -199,6 +199,7 @@ export default class Hero extends Character {
     this.int.update(this.level);
     this.det.update(this.level);
     if (this.level <= 24) {
+      this.buildStatsPasives(scene);
       this.level++;
       this.fortitude += 0.3 * (this.str.change.derivate() + this.res.change.derivate());
       this.damage += 2 * this.str.change.derivate();
@@ -255,6 +256,12 @@ export default class Hero extends Character {
 
   calculateSpawnTime(respawnMeanTime){
     return ((this.level * respawnMeanTime * 0.375) + (respawnMeanTime * 0.625));
+  }
+
+  //funciones sobre pasivas
+  buildStatsPasives(scene){
+    this.pushBuff(true, {name: this.name + "*" + this.type, attribute: "armor", amount: 16 + (2 * this.level), timer: -3, stacks: 1, stackable: 1, clearAtZero: false}, scene);
+    this.pushBuff(true, {name: this.name + "*" + this.race, attribute: "FOV", amount: 1 + (0.2 * this.level), timer: -3, stacks: 1, stackable: 1, clearAtZero: false}, scene);
   }
 
   //funciones sobre eventos

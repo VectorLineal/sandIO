@@ -155,7 +155,7 @@
                   },
                   "f":{
                     "name": "camouflage",
-                    "effect": "invis(24x+300) y speedChange(0.16x+2, -3)",
+                    "effect": "invis(24x+300) speedChange(0.16x+2, -3)",
                     "cooldown": "600",
                     "castpoint": 600,
                     "manaCost": "4x+40",
@@ -243,7 +243,7 @@
                   },
                   "e":{
                     "name": "coup_de_grace",
-                    "effect": " self.damageChange((2x+15)%, 1) target.disarm(1.2x+30) y target.speedChange(0.12x+2, 1.2x+30)",
+                    "effect": "self.damageChange((2x+15)%, 1) target.disarm(1.2x+30) target.speedChange(0.12x+2, 1.2x+30)",
                     "isPhysical": true,
                     "cooldown": "240",
                     "castpoint": 0,
@@ -551,7 +551,7 @@
     },
     "classes":{
       "assasin": {
-        "effect": "critmulChange(0.02x+0.3, -1)",
+        "effect": "critmulChange(0.02x+0.3, -3)",
         "forEnemy": false
       },
       "bountyHunter": {
@@ -575,7 +575,7 @@
         "forEnemy": false
       },
       "hunter": {
-        "effect": "FOVChange(0.2x+1, -1)",
+        "effect": "FOVChange(0.2x+1, -3)",
         "forEnemy": false
       },
       "inquisitor": {
@@ -599,7 +599,7 @@
         "forEnemy": false
       },
       "psionic": {
-        "effect": "willChange(x+6, -1) spellTriggered(other.Spell.damage = other.Spell.damage * (1-self.will/600))",
+        "effect": "willChange(x+6, -3) spellTriggered(target.Spell.damage = target.Spell.damage * (1-self.will/600))",
         "forEnemy": false
       },
       "rogue": {
@@ -627,11 +627,11 @@
         "forEnemy": false
       },
       "warrior": {
-        "effect": "armorChange(2x+16, -1)",
+        "effect": "armorChange(2x+16, -3)",
         "forEnemy": false
       },
       "wizard": {
-        "effect": "spellpChange(x+6, -1)",
+        "effect": "spellpChange(x+6, -3)",
         "forEnemy": false
       }
     }

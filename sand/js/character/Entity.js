@@ -97,7 +97,31 @@ export default class Entity{
         }
     }
 
-    generateAttackBox(gameObject){
+    pickCategory(gameObject, forEnemy){
+        var category = gameObject.scene.categories[0];
+        if(forEnemy){
+            switch(gameObject.body.collisionFilter.group){
+                case gameObject.scene.groups[0]:
+                    return gameObject.scene.categories[0];
+                case gameObject.scene.groups[1]:
+                    return gameObject.scene.categories[2];
+                case gameObject.scene.groups[2]:
+                    return gameObject.scene.categories[4];
+            }
+        }else{
+            switch(gameObject.body.collisionFilter.group){
+                case gameObject.scene.groups[0]:
+                    return gameObject.scene.categories[1];
+                case gameObject.scene.groups[1]:
+                    return gameObject.scene.categories[3];
+                case gameObject.scene.groups[2]:
+                    return gameObject.scene.categories[5];
+            }
+        }
+        return category;
+    }
+
+    generateAttackBox(gameObject, forEnemy){
         var xc = gameObject.x;
         var yc = gameObject.y;
         var xr = -gameObject.displayWidth / 4;
@@ -130,17 +154,12 @@ export default class Entity{
             }
           );
           attackBox.label = "attackBox." + gameObject.getData("backend").name + "#" + gameObject.body.collisionFilter.group;
-          if (gameObject.body.collisionFilter.group == gameObject.scene.groups[0]) {
-            attackBox.collisionFilter.category = gameObject.scene.categories[0];
-          } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[1]) {
-            attackBox.collisionFilter.category = gameObject.scene.categories[2];
-          } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[2]) {
-            attackBox.collisionFilter.category = gameObject.scene.categories[4];
-          }
+          attackBox.collisionFilter.category = this.pickCategory(gameObject, forEnemy);
+
           return attackBox;
     }
 
-    generateProjectile(gameObject, range){
+    generateProjectile(gameObject, range, forEnemy){
         //crear proyectil para ataque a distancia, pendiente creacion de clase proyectil
         var xc = gameObject.x;
         var yc = gameObject.y;
@@ -148,12 +167,6 @@ export default class Entity{
         var yr = gameObject.displayHeight / 2;
         let magnitude = Math.sqrt(xr * xr + yr * yr);
 
-        /*if(gameObject.body.render.sprite.xOffset == 0){
-            xr = -((gameObject.displayWidth * (1 - ((gameObject.displayWidth - gameObject.body.shape.width * gameObject.scene.scaleRatio / 2 - 1) / gameObject.displayWidth - 0.5))) / 4);
-        }
-        if(gameObject.body.render.sprite.yOffset == 0){
-            yr = (gameObject.displayHeight * (1 - ((gameObject.displayHeight - gameObject.body.shape.height * gameObject.scene.scaleRatio - 1) / 2 / gameObject.displayHeight))) / 2;
-        }*/
         var shot = gameObject.scene.matter.add.image(
             xc + magnitude * Math.cos(getRotation(xr, yr) + degToRad(gameObject.angle)),
             yc + magnitude * Math.sin(getRotation(xr, yr) + degToRad(gameObject.angle)),
@@ -170,13 +183,7 @@ export default class Entity{
         shot.body.timer = range.reach;
         shot.body.updateSpeed = range.speed;
         shot.body.label = "projectileBox." + gameObject.getData("backend").name + "#" + gameObject.body.collisionFilter.group;
-        if (gameObject.body.collisionFilter.group == gameObject.scene.groups[0]) {
-            shot.body.collisionFilter.category = gameObject.scene.categories[0];
-        } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[1]) {
-            shot.body.collisionFilter.category = gameObject.scene.categories[2];
-        } else if (gameObject.body.collisionFilter.group == gameObject.scene.groups[2]) {
-            shot.body.collisionFilter.category = gameObject.scene.categories[4];
-        }
+        shot.body.collisionFilter.category = this.pickCategory(gameObject, forEnemy);
         return shot;
     }
 
@@ -196,7 +203,7 @@ export default class Entity{
     commitAttack(animation, frame, gameObject) {
         gameObject.getData("backend").statusManager.makeVisible();
         if(!gameObject.getData("backend").getRanged()){
-            let box = gameObject.getData("backend").generateAttackBox(gameObject);
+            let box = gameObject.getData("backend").generateAttackBox(gameObject, true);
             box.attackParams = {
                 isAttack: true,
                 caster: gameObject.getData("backend"),
@@ -221,7 +228,7 @@ export default class Entity{
                   });
             }
         }else{
-            let projectile = gameObject.getData("backend").generateProjectile(gameObject, gameObject.getData("backend").getRange());
+            let projectile = gameObject.getData("backend").generateProjectile(gameObject, gameObject.getData("backend").getRange(), true);
             projectile.body.attackParams = {
                 isAttack: true,
                 caster: gameObject.getData("backend"),
@@ -402,7 +409,7 @@ export default class Entity{
     mayAttack(){
         return this.statusManager.mayAttack();
     }
-    mayUsePasives(){ //pendiente implementación
+    mayUsePasives(){ //implementación parcial
         return this.statusManager.mayUsePasives();
     }
     mayCastSpells(){
@@ -417,7 +424,7 @@ export default class Entity{
     mayBeDebuffed(){
         return !this.statusManager.isSpellInmune();
     }
-    isMarked(){ //pendiente implementación
+    isMarked(){ //implementación parcial
         return this.statusManager.isMarked();
     }
     isInmortal(){
@@ -467,7 +474,7 @@ export default class Entity{
     }
     decimate(physical, amount){
         if(this.mayBeDisabled())
-            this.statusManager.decimate(amount);
+            this.statusManager.decimate(this, amount);
     }
     becomeInvisible(amount){
         this.statusManager.becomeInvisible(amount);
@@ -569,7 +576,6 @@ export default class Entity{
         var rawDamage = params.attacker.damage;
         var crit = false;
         var finalDamage = 0;
-        console.log("attacker params:", params.attacker);
 
         if(!params.attacker.avoidable){
             if(params.attacker.critable){
@@ -656,12 +662,8 @@ export default class Entity{
     }
 
     //funciones sobre pasivas
-    buildStatsPasives(){ //funciona para crear pasivas que solo suman stats, esta funciçon se llama al restaurar los efectos de las pasivas cuando s epierden por el status Decimate
+    buildStatsPasives(scene){ //funciona para crear pasivas que solo suman stats, esta funciçon se llama al restaurar los efectos de las pasivas cuando s epierden por el status Decimate
         //se debe hacer la traducción de SDL y sumer stats mediante el status manager con código -3 en el timer
-    }
-
-    removePasiveStats(){
-        this.statusManager.clearPasives(this);
     }
 
     buildTriggerPasives(){ //funciona para crear pasivas que otorgan funcionaldades condicionadas

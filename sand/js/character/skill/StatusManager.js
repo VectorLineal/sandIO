@@ -400,7 +400,7 @@ export default class{
             this.singleEffects.damageInmune = 0;
 
             for(var i = this.buffs.length - 1; i >= 0; i--){
-                if(this.buffs[i].amount >= 0 && this.buffs[i].timer > 0){
+                if(this.buffs[i].amount >= 0 && this.buffs[i].timer >= 0){
                     let buff = this.buffs.splice(i, 1);
                     this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
                 }
@@ -421,7 +421,7 @@ export default class{
             this.singleEffects.push = 0;
 
             for(var i = this.buffs.length - 1; i >= 0; i--){
-                if(this.buffs[i].amount <= 0 && this.buffs[i].timer > 0){
+                if(this.buffs[i].amount <= 0 && this.buffs[i].timer >= 0){
                     let buff = this.buffs.splice(i, 1);
                     this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
                 }
@@ -478,8 +478,10 @@ export default class{
     morph(amount){
         this.singleEffects.polymorph = Math.max(this.singleEffects.polymorph, amount);
     }
-    decimate(amount){
+    decimate(entity, amount){
         this.singleEffects.decimate = Math.max(this.singleEffects.decimate, amount);
+        if(this.singleEffects.decimate > 0)
+            this.clearPasives(entity);
     }
     becomeInvisible(amount){
         this.singleEffects.invisibility = Math.max(this.singleEffects.invisibility, amount);
@@ -539,8 +541,21 @@ export default class{
         if(posibleIndex != -1){
             if(this.buffs[posibleIndex].stackable > this.buffs[posibleIndex].stacks){
                 this.buffs[posibleIndex].stacks++;
-                this.alterStat(entity, element.attribute, element.amount, scene);
+                this.buffs[posibleIndex].amount += element.amount;
+                this.alterStat(entity, this.buffs[posibleIndex].attribute, element.amount, scene);
+            }else if(this.buffs[posibleIndex].stackable > 1){
+                this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
             }else{
+                if(this.buffs[posibleIndex].amount < 0)
+                    this.buffs[posibleIndex].amount = Math.min(this.buffs[posibleIndex].amount, element.amount);
+                else if(this.buffs[posibleIndex].amount > 0)
+                    this.buffs[posibleIndex].amount = Math.max(this.buffs[posibleIndex].amount, element.amount);
+                else{
+                    if(element.amount < 0)
+                        this.buffs[posibleIndex].amount = Math.min(this.buffs[posibleIndex].amount, element.amount);
+                    else
+                        this.buffs[posibleIndex].amount = Math.max(this.buffs[posibleIndex].amount, element.amount);
+                }
                 this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
             }
         }else{
@@ -657,6 +672,8 @@ export default class{
         }
         if(this.singleEffects.decimate > 0){
             this.singleEffects.decimate--;
+            if(this.singleEffects.decimate == 0)
+                params.entity.buildStatsPasives(params.scene);
         }
         if(this.singleEffects.invisibility > 0){
             this.singleEffects.invisibility--;
@@ -695,7 +712,7 @@ export default class{
             //se limpian los debuffs cuyo tiempo haya expirado
             if(this.buffs[i].timer == 0 || (this.buffs[i].clearAtZero && this.queryStat(params.entity, this.buffs[i].attribute) == 0) || this.buffs[i].amount == 0){
                 let buff = this.buffs.splice(i, 1);
-                this.alterStat(params.entity, buff[0].attribute, -buff[0].amount * buff[0].stacks, params.scene);
+                this.alterStat(params.entity, buff[0].attribute, -buff[0].amount, params.scene);
             }
         }
 
