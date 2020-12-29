@@ -42,6 +42,10 @@ export default class Character extends Entity{
         this.critMultiplier = critMultiplier;
         this.spellLifesteal = 0; //[0, inf]
 
+        this.onCrit = function(params){
+            params.target.stun(true, 30 * (1 + this.getConcentration() / 100), params.sprite);
+        }
+
         //character's body
         this.spawnX = spawnPoint.x;
         this.spawnY = spawnPoint.y;
@@ -255,45 +259,45 @@ export default class Character extends Entity{
         this.push(physical, amount, sprite, randomFloat(Math.PI * 2), speed);
     }
 
-    stun(physical, amount){
+    stun(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
-        super.stun(physical, amount);
+        super.stun(physical, amount, sprite);
     }
-    disarm(physical, amount){
+    disarm(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
-        super.disarm(physical, amount);
+        super.disarm(physical, amount, sprite);
     }
-    cripple(physical, amount){
+    cripple(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
-        super.cripple(physical, amount);
+        super.cripple(physical, amount, sprite);
     }
-    mute(physical, amount){
+    mute(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
-        super.mute(physical, amount);
+        super.mute(physical, amount, sprite);
     }
-    sleep(physical, amount){
+    sleep(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
-        super.sleep(physical, amount);
+        super.sleep(physical, amount, sprite);
     }
-    freeze(physical, amount){
+    freeze(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
-        super.freeze(physical, amount);
+        super.freeze(physical, amount, sprite);
     }
     mark(physical, amount){
         amount = this.ApplyStatusResistance(amount, physical);
         super.mark(physical, amount);
     }
-    morph(physical, amount){
+    morph(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
-        super.morph(physical, amount);
+        super.morph(physical, amount, sprite);
     }
     decimate(physical, amount){
         amount = this.ApplyStatusResistance(amount, physical);
         super.decimate(physical, amount);
     }
-    hypnotize(physical, amount){
+    hypnotize(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
-        super.hypnotize(physical, amount);
+        super.hypnotize(physical, amount, sprite);
     }
     becomeFeared(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
@@ -444,7 +448,7 @@ export default class Character extends Entity{
         gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.r.name+ "_crit", attribute: "crit", amount: 10 + gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: 1, clearAtZero: false}, gameObject.scene);
         gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.r.name+ "_lifesteal", attribute: "lifesteal", amount: 0.4, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: 1, clearAtZero: false}, gameObject.scene);
         gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.r.name+ "_armor", attribute: "armor", amount: - 30 - 4 * gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: 1, clearAtZero: false}, gameObject.scene);
-        gameObject.getData("backend").mute(true, (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100));
+        gameObject.getData("backend").mute(true, (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), gameObject);
         gameObject.getData("backend").decimate(true, (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100));
     }
 }

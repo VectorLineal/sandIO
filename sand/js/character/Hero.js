@@ -261,7 +261,11 @@ export default class Hero extends Character {
   //funciones sobre pasivas
   buildStatsPasives(scene){
     this.pushBuff(true, {name: this.name + "*" + this.type, attribute: "armor", amount: 16 + (2 * this.level), timer: -3, stacks: 1, stackable: 1, clearAtZero: false}, scene);
-    this.pushBuff(true, {name: this.name + "*" + this.race, attribute: "FOV", amount: 1 + (0.2 * this.level), timer: -3, stacks: 1, stackable: 1, clearAtZero: false}, scene);
+    this.pushBuff(true, {name: this.name + "*" + this.race, attribute: "crit", amount: 50 + (2 * this.level), timer: -3, stacks: 1, stackable: 1, clearAtZero: false}, scene);
+  }
+
+  buildTriggerPasives(){
+    
   }
 
   //funciones sobre eventos

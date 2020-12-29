@@ -15,7 +15,7 @@ export default class NPCFactory extends CharacterFactory{
       propertie.character.xpFactor,
       propertie.character.bountyFactor,
       propertie.character.race,
-      propertie.character.fortitude,
+      calculateInlineLinearFunction(propertie.character.fortitude, this.level),
       calculateInlineLinearFunction(propertie.character.damage, this.level),
       calculateInlineLinearFunction(propertie.character.armor, this.level),
       calculateInlineLinearFunction(propertie.character.maxHealth, this.level),

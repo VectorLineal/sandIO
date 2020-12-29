@@ -454,28 +454,43 @@ export default class{
         }
     }
 
-    stun(amount){
+    stun(sprite, amount){
+        if(sprite.anims.isPlaying)
+            sprite.anims.stop();
         this.singleEffects.stun = Math.max(this.singleEffects.stun, amount);
     }
-    disarm(amount){
+    disarm(sprite, amount){
+        if(sprite.anims.isPlaying && sprite.anims.key == "attack_" + this.name)
+            sprite.anims.stop();
         this.singleEffects.disarm = Math.max(this.singleEffects.disarm, amount);
     }
-    cripple(amount){
+    cripple(sprite, amount){
         this.singleEffects.cripple = Math.max(this.singleEffects.cripple, amount);
+        sprite.setVelocity(0);
     }
-    mute(amount){
+    mute(sprite, amount){
+        if(sprite.anims.isPlaying && sprite.anims.key != "attack_" + this.name)
+            sprite.anims.stop();
         this.singleEffects.mute = Math.max(this.singleEffects.mute, amount);
     }
-    sleep(amount){
+    sleep(sprite, amount){
+        if(sprite.anims.isPlaying)
+            sprite.anims.stop();
         this.singleEffects.sleep = Math.max(this.singleEffects.sleep, amount);
     }
-    freeze(amount){
+    freeze(sprite, amount){
+        if(sprite.anims.isPlaying && sprite.anims.key == "attack_" + this.name)
+            sprite.anims.stop();
         this.singleEffects.freeze = Math.max(this.singleEffects.freeze, amount);
+        if(this.singleEffects.freeze > 0)
+            this.clearPasives(entity);
     }
     mark(amount){
         this.singleEffects.mark = Math.max(this.singleEffects.mark, amount);
     }
-    morph(amount){
+    morph(sprite, amount){
+        if(sprite.anims.isPlaying)
+            sprite.anims.stop();
         this.singleEffects.polymorph = Math.max(this.singleEffects.polymorph, amount);
     }
     decimate(entity, amount){
@@ -489,11 +504,15 @@ export default class{
     becomeInmortal(amount){
         this.singleEffects.inmortality = Math.max(this.singleEffects.inmortality, amount);
     }
-    hypnotize(amount){
+    hypnotize(sprite, amount){
+        if(sprite.anims.isPlaying)
+            sprite.anims.stop();
         this.singleEffects.hypnosis = Math.max(this.singleEffects.hypnosis, amount);
     }
-    becomeFeared(amount, sprite){
+    becomeFeared(sprite, amount){
         sprite.setAngle(randomFloat(360));
+        if(sprite.anims.isPlaying)
+            sprite.anims.stop();
         this.singleEffects.fear= Math.max(this.singleEffects.fear, amount);
     }
     becomeCCInmune(amount){
@@ -508,7 +527,9 @@ export default class{
     becomeDamageInmune(amount){
         this.singleEffects.damageInmune = Math.max(this.singleEffects.damageInmune, amount);
     }
-    banish(amount){
+    banish(sprite, amount){
+        if(sprite.anims.isPlaying)
+            sprite.anims.stop();
         this.singleEffects.banish = Math.max(this.singleEffects.banish, amount);
     }
     pushBody(amount){

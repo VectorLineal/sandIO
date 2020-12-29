@@ -442,35 +442,35 @@ export default class Entity{
     purge(positive, scene){
         this.statusManager.purge(this, positive, scene);
     }
-    stun(physical, amount){
+    stun(physical, amount, sprite){
         if(this.mayBeDisabled())
-            this.statusManager.stun(amount);
+            this.statusManager.stun(sprite, amount);
     }
-    disarm(physical, amount){
-        this.statusManager.disarm(amount);
+    disarm(physical, amount, sprite){
+        this.statusManager.disarm(sprite, amount);
     }
-    cripple(physical, amount){
+    cripple(physical, amount, sprite){
         if(this.mayBeDisabled())
-            this.statusManager.cripple(amount);
+            this.statusManager.cripple(sprite, amount);
     }
-    mute(physical, amount){
+    mute(physical, amount, sprite){
         if(this.mayBeDisabled())
-            this.statusManager.mute(amount);
+            this.statusManager.mute(sprite, amount);
     }
-    sleep(physical, amount){
+    sleep(physical, amount, sprite){
         if(this.mayBeDisabled())
-            this.statusManager.sleep(amount);
+            this.statusManager.sleep(sprite, amount);
     }
-    freeze(physical, amount){
+    freeze(physical, amount, sprite){
         if(this.mayBeDisabled())
-            this.statusManager.freeze(amount);
+            this.statusManager.freeze(sprite, amount);
     }
     mark(physical, amount){
         this.statusManager.mark(amount);
     }
-    morph(physical, amount){
+    morph(physical, amount, sprite){
         if(this.mayBeDisabled())
-            this.statusManager.morph(amount);
+            this.statusManager.morph(sprite, amount);
     }
     decimate(physical, amount){
         if(this.mayBeDisabled())
@@ -482,9 +482,9 @@ export default class Entity{
     becomeInmortal(amount){
         this.statusManager.becomeInmortal(amount);
     }
-    hypnotize(physical, amount){
+    hypnotize(physical, amount, sprite){
         if(this.mayBeDisabled())
-            this.statusManager.hypnotize(amount);
+            this.statusManager.hypnotize(sprite, amount);
     }
     becomeFeared(physical, amount, sprite){
         if(this.mayBeDisabled())
@@ -582,6 +582,7 @@ export default class Entity{
                 if(randomFloat(101) <= params.attacker.crit){
                     rawDamage *= params.attacker.critMultiplier;
                     crit = true;
+                    params.attacker.caster.onCrit({sprite: params.sprite, target: this});
                 }
             }
             this.lastHitBy = params.attackerLabel;
@@ -602,6 +603,8 @@ export default class Entity{
                     if(randomFloat(101) <= params.attacker.crit){
                         rawDamage *= params.attacker.critMultiplier;
                         crit = true;
+                        console.log("attacker", params.attacker);
+                        params.attacker.caster.onCrit({sprite: params.sprite, target: this});
                     }
                 }
                 this.lastHitBy = params.attackerLabel;
