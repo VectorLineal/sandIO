@@ -585,7 +585,7 @@ export default class SceneGame extends Phaser.Scene {
         case "bountyBox":
           for(var i = 0; i < event.pairs.length; i++){
             if(event.pairs[i].bodyA.gameObject != null){
-              console.log("bounty pairs:",event.pairs[i].bodyA);
+              //console.log("bounty pairs:",event.pairs[i].bodyA);
               if(event.pairs[i].bodyA.gameObject.getData("backend") instanceof Hero){
                 let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyA.gameObject.getData("backend").name, event.pairs[i].bodyA.collisionFilter.group);
                 event.pairs[i].bodyA.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyB.bounty.xp});

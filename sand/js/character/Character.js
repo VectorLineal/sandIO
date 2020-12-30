@@ -175,9 +175,13 @@ export default class Character extends Entity{
 
         //se reparte oro y xp a los que estaban cerca aquien murió
         var bounty = {xp: this.calculateNextLevelXp() * 0.2, gold: 0};
+        params.attacker.caster.onKill({scene: params.scene});
 
-        if(this.constructor instanceof Hero || this.isBoss)
+        if(this.constructor instanceof Hero || this.isBoss){
             bounty.gold = this.calculateBounty() * 0.2;
+            params.attacker.caster.onKillMain({scene: params.scene});
+        }
+            
 
         if(category == params.scene.categories[1] || category == params.scene.categories[3]){
             let box = this.generateAreaBox("bountyBox.", params.scene, this, params.body, category, 1, params.scaleRatio);
@@ -242,10 +246,14 @@ export default class Character extends Entity{
     }
     //revisa si se aplica resistencia mental o física
     ApplyStatusResistance(amount, physical){
-        if(physical)
-            return Math.ceil(amount * (1 - this.getFortitude() / 100));
-        else
-            return Math.ceil(amount * (1 - this.getWill() / 100));
+        if(amount > 0){
+            if(physical)
+                return Math.ceil(amount * (1 - this.getFortitude() / 100));
+            else
+                return Math.ceil(amount * (1 - this.getWill() / 100));
+        }else{
+            return amount;
+        }
     }
     //funciones sobre el statusManager
     push(physical, amount, sprite, direction, speed){
@@ -291,9 +299,9 @@ export default class Character extends Entity{
         amount = this.ApplyStatusResistance(amount, physical);
         super.morph(physical, amount, sprite);
     }
-    decimate(physical, amount){
+    decimate(physical, amount, scene){
         amount = this.ApplyStatusResistance(amount, physical);
-        super.decimate(physical, amount);
+        super.decimate(physical, amount, scene);
     }
     hypnotize(physical, amount, sprite){
         amount = this.ApplyStatusResistance(amount, physical);
@@ -309,7 +317,10 @@ export default class Character extends Entity{
     }
 
     pushBuff(physical, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
-        element.timer = this.ApplyStatusResistance(element.timer, physical);
+        if(element.amount < 0)
+            element.timer = this.ApplyStatusResistance(element.timer, physical);
+        else
+            element.timer = Math.ceil(element.timer);
         super.pushBuff(physical, element, scene);
     }
     pushDamageOnTime(physical, element, type, scene){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster}
@@ -320,26 +331,43 @@ export default class Character extends Entity{
     }
 
     //funciones de hechizos
-    updateCooldowns(params){
+    modifyCooldowns(params){
+        if(params.multiplier > 1)
+            params.multiplier = 1;
+        
         if(this.skills["q"] != null){
-            if(this.skills["q"].curCooldown > 0){
-                this.skills["q"].curCooldown--;
-            }
+            if(this.skills["q"].curCooldown > 0)
+                this.skills["q"].curCooldown = Math.ceil(this.skills["q"].curCooldown * (1 - params.multiplier));
         }
         if(this.skills["e"] != null){
-            if(this.skills["e"].curCooldown > 0){
-                this.skills["e"].curCooldown--;
-            }
+            if(this.skills["e"].curCooldown > 0)
+                this.skills["e"].curCooldown = Math.ceil(this.skills["e"].curCooldown * (1 - params.multiplier));
         }
         if(this.skills["f"] != null){
-            if(this.skills["f"].curCooldown > 0){
-                this.skills["f"].curCooldown--;
-            }
+            if(this.skills["f"].curCooldown > 0)
+                this.skills["f"].curCooldown = Math.ceil(this.skills["f"].curCooldown * (1 - params.multiplier));
         }
         if(this.skills["r"] != null){
-            if(this.skills["r"].curCooldown > 0){
+            if(this.skills["r"].curCooldown > 0)
+                this.skills["r"].curCooldown = Math.ceil(this.skills["r"].curCooldown * (1 - params.multiplier));
+        }
+    }
+    updateCooldowns(params){
+        if(this.skills["q"] != null){
+            if(this.skills["q"].curCooldown > 0)
+                this.skills["q"].curCooldown--;
+        }
+        if(this.skills["e"] != null){
+            if(this.skills["e"].curCooldown > 0)
+                this.skills["e"].curCooldown--;
+        }
+        if(this.skills["f"] != null){
+            if(this.skills["f"].curCooldown > 0)
+                this.skills["f"].curCooldown--;
+        }
+        if(this.skills["r"] != null){
+            if(this.skills["r"].curCooldown > 0)
                 this.skills["r"].curCooldown--;
-            }
         }
     }
 
@@ -449,6 +477,6 @@ export default class Character extends Entity{
         gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.r.name+ "_lifesteal", attribute: "lifesteal", amount: 0.4, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: 1, clearAtZero: false}, gameObject.scene);
         gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.r.name+ "_armor", attribute: "armor", amount: - 30 - 4 * gameObject.getData("backend").level, timer: (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), stacks: 1, stackable: 1, clearAtZero: false}, gameObject.scene);
         gameObject.getData("backend").mute(true, (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), gameObject);
-        gameObject.getData("backend").decimate(true, (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100));
+        gameObject.getData("backend").decimate(true, (180 + 12 * gameObject.getData("backend").level) * (1 + gameObject.getData("backend").getConcentration() / 100), gameObject.scene);
     }
 }

@@ -45,21 +45,21 @@ export default class Building extends Entity {
           params.scene.matter.world.remove(params.sprite.body);
           if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
-            for(var i = 0; i < VREyeParameters.scene.teamBSprites.children.getArray().length; i++){
-                if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
-                params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
-                params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
-                }
-            }
+              for(var i = 0; i < params.scene.teamBSprites.children.getArray().length; i++){
+                  if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
+                    params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
+                    params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
+                  }
+              }
             }
         }else if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[0] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
-            for(var i = 0; i < params.scene.teamASprites.children.getArray().length; i++){
-                if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
-                    params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
-                    params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
-                }
-            }
+              for(var i = 0; i < params.scene.teamASprites.children.getArray().length; i++){
+                  if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
+                      params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
+                      params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
+                  }
+              }
             }
         }else{
             return;
@@ -75,7 +75,7 @@ export default class Building extends Entity {
           this.purge(false, params.scene);
           if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
-            for(var i = 0; i < VREyeParameters.scene.teamBSprites.children.getArray().length; i++){
+            for(var i = 0; i < params.scene.teamBSprites.children.getArray().length; i++){
                 if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
                 params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
                 params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
@@ -117,7 +117,7 @@ export default class Building extends Entity {
           this.purge(false, params.scene);
           if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
-            for(var i = 0; i < VREyeParameters.scene.teamBSprites.children.getArray().length; i++){
+            for(var i = 0; i < params.scene.teamBSprites.children.getArray().length; i++){
                 if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
                 params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
                 params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});

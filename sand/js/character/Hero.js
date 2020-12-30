@@ -114,9 +114,9 @@ export default class Hero extends Character {
     this.manaRegen = 0.1 + this.int.getStat2();
     this.spellPower = this.int.getStat3();
     this.will = this.det.getStat1();
-    this.magicArmor =
-      this.bodyArmor.getCurrentMagicArmor() + this.det.getStat2();
+    this.magicArmor = this.bodyArmor.getCurrentMagicArmor() + this.det.getStat2();
     this.concentration = this.det.getStat3();
+    
   }
 
   //getter y setter
@@ -265,7 +265,17 @@ export default class Hero extends Character {
   }
 
   buildTriggerPasives(){
-    
+    this.onKill = function(params){
+      if(this.mayUsePasives()){
+        this.pushBuff(true, {name: this.name + "*" + this.pasives[0].name + "_atSpeed", attribute: "atSpeed", amount: 10 + (0.6 * this.level), timer: -2, stacks: 1, stackable: 5, clearAtZero: false}, params.scene);
+      }
+    }
+    this.onKillMain = function(params){
+      if(this.mayUsePasives()){
+        this.modifyCooldowns({multiplier: 0.05 + (0.004 * this.level)});
+        this.heal(this.maxHealth * (0.05 + 0.002 * this.level));
+      }
+    }
   }
 
   //funciones sobre eventos

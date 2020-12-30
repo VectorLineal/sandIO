@@ -175,7 +175,7 @@ export default class{
         return !(this.isSlept() || this.isStunt() || this.isFrozen() || this.isFeared() || this.isHypnotized() || this.isMorphed() || this.isDisarmed() || this.isBanished());
     }
     mayUsePasives(){
-        return !(this.isDecimated() || this.isFrozen());
+        return !this.isDecimated();
     }
     mayCastSpells(){
         return !(this.isSlept() || this.isStunt() || this.isMuted() || this.isMorphed() || this.isFeared() || this.isHypnotized() || this.isBanished());
@@ -482,8 +482,6 @@ export default class{
         if(sprite.anims.isPlaying && sprite.anims.key == "attack_" + this.name)
             sprite.anims.stop();
         this.singleEffects.freeze = Math.max(this.singleEffects.freeze, amount);
-        if(this.singleEffects.freeze > 0)
-            this.clearPasives(entity);
     }
     mark(amount){
         this.singleEffects.mark = Math.max(this.singleEffects.mark, amount);
@@ -493,10 +491,10 @@ export default class{
             sprite.anims.stop();
         this.singleEffects.polymorph = Math.max(this.singleEffects.polymorph, amount);
     }
-    decimate(entity, amount){
+    decimate(entity, amount, scene){
         this.singleEffects.decimate = Math.max(this.singleEffects.decimate, amount);
         if(this.singleEffects.decimate > 0)
-            this.clearPasives(entity);
+            this.clearPasives(entity, scene);
     }
     becomeInvisible(amount){
         this.singleEffects.invisibility = Math.max(this.singleEffects.invisibility, amount);
@@ -548,7 +546,7 @@ export default class{
         return -1; //en caso que el elemento no esté en la lista
     }
 
-    clearPasives(entity){
+    clearPasives(entity, scene){
         for(var i = this.buffs.length - 1; i >= 0; i--){
             if(this.buffs[i].timer == -3){
                 let buff = this.buffs.splice(i, 1);
@@ -560,6 +558,9 @@ export default class{
     pushBuff(entity, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
         let posibleIndex = this.getListIndex(this.buffs, element.name);
         if(posibleIndex != -1){
+            if(this.buffs[posibleIndex].stackable < element.stackable)
+                this.buffs[posibleIndex].stackable = element.stackable;
+
             if(this.buffs[posibleIndex].stackable > this.buffs[posibleIndex].stacks){
                 this.buffs[posibleIndex].stacks++;
                 this.buffs[posibleIndex].amount += element.amount;
@@ -579,9 +580,11 @@ export default class{
                 }
                 this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
             }
+            //console.log("updated buff", this.buffs[posibleIndex]);
         }else{
             this.buffs.push(element);
             this.alterStat(entity, element.attribute, element.amount, scene);
+            //console.log("pushed", this.buffs[this.buffs.length - 1]);
         }
     }
     
@@ -653,17 +656,18 @@ export default class{
 
     //funciones sobre eventos
     onDeath(entity, scene){
-        //se limpian cambios de estado
-        this.purge(entity, true, scene);
-        this.purge(entity, false, scene);
-
         //se elminan condiciones que se pierden al morir
         for(var i = this.buffs.length - 1; i >= 0; i--){
+            console.log("buff death", i, ":", this.buffs[i]);
             if(this.buffs[i].timer == -2){
                 let buff = this.buffs.splice(i, 1);
                 this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
             }
         }
+        //se limpian cambios de estado
+        this.purge(entity, true, scene);
+        this.purge(entity, false, scene);
+        
     }
     onUpdate(params){
         //se actualizan timers de todos los efectos de un solo parametro
@@ -729,7 +733,8 @@ export default class{
 
         //se actualizan contadores de buffs y debuffs
         for(var i = this.buffs.length - 1; i >= 0; i--){
-            this.buffs[i].timer--;
+            if(this.buffs[i].timer > 0)
+                this.buffs[i].timer--;
             //se limpian los debuffs cuyo tiempo haya expirado
             if(this.buffs[i].timer == 0 || (this.buffs[i].clearAtZero && this.queryStat(params.entity, this.buffs[i].attribute) == 0) || this.buffs[i].amount == 0){
                 let buff = this.buffs.splice(i, 1);
@@ -739,7 +744,8 @@ export default class{
 
         //se actualizan contadores de quemadura
         for(var i = this.damageOnTime.rawDamage.length - 1; i >= 0 ; i--){
-            this.damageOnTime.rawDamage[i].timer --;
+            if(this.damageOnTime.rawDamage[i].timer > 0)
+                this.damageOnTime.rawDamage[i].timer --;
             params.entity.dealDamage(this.damageOnTime.rawDamage[i].amount * this.damageOnTime.rawDamage[i].stacks, this.damageOnTime.rawDamage[i].damageType);
             if(params.entity.curHealth <= 0){
                 params.entity.onDeath(params);
@@ -750,7 +756,8 @@ export default class{
             }
         }
         for(var i = this.damageOnTime.burn.length - 1; i >= 0; i--){
-            this.damageOnTime.burn[i].timer --;
+            if(this.damageOnTime.burn[i].timer > 0)
+                this.damageOnTime.burn[i].timer --;
             params.entity.dealDamage(this.damageOnTime.burn[i].amount * this.damageOnTime.burn[i].stacks, this.damageOnTime.burn[i].damageType);
             if(params.entity.curHealth <= 0){
                 params.entity.onDeath(params);
@@ -762,7 +769,8 @@ export default class{
             }
         }
         for(var i = this.damageOnTime.bleed.length - 1; i >= 0; i--){
-            this.damageOnTime.bleed[i].timer --;
+            if(this.damageOnTime.bleed[i].timer > 0)
+                this.damageOnTime.bleed[i].timer --;
             params.entity.dealDamage(this.damageOnTime.bleed[i].amount * this.damageOnTime.bleed[i].stacks, this.damageOnTime.bleed[i].damageType);
             if(params.entity.curHealth <= 0){
                 params.entity.onDeath(params);
@@ -774,7 +782,8 @@ export default class{
             }
         }
         for(var i = this.damageOnTime.poison.length - 1; i >= 0; i--){
-            this.damageOnTime.poison[i].timer --;
+            if(this.damageOnTime.poison[i].timer > 0)
+                this.damageOnTime.poison[i].timer --;
             params.entity.dealDamage(this.damageOnTime.poison[i].amount * this.damageOnTime.poison[i].stacks, this.damageOnTime.poison[i].damageType);
             if(params.entity.curHealth <= 0){
                 params.entity.onDeath(params);
@@ -786,7 +795,8 @@ export default class{
             }
         }
         for(var i = this.damageOnTime.curse.length - 1; i >= 0; i--){
-            this.damageOnTime.curse[i].timer --;
+            if(this.damageOnTime.curse[i].timer > 0)
+                this.damageOnTime.curse[i].timer --;
             params.entity.dealDamage(this.damageOnTime.curse[i].amount * this.damageOnTime.curse[i].stacks, this.damageOnTime.curse[i].damageType);
             if(params.entity.curHealth <= 0){
                 params.entity.onDeath(params);
@@ -798,7 +808,8 @@ export default class{
             }
         }
         for(var i = this.damageOnTime.electric.length - 1; i >= 0; i--){
-            this.damageOnTime.electric[i].timer --;
+            if(this.damageOnTime.electric[i].timer > 0)
+                this.damageOnTime.electric[i].timer --;
             params.entity.spendMana({scene: params.scene, amount: -0.25 * params.entity.dealDamage(this.damageOnTime.electric[i].amount * this.damageOnTime.electric[i].stacks, this.damageOnTime.electric[i].damageType)});
             if(params.entity.curHealth <= 0){
                 params.entity.onDeath(params);
@@ -809,7 +820,8 @@ export default class{
             }
         }
         for(var i = this.damageOnTime.parasite.length - 1; i >= 0; i--){
-            this.damageOnTime.parasite[i].timer --;
+            if(this.damageOnTime.parasite[i].timer > 0)
+                this.damageOnTime.parasite[i].timer --;
             this.damageOnTime.parasite[i].caster.heal(params.entity.dealDamage(this.damageOnTime.parasite[i].amount * this.damageOnTime.parasite[i].stacks, this.damageOnTime.parasite[i].damageType));
             if(params.entity.curHealth <= 0){
                 params.entity.onDeath(params);
@@ -820,7 +832,8 @@ export default class{
             }
         }
         for(var i = this.damageOnTime.illness.length - 1; i >= 0; i--){
-            this.damageOnTime.illness[i].timer --;
+            if(this.damageOnTime.illness[i].timer > 0)
+                this.damageOnTime.illness[i].timer --;
             params.entity.dealDamage(this.damageOnTime.illness[i].amount * this.damageOnTime.illness[i].stacks, this.damageOnTime.illness[i].damageType);
             if(params.entity.curHealth <= 0){
                 params.entity.onDeath(params);

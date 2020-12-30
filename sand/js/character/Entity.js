@@ -472,9 +472,9 @@ export default class Entity{
         if(this.mayBeDisabled())
             this.statusManager.morph(sprite, amount);
     }
-    decimate(physical, amount){
+    decimate(physical, amount, scene){
         if(this.mayBeDisabled())
-            this.statusManager.decimate(this, amount);
+            this.statusManager.decimate(this, amount, scene);
     }
     becomeInvisible(amount){
         this.statusManager.becomeInvisible(amount);
@@ -603,7 +603,6 @@ export default class Entity{
                     if(randomFloat(101) <= params.attacker.crit){
                         rawDamage *= params.attacker.critMultiplier;
                         crit = true;
-                        console.log("attacker", params.attacker);
                         params.attacker.caster.onCrit({sprite: params.sprite, target: this});
                     }
                 }
@@ -675,11 +674,9 @@ export default class Entity{
 
     //funciones sobre eventos
     onKillMain(params){ //se activa al matar heroes o jefes
-
     }
 
     onKill(params){ //se activa al matar cualquier entidad
-
     }
 
     onAttack(params){ //se activa al lanzar un ataque
@@ -738,10 +735,10 @@ export default class Entity{
         if(parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[1] || parseInt(this.lastHitBy.split("#")[1]) == params.scene.groups[4]){
             if(parseInt(this.lastHitBy.split("#")[1]) != params.scene.groups[4]){
                 for(var i = 0; i < params.scene.teamBSprites.children.getArray().length; i++){
-                    if(params.scene.teamASprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
+                    if(params.scene.teamBSprites.children.getArray()[i].getData("backend").name == this.lastHitBy.split("#")[0] && (params.scene.teamASprites.children.getArray()[i].getData("backend") instanceof Hero)){
                         let punctuation = params.scene.getPunctuationByHeroAndGroup(this.lastHitBy.split("#")[0] ,parseInt(this.lastHitBy.split("#")[1]));
-                        params.scene.teamASprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
-                        params.scene.teamASprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
+                        params.scene.teamBSprites.children.getArray()[i].getData("backend").gainXP({scene: params.scene, amount: this.calculateNextLevelXp() * 0.8});
+                        params.scene.teamBSprites.children.getArray()[i].getData("backend").earnGold({scene: params.scene, amount: this.calculateBounty() * 0.8});
                         punctuation.GPM += this.calculateBounty() * 0.8;
                         punctuation.XPM += this.calculateNextLevelXp() * 0.8;
                         punctuation.lastHits++;
