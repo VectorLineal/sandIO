@@ -276,6 +276,15 @@ export default class Hero extends Character {
         this.heal(this.maxHealth * (0.05 + 0.002 * this.level));
       }
     }
+    this.onAttackHit = function(params){
+      params.target.pushBuff(true, {name: this.name + "*" + this.pasives[0].name + "_fortitude", attribute: "fortitude", amount: -5 - (0.6 * this.level), timer: 120, stacks: 1, stackable: 1, clearAtZero: false}, params.scene);
+    }
+    this.onAttack = function(params){
+      this.heal(10);
+    }
+    this.onCastSpell = function(params){
+      this.pushBuff(true, {name: this.name + "*" + this.pasives[0].name + "_damage", attribute: "damage", amount: 5 + this.level, timer: 240, stacks: 1, stackable: 4, clearAtZero: false}, params.scene);
+    }
   }
 
   //funciones sobre eventos

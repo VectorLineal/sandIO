@@ -405,6 +405,7 @@ export default class Character extends Entity{
             this.spendMana({scene: scene, amount: - this.skills[this.curKey].getManaCost(this.level)});
             sprite.play("spell" + this.curKey + "_" + this.name);
             this.skills[this.curKey].curCooldown = this.skills[this.curKey].getCooldown(this.level);
+            this.onCastSpell({scene: scene});
         }else{
             console.log("not enough mana");
         }

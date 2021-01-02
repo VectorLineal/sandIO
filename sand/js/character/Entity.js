@@ -254,6 +254,7 @@ export default class Entity{
             }
         }
         
+        gameObject.getData("backend").onAttack({scene: gameObject.scene});
         gameObject.play("attack_" + gameObject.getData("backend").name + "_end");
         console.log("bodies in world:", gameObject.scene.matter.world.getAllBodies());
     }
@@ -407,13 +408,13 @@ export default class Entity{
         return this.statusManager.onlyMovingForward();
     }
     mayAttack(){
-        return this.statusManager.mayAttack();
+        return this.statusManager.mayAttack() && !this.isDead();
     }
     mayUsePasives(){ //implementación parcial
         return this.statusManager.mayUsePasives();
     }
     mayCastSpells(){
-        return this.statusManager.mayCastSpells();
+        return this.statusManager.mayCastSpells() && !this.isDead();
     }
     mayTakeDamage(type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
         return this.statusManager.mayTakeDamage(type);
@@ -515,9 +516,17 @@ export default class Entity{
             this.statusManager.pushBuff(this, element, scene);
     }
 
+    removeBuff(code, scene){
+        this.statusManager.removeBuffByCode(this, code, scene);
+    }
+
     pushDamageOnTime(physical, element, type, scene){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster}
         if((type == "rawDamage" || type == "burn" || type == "curse" || type == "parasite") && this.mayBeDebuffed())    
             this.statusManager.pushDamageOnTime(this, element, type, scene);
+    }
+
+    removeDamageOnTime(type, code, scene){
+        this.statusManager.removeDamageOnTimeByCode(this, type, code, scene);
     }
 
     shieldDamage(amount){
@@ -623,7 +632,7 @@ export default class Entity{
         //robo de vida
         if(finalDamage > 0 && params.attacker.type == 1 && params.attacker.caster.getLifesteal() > 0)
             params.attacker.caster.heal(finalDamage * params.attacker.caster.getLifesteal());
-        else if(finalDamage > 0 && params.attacker.type == 2 && params.attacker.caster.getSpellLifesteal() > 0)
+        else if(finalDamage > 0 && params.attacker.type != 1 && !params.attacker.isAttack && params.attacker.caster.getSpellLifesteal() > 0)
             params.attacker.caster.heal(finalDamage * params.attacker.caster.getSpellLifesteal());
 
         //mostrar texto de daño
@@ -649,7 +658,9 @@ export default class Entity{
             params.sprite.getData("displayDamage").setVisible(true);
             console.log(this.name, "got hit by", this.lastHitBy);
         }
-        if(finalDamage > 0){
+        if((!this.mayTakeDamage(params.attacker.type) || finalDamage > 0) && params.attacker.isAttack){
+            params.attacker.caster.onAttackHit({target: this, scene: params.scene});
+        }else if(finalDamage > 0){
             this.statusManager.awake();
         }
         return {amount: finalDamage, isCrit: crit};
@@ -692,23 +703,22 @@ export default class Entity{
     }
 
     onBodyCollision(params){ //se activa cuando el usuario colisiona con otro
-
+        //pendiente
     }
 
     aura(reach, params){ //genera un aura pasiva que afecta a los que esten dentro de dicha area
-
+        //pendiente
     }
 
     debuffTriggered(params){ //se activa cuando el usuario recibe un debuff
 
     }
 
-    statusTriggered(params){ //se activa al acertar un ataque
-
+    statusTriggered(params){ //se activa al cambiar de estado
     }
 
     healthTriggered(treshold, sign, params){ //se activa cuando el usuario obtiene cierto porcentaje de salud (0: =, 1: <, 2: <=, 3: >, 4: >=)
-
+        //pendiente
     }
 
     critTriggered(params){ //se activa cuando se recibe un crítico
@@ -720,7 +730,7 @@ export default class Entity{
     }
 
     backstabTriggered(params){ //se activa al cuando se recibe un backstab
-
+        //pendiente
     }
 
     spellTriggered(params){ //se activa cuando el usuario es victima de un hechizo

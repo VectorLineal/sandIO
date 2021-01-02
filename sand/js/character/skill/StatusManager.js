@@ -183,13 +183,12 @@ export default class{
     mayTakeDamage(type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
         switch(type){
             case 0:
+            default:
                 return !(this.isDamageInmune() || this.isBanished());
             case 1:
                 return !(this.isDamageInmune() || this.isBanished());
             case 2:
                 return !(this.isDamageInmune() || this.isSpellInmune() || this.isBanished());
-            default:
-                return !(this.isDamageInmune() || this.isBanished());
         }
     }
     mayBeDisabled(){
@@ -455,13 +454,17 @@ export default class{
     }
 
     stun(sprite, amount){
-        if(sprite.anims.isPlaying)
+        if(sprite.anims.isPlaying){
             sprite.anims.stop();
+            sprite.setFrame(0);
+        }
         this.singleEffects.stun = Math.max(this.singleEffects.stun, amount);
     }
     disarm(sprite, amount){
-        if(sprite.anims.isPlaying && sprite.anims.key == "attack_" + this.name)
+        if(sprite.anims.isPlaying && sprite.anims.key == "attack_" + this.name){
             sprite.anims.stop();
+            sprite.setFrame(0);
+        }
         this.singleEffects.disarm = Math.max(this.singleEffects.disarm, amount);
     }
     cripple(sprite, amount){
@@ -469,26 +472,34 @@ export default class{
         sprite.setVelocity(0);
     }
     mute(sprite, amount){
-        if(sprite.anims.isPlaying && sprite.anims.key != "attack_" + this.name)
+        if(sprite.anims.isPlaying && sprite.anims.key != "attack_" + this.name){
             sprite.anims.stop();
+            sprite.setFrame(0);
+        }
         this.singleEffects.mute = Math.max(this.singleEffects.mute, amount);
     }
     sleep(sprite, amount){
-        if(sprite.anims.isPlaying)
+        if(sprite.anims.isPlaying){
             sprite.anims.stop();
+            sprite.setFrame(0);
+        }
         this.singleEffects.sleep = Math.max(this.singleEffects.sleep, amount);
     }
     freeze(sprite, amount){
-        if(sprite.anims.isPlaying && sprite.anims.key == "attack_" + this.name)
+        if(sprite.anims.isPlaying && sprite.anims.key == "attack_" + this.name){
             sprite.anims.stop();
+            sprite.setFrame(0);
+        }
         this.singleEffects.freeze = Math.max(this.singleEffects.freeze, amount);
     }
     mark(amount){
         this.singleEffects.mark = Math.max(this.singleEffects.mark, amount);
     }
     morph(sprite, amount){
-        if(sprite.anims.isPlaying)
+        if(sprite.anims.isPlaying){
             sprite.anims.stop();
+            sprite.setFrame(0);
+        }
         this.singleEffects.polymorph = Math.max(this.singleEffects.polymorph, amount);
     }
     decimate(entity, amount, scene){
@@ -503,14 +514,18 @@ export default class{
         this.singleEffects.inmortality = Math.max(this.singleEffects.inmortality, amount);
     }
     hypnotize(sprite, amount){
-        if(sprite.anims.isPlaying)
+        if(sprite.anims.isPlaying){
             sprite.anims.stop();
+            sprite.setFrame(0);
+        }
         this.singleEffects.hypnosis = Math.max(this.singleEffects.hypnosis, amount);
     }
     becomeFeared(sprite, amount){
         sprite.setAngle(randomFloat(360));
-        if(sprite.anims.isPlaying)
+        if(sprite.anims.isPlaying){
             sprite.anims.stop();
+            sprite.setFrame(0);
+        }
         this.singleEffects.fear= Math.max(this.singleEffects.fear, amount);
     }
     becomeCCInmune(amount){
@@ -526,8 +541,10 @@ export default class{
         this.singleEffects.damageInmune = Math.max(this.singleEffects.damageInmune, amount);
     }
     banish(sprite, amount){
-        if(sprite.anims.isPlaying)
+        if(sprite.anims.isPlaying){
             sprite.anims.stop();
+            sprite.setFrame(0);
+        }
         this.singleEffects.banish = Math.max(this.singleEffects.banish, amount);
     }
     pushBody(amount){
@@ -556,6 +573,7 @@ export default class{
     }
 
     pushBuff(entity, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
+        //console.log("raw buff", element);
         let posibleIndex = this.getListIndex(this.buffs, element.name);
         if(posibleIndex != -1){
             if(this.buffs[posibleIndex].stackable < element.stackable)
@@ -565,7 +583,8 @@ export default class{
                 this.buffs[posibleIndex].stacks++;
                 this.buffs[posibleIndex].amount += element.amount;
                 this.alterStat(entity, this.buffs[posibleIndex].attribute, element.amount, scene);
-            }else if(this.buffs[posibleIndex].stackable > 1){
+                this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
+            }else if(this.buffs[posibleIndex].stackable > 1 && this.buffs[posibleIndex].stackable == this.buffs[posibleIndex].stacks){
                 this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
             }else{
                 if(this.buffs[posibleIndex].amount < 0)
@@ -586,6 +605,16 @@ export default class{
             this.alterStat(entity, element.attribute, element.amount, scene);
             //console.log("pushed", this.buffs[this.buffs.length - 1]);
         }
+    }
+
+    removeBuffByCode(entity, code, scene){
+        let posibleIndex = this.getListIndex(this.buffs, element.name);
+        if(posibleIndex != -1){
+            let buff = this.buffs.splice(posibleIndex, 1);
+            this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
+            return true;
+        }
+        return false;
     }
     
     pushDamageOnTime(entity, element, type, scene){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster} donde caster es un puntero al lanzador del hechizo
@@ -642,6 +671,33 @@ export default class{
                     break;
             }
         }
+    }
+
+    removeDamageOnTimeByCode(entity, type, code, scene){
+        let posibleIndex = this.getListIndex(this.damageOnTime[type], element.name);
+        if(posibleIndex != -1){
+            var status = this.damageOnTime[type].splice(posibleIndex, 1);
+            switch(type){
+                case "burn":
+                    this.alterStat(entity, "armor", -status[0].debuffAmount, scene);
+                    return true;
+                case "bleed":
+                    this.alterStat(entity, "cauterize", -status[0].debuffAmount, scene);
+                    return true;
+                case "poison":
+                    this.alterStat(entity, "speed", -status[0].debuffAmount, scene);
+                    return true;
+                case "curse":
+                    this.alterStat(entity, "magicArmor", -status[0].debuffAmount, scene);
+                    return true;
+                case "illness":
+                    this.alterStat(entity, "atSpeed", -status[0].debuffAmount, scene);
+                    return true;
+                default:
+                    return true;
+            }
+        }
+        return false;
     }
 
     //funciones de utilidades
