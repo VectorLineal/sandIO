@@ -444,38 +444,53 @@ export default class Entity{
         this.statusManager.purge(this, positive, scene);
     }
     stun(physical, amount, sprite){
-        if(this.mayBeDisabled())
+        if(this.mayBeDisabled()){
             this.statusManager.stun(sprite, amount);
+            this.ccTriggered({scene: sprite.scene});
+        }
     }
     disarm(physical, amount, sprite){
         this.statusManager.disarm(sprite, amount);
     }
     cripple(physical, amount, sprite){
-        if(this.mayBeDisabled())
+        if(this.mayBeDisabled()){
             this.statusManager.cripple(sprite, amount);
+            this.ccTriggered({scene: sprite.scene});
+        }
     }
     mute(physical, amount, sprite){
-        if(this.mayBeDisabled())
+        if(this.mayBeDisabled()){
             this.statusManager.mute(sprite, amount);
+            this.ccTriggered({scene: sprite.scene});
+        }
     }
     sleep(physical, amount, sprite){
-        if(this.mayBeDisabled())
+        if(this.mayBeDisabled()){
             this.statusManager.sleep(sprite, amount);
+            this.ccTriggered({scene: sprite.scene});
+        }
     }
     freeze(physical, amount, sprite){
-        if(this.mayBeDisabled())
+        if(this.mayBeDisabled()){
             this.statusManager.freeze(sprite, amount);
+            this.ccTriggered({scene: sprite.scene});
+        } 
     }
     mark(physical, amount){
         this.statusManager.mark(amount);
     }
     morph(physical, amount, sprite){
-        if(this.mayBeDisabled())
+        if(this.mayBeDisabled()){
             this.statusManager.morph(sprite, amount);
+            this.ccTriggered({scene: sprite.scene});
+        } 
     }
     decimate(physical, amount, scene){
-        if(this.mayBeDisabled())
+        if(this.mayBeDisabled()){
             this.statusManager.decimate(this, amount, scene);
+            this.ccTriggered({scene: scene});
+        }
+            
     }
     becomeInvisible(amount){
         this.statusManager.becomeInvisible(amount);
@@ -484,12 +499,16 @@ export default class Entity{
         this.statusManager.becomeInmortal(amount);
     }
     hypnotize(physical, amount, sprite){
-        if(this.mayBeDisabled())
+        if(this.mayBeDisabled()){
             this.statusManager.hypnotize(sprite, amount);
+            this.ccTriggered({scene: sprite.scene});
+        }
     }
     becomeFeared(physical, amount, sprite){
-        if(this.mayBeDisabled())
+        if(this.mayBeDisabled()){
             this.statusManager.becomeFeared(amount, sprite);
+            this.ccTriggered({scene: sprite.scene});
+        }
     }
     becomeCCInmune(amount){
         this.statusManager.becomeCCInmune(amount);
@@ -500,33 +519,48 @@ export default class Entity{
     becomeSpellInmune(amount){
         this.statusManager.becomeSpellInmune(amount);
     }
+    becomePhysicInmune(amount){
+        this.statusManager.becomePhysicInmune(amount);
+    }
     becomeDamageInmune(amount){
         this.statusManager.becomeDamageInmune(amount);
     }
-    banish(physical, amount){
-        if(this.mayBeDisabled())
+    banish(physical, amount, scene){
+        if(this.mayBeDisabled()){
             this.StatusManager.banish(amount);
+            this.ccTriggered({scene: scene});
+        }
     }
     markForDeath(amount){
         this.statusManager.markForDeath(amount);
     }
 
     pushBuff(physical, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
-        if(this.mayBeDebuffed() || element.amount > 0)
+        if(this.mayBeDebuffed() || element.amount > 0){
             this.statusManager.pushBuff(this, element, scene);
+            if (element.amount < 0)
+                this.debuffTriggered({scene: scene});
+            this.statusTriggered({scene: scene});
+        }
     }
-
     removeBuff(code, scene){
         this.statusManager.removeBuffByCode(this, code, scene);
     }
-
-    pushDamageOnTime(physical, element, type, scene){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster}
-        if((type == "rawDamage" || type == "burn" || type == "curse" || type == "parasite") && this.mayBeDebuffed())    
-            this.statusManager.pushDamageOnTime(this, element, type, scene);
+    queryBuff(code){
+        return this.statusManager.queryBuff(code);
     }
 
+    pushDamageOnTime(physical, element, type, scene){ //elementos tipo {name, damageType, amount, debuffAmount, timer, stacks, stackable, caster}
+        if((type == "rawDamage" || type == "burn" || type == "curse" || type == "parasite") && this.mayBeDebuffed()){
+            this.statusManager.pushDamageOnTime(this, element, type, scene);
+            this.statusTriggered({scene: scene});
+        }
+    }
     removeDamageOnTime(type, code, scene){
         this.statusManager.removeDamageOnTimeByCode(this, type, code, scene);
+    }
+    queryDamageOnTime(type, code){
+        return this.statusManager.queryDamageOnTime(type, code);
     }
 
     shieldDamage(amount){
@@ -591,7 +625,6 @@ export default class Entity{
                 if(randomFloat(101) <= params.attacker.crit){
                     rawDamage *= params.attacker.critMultiplier;
                     crit = true;
-                    params.attacker.caster.onCrit({sprite: params.sprite, target: this});
                 }
             }
             this.lastHitBy = params.attackerLabel;
@@ -602,9 +635,6 @@ export default class Entity{
                     punctuation.damage += finalDamage;
                 }
             }
-            if(this.curHealth <= 0){
-                this.onDeath(params);
-            }
         }else{
             var hitChance = params.attacker.accuracy - this.getEvasion();
             if(hitChance >= 100 || randomFloat(101) <= hitChance){
@@ -612,7 +642,6 @@ export default class Entity{
                     if(randomFloat(101) <= params.attacker.crit){
                         rawDamage *= params.attacker.critMultiplier;
                         crit = true;
-                        params.attacker.caster.onCrit({sprite: params.sprite, target: this});
                     }
                 }
                 this.lastHitBy = params.attackerLabel;
@@ -624,9 +653,6 @@ export default class Entity{
                         punctuation.damage += finalDamage;
                     }
                 }
-                if(this.curHealth <= 0){
-                    this.onDeath(params);
-                }
             }
         }
         //robo de vida
@@ -634,6 +660,21 @@ export default class Entity{
             params.attacker.caster.heal(finalDamage * params.attacker.caster.getLifesteal());
         else if(finalDamage > 0 && params.attacker.type != 1 && !params.attacker.isAttack && params.attacker.caster.getSpellLifesteal() > 0)
             params.attacker.caster.heal(finalDamage * params.attacker.caster.getSpellLifesteal());
+
+        //se aplican efectos sobre eventos de un ataque
+        if((!this.mayTakeDamage(params.attacker.type) || finalDamage > 0) && params.attacker.isAttack){
+            params.attacker.caster.onAttackHit({target: this, scene: params.scene});
+            this.attackTriggered({scene: params.scene});
+        }else if(finalDamage > 0){
+            this.statusManager.awake();
+        }
+        if(crit){
+            params.attacker.caster.onCrit({sprite: params.sprite, target: this, scene: params.scene});
+            this.critTriggered({scene: params.scene});
+        }
+        if(this.curHealth <= 0){
+            this.onDeath(params);
+        }
 
         //mostrar texto de daño
         if(params.sprite != null && params.sprite.body != null){
@@ -658,11 +699,7 @@ export default class Entity{
             params.sprite.getData("displayDamage").setVisible(true);
             console.log(this.name, "got hit by", this.lastHitBy);
         }
-        if((!this.mayTakeDamage(params.attacker.type) || finalDamage > 0) && params.attacker.isAttack){
-            params.attacker.caster.onAttackHit({target: this, scene: params.scene});
-        }else if(finalDamage > 0){
-            this.statusManager.awake();
-        }
+        
         return {amount: finalDamage, isCrit: crit};
     }
 
@@ -717,8 +754,8 @@ export default class Entity{
     statusTriggered(params){ //se activa al cambiar de estado
     }
 
-    healthTriggered(treshold, sign, params){ //se activa cuando el usuario obtiene cierto porcentaje de salud (0: =, 1: <, 2: <=, 3: >, 4: >=)
-        //pendiente
+    healthTriggered(params){ //se activa cuando el usuario obtiene cierto porcentaje de salud (0: =, 1: <, 2: <=, 3: >, 4: >=)
+        
     }
 
     critTriggered(params){ //se activa cuando se recibe un crítico

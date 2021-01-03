@@ -187,6 +187,7 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
               entity.getData('shieldBar').y = entity.y - (scaleRatio * entity.body.shape.width / 2);
               entity.getData('shieldBar').width = (entity.getData("backend").getShield() / (entity.getData("backend").getMaxHealth() + entity.getData("backend").getShield())) * entity.body.shape.width * scaleRatio;
               entity.getData("backend").statusManager.onUpdate({scene: scene, entity: entity.getData("backend"), sprite: entity, body: entity.body, scaleRatio: scaleRatio, factory: fact});
+              entity.getData("backend").healthTriggered({scene: scene});
             }
             
             //entity.setVelocity(0);

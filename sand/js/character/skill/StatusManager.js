@@ -21,11 +21,13 @@ export default class{
            CCInmune: 0,
            fly: 0,
            spellInmune: 0,
+           physicInmune: 0,
            damageInmune: 0,
            banish: 0,
-           push: 0, //se usa cuando se aplique efecto de cambios de movimiento (push, pull, shuffle)
            markedForDeath: -1 //(no purgable)indica si algun personaje morira en dado tiempo (se usa sobre todo en criaturas invocadas por x tiempo) default -1
        };
+       //lista
+       this.pushes = [] //elementos tipo {name, direction, speed, timer}
        //lista
        this.buffs = []; //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero} siendo los ultimos dos atributos flags que indican si el efecto es acumulable(0: no es, 1: es, cada nueva acumulación refresca su duración, 2: es, pero cada acumulación no altera el tiempo) y si se elimina cuando su atributo cambie a 0(escudo o bloqueo)
        //hastable de listas
@@ -90,14 +92,14 @@ export default class{
     isSpellInmune(){
         return this.singleEffects.spellInmune != 0;
     }
+    isPhysicInmune(){
+        return this.singleEffects.physicInmune != 0;
+    }
     isDamageInmune(){
         return this.singleEffects.damageInmune != 0;
     }
     isBanished(){
         return this.singleEffects.banish != 0;
-    }
-    isPushed(){
-        return this.singleEffects.push != 0;
     }
     isMarkedForDeath(){
         return this.singleEffects.markedForDeath != 0;
@@ -109,6 +111,9 @@ export default class{
             }
         }
         return false;
+    }
+    isPushed(){
+        return this.pushes.length > 0;
     }
     isDebuffed(){
         for(var i = 0; i < this.buffs.length; i++){
@@ -186,7 +191,7 @@ export default class{
             default:
                 return !(this.isDamageInmune() || this.isBanished());
             case 1:
-                return !(this.isDamageInmune() || this.isBanished());
+                return !(this.isDamageInmune() || this.isBanished() || this.isPhysicInmune());
             case 2:
                 return !(this.isDamageInmune() || this.isSpellInmune() || this.isBanished());
         }
@@ -396,6 +401,7 @@ export default class{
             this.singleEffects.banish = 0;
             this.singleEffects.fly = 0;
             this.singleEffects.spellInmune = 0;
+            this.singleEffects.physicInmune = 0;
             this.singleEffects.damageInmune = 0;
 
             for(var i = this.buffs.length - 1; i >= 0; i--){
@@ -457,6 +463,7 @@ export default class{
         if(sprite.anims.isPlaying){
             sprite.anims.stop();
             sprite.setFrame(0);
+            sprite.setVelocity(0);
         }
         this.singleEffects.stun = Math.max(this.singleEffects.stun, amount);
     }
@@ -482,6 +489,7 @@ export default class{
         if(sprite.anims.isPlaying){
             sprite.anims.stop();
             sprite.setFrame(0);
+            sprite.setVelocity(0);
         }
         this.singleEffects.sleep = Math.max(this.singleEffects.sleep, amount);
     }
@@ -489,6 +497,7 @@ export default class{
         if(sprite.anims.isPlaying && sprite.anims.key == "attack_" + this.name){
             sprite.anims.stop();
             sprite.setFrame(0);
+            sprite.setVelocity(0);
         }
         this.singleEffects.freeze = Math.max(this.singleEffects.freeze, amount);
     }
@@ -537,6 +546,9 @@ export default class{
     becomeSpellInmune(amount){
         this.singleEffects.spellInmune = Math.max(this.singleEffects.spellInmune, amount);
     }
+    becomePhysicInmune(amount){
+        this.singleEffects.physicInmune = Math.max(this.singleEffects.physicInmune, amount);
+    }
     becomeDamageInmune(amount){
         this.singleEffects.damageInmune = Math.max(this.singleEffects.damageInmune, amount);
     }
@@ -546,9 +558,6 @@ export default class{
             sprite.setFrame(0);
         }
         this.singleEffects.banish = Math.max(this.singleEffects.banish, amount);
-    }
-    pushBody(amount){
-        this.singleEffects.push = Math.max(this.singleEffects.push, amount);
     }
     markForDeath(amount){
         this.singleEffects.markedForDeath = Math.max(this.singleEffects.markedForDeath, amount);
@@ -563,6 +572,30 @@ export default class{
         return -1; //en caso que el elemento no esté en la lista
     }
 
+    queryPush(code){
+        let index = this.getListIndex(this.pushes, code);
+        if(index > -1)
+            return this.pushes[index];
+        else
+            return null;
+    }
+
+    queryBuff(code){
+        let index = this.getListIndex(this.buffs, code);
+        if(index > -1)
+            return this.buffs[index];
+        else
+            return null;
+    }
+
+    queryDamageOnTime(type, code){
+        let index = this.getListIndex(this.damageOnTime[type], code);
+        if(index > -1)
+            return this.damageOnTime[type][index];
+        else
+            return null;
+    }
+
     clearPasives(entity, scene){
         for(var i = this.buffs.length - 1; i >= 0; i--){
             if(this.buffs[i].timer == -3){
@@ -570,6 +603,23 @@ export default class{
                 this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
             }
         }
+    }
+
+    pushBody(element){
+        let posibleIndex = this.getListIndex(this.pushes, element.name);
+        if(posibleIndex > -1)
+            this.pushes[posibleIndex] = element;
+        else
+            this.pushes.push(element);
+    }
+
+    removePush(code){
+        let posibleIndex = this.getListIndex(this.pushes, code);
+        if(posibleIndex > -1){
+            this.pushes.splice(posibleIndex, 1);
+            return true;
+        }
+        return false;
     }
 
     pushBuff(entity, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
@@ -608,7 +658,7 @@ export default class{
     }
 
     removeBuffByCode(entity, code, scene){
-        let posibleIndex = this.getListIndex(this.buffs, element.name);
+        let posibleIndex = this.getListIndex(this.buffs, code);
         if(posibleIndex != -1){
             let buff = this.buffs.splice(posibleIndex, 1);
             this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
@@ -674,7 +724,7 @@ export default class{
     }
 
     removeDamageOnTimeByCode(entity, type, code, scene){
-        let posibleIndex = this.getListIndex(this.damageOnTime[type], element.name);
+        let posibleIndex = this.getListIndex(this.damageOnTime[type], code);
         if(posibleIndex != -1){
             var status = this.damageOnTime[type].splice(posibleIndex, 1);
             switch(type){
@@ -777,6 +827,9 @@ export default class{
         if(this.singleEffects.spellInmune > 0){
             this.singleEffects.spellInmune--;
         }
+        if(this.singleEffects.physicInmune > 0){
+            this.singleEffects.physicInmune--;
+        }
         if(this.singleEffects.damageInmune > 0){
             this.singleEffects.damageInmune--;
         }
@@ -785,6 +838,16 @@ export default class{
         }
         if(this.singleEffects.markedForDeath > 0){
             this.singleEffects.markedForDeath--;
+        }
+
+        //actualizar contadores de fuerzas sobre el objeto
+        for(var i = this.pushes.length - 1; i >= 0; i--){
+            if(this.pushes[i].timer > 0)
+                this.pushes[i].timer--;
+            //se limpia
+            if(this.pushes[i].timer == 0){
+                this.pushes.splice(i, 1);
+            }
         }
 
         //se actualizan contadores de buffs y debuffs
@@ -919,6 +982,7 @@ export default class{
             {value: this.isCCInmune(), code: 28},
             {value: this.flies(), code: 3},
             {value: this.isSpellInmune(), code: 24},
+            {value: this.isPhysicInmune(), code: 27},
             {value: this.isDamageInmune(), code: 26},
             {value: this.isBuffed(), code: 0},
             {value: this.isDebuffed(), code: 1},
@@ -948,6 +1012,11 @@ export default class{
         //se ejecutan condiciones especiales de los cambios de estado
         if(this.onlyMovingForward()){
             params.entity.moveForward(params.sprite, params.scaleRatio, true);
+          }
+          if(this.isPushed()){
+              for(var i = 0; i < this.pushes.length; i++){
+                params.entity.moveDirection(params.sprite, this.pushes[i].direction, this.pushes[i].speed, params.scaleRatio, true)
+              }
           }
 
           if(this.isBanished()){

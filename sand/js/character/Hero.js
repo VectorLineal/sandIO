@@ -277,13 +277,33 @@ export default class Hero extends Character {
       }
     }
     this.onAttackHit = function(params){
-      params.target.pushBuff(true, {name: this.name + "*" + this.pasives[0].name + "_fortitude", attribute: "fortitude", amount: -5 - (0.6 * this.level), timer: 120, stacks: 1, stackable: 1, clearAtZero: false}, params.scene);
+      if(this.mayUsePasives()){
+        params.target.pushBuff(true, {name: this.name + "*" + this.pasives[0].name + "_fortitude", attribute: "fortitude", amount: -5 - (0.6 * this.level), timer: 120, stacks: 1, stackable: 1, clearAtZero: false}, params.scene);
+      }
     }
     this.onAttack = function(params){
-      this.heal(10);
+      if(this.mayUsePasives()){
+        this.heal(10);
+      }
     }
     this.onCastSpell = function(params){
-      this.pushBuff(true, {name: this.name + "*" + this.pasives[0].name + "_damage", attribute: "damage", amount: 5 + this.level, timer: 240, stacks: 1, stackable: 4, clearAtZero: false}, params.scene);
+      if(this.mayUsePasives()){
+        this.pushBuff(true, {name: this.name + "*" + this.pasives[0].name + "_damage", attribute: "damage", amount: 5 + this.level, timer: 240, stacks: 1, stackable: 4, clearAtZero: false}, params.scene);
+      }
+    }
+    this.healthTriggered = function(params){
+      if(this.mayUsePasives()){
+        let attribute = "spellPower";
+        let id = this.name + "*" + this.pasives[0].name + "_" + attribute;
+        if(0.3 >= this.curHealth / this.maxHealth){
+          if(this.queryBuff(id) == null)
+            this.pushBuff(true, {name: id, attribute: attribute, amount: 8 + (0.6 * this.level), timer: -3, stacks: 1, stackable: 1, clearAtZero: false}, params.scene);
+        }else if(this.queryBuff(id) != null){
+            if(this.queryBuff(id).timer <= 0){
+              this.removeBuff(id, params.scene);
+            }
+        }
+      }
     }
   }
 

@@ -256,15 +256,18 @@ export default class Character extends Entity{
         }
     }
     //funciones sobre el statusManager
-    push(physical, amount, sprite, direction, speed){
-        if(this.mayBeDisabled){
-            amount = this.ApplyStatusResistance(amount, physical);
-            this.moveDirection(sprite, direction, speed, scale, true);
-            this.statusManager.pushBody(amount);
+    pushBody(physical, element, scene){
+        if(this.mayBeDisabled()){
+            element.timer = this.ApplyStatusResistance(element.timer, physical);
+            this.StatusManager.pushBody(element);
+            this.ccTriggered({scene: scene});
         }
     }
-    shuffle(physical, amount, sprite, speed){
-        this.push(physical, amount, sprite, randomFloat(Math.PI * 2), speed);
+    removeVelocity(code){
+        this.statusManager.removePush(code);
+    }
+    queryPush(code){
+        return this.statusManager.queryPush(code);
     }
 
     stun(physical, amount, sprite){
@@ -327,6 +330,7 @@ export default class Character extends Entity{
         if(this.mayBeDebuffed){
             element.timer = this.ApplyStatusResistance(element.timer, physical);
             this.statusManager.pushDamageOnTime(this, element, type, scene);
+            this.statusTriggered({scene: scene});
         }
     }
 
