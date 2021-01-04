@@ -295,8 +295,11 @@ export default class Hero extends Character {
       if(this.mayUsePasives()){
         let attribute = "spellPower";
         let id = this.name + "*" + this.pasives[0].name + "_" + attribute;
-        if(0.3 >= this.curHealth / this.maxHealth){
-          if(this.queryBuff(id) == null)
+        let healthPercentage = this.curHealth / this.maxHealth;
+        if(0.3 >= healthPercentage){
+          if(this.queryBuff(id) != null && this.queryBuff(id).amount != 8 + (0.6 * this.level))
+            this.pushBuff(true, {name: id, attribute: attribute, amount: 8 + (0.6 * this.level), timer: -3, stacks: 1, stackable: 1, clearAtZero: false}, params.scene);
+          else if(this.queryBuff(id) == null)
             this.pushBuff(true, {name: id, attribute: attribute, amount: 8 + (0.6 * this.level), timer: -3, stacks: 1, stackable: 1, clearAtZero: false}, params.scene);
         }else if(this.queryBuff(id) != null){
             if(this.queryBuff(id).timer <= 0){

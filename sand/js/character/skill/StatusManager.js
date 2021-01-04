@@ -637,7 +637,7 @@ export default class{
             }else if(this.buffs[posibleIndex].stackable > 1 && this.buffs[posibleIndex].stackable == this.buffs[posibleIndex].stacks){
                 this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
             }else{
-                if(this.buffs[posibleIndex].amount < 0)
+                /*if(this.buffs[posibleIndex].amount < 0)
                     this.buffs[posibleIndex].amount = Math.min(this.buffs[posibleIndex].amount, element.amount);
                 else if(this.buffs[posibleIndex].amount > 0)
                     this.buffs[posibleIndex].amount = Math.max(this.buffs[posibleIndex].amount, element.amount);
@@ -646,7 +646,10 @@ export default class{
                         this.buffs[posibleIndex].amount = Math.min(this.buffs[posibleIndex].amount, element.amount);
                     else
                         this.buffs[posibleIndex].amount = Math.max(this.buffs[posibleIndex].amount, element.amount);
-                }
+                }*/
+                this.alterStat(entity, element.attribute, -this.buffs[posibleIndex].amount, scene);
+                this.buffs[posibleIndex].amount = element.amount;
+                this.alterStat(entity, element.attribute, element.amount, scene);
                 this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
             }
             //console.log("updated buff", this.buffs[posibleIndex]);

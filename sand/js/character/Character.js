@@ -429,15 +429,6 @@ export default class Character extends Entity{
     }
     commitSpelle(animation, frame, gameObject) {
         gameObject.getData("backend").statusManager.makeVisible();
-        gameObject.getData("backend").pushBuff(gameObject.getData("backend"),{
-            name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.e.name,
-            attribute: "damage",
-            amount: 2 * gameObject.getData("backend").level + 20,
-            timer: 1,
-            stacks: 1,
-            stackable: 1,
-            clearAtZero: false
-        }, gameObject.scene);
         let shot = gameObject.getData("backend").generateProjectile(gameObject, gameObject.getData("backend").skills.e.range, true);
         shot.body.attackParams = {
             isAttack: true,
@@ -445,7 +436,7 @@ export default class Character extends Entity{
             type: 1,
             avoidable: true,
             critable: true,
-            damage: gameObject.getData("backend").getDamage(),
+            damage: gameObject.getData("backend").getDamage() + (2 * gameObject.getData("backend").level) + 20,
             accuracy: gameObject.getData("backend").getAccuracy(),
             crit: gameObject.getData("backend").getCrit(),
             critMultiplier: gameObject.getData("backend").getCritMultiplier()
