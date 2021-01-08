@@ -2,6 +2,7 @@ import Entity from "./Entity.js";
 import Hero from "./Hero.js";
 import Pasive from "./skill/Pasive.js";
 import Spell from "./skill/Spell.js";
+import {polarToEuclidean} from "../main_layer/MathUtils.js";
 
 export default class Character extends Entity{
     constructor(name, level, xpFactor, bountyFactor, race, fortitude, damage, armor, maxHealth, healthRegen, speed, atSpeed, evasion, crit, accuracy, maxMana, manaRegen, spellPower, will, magicArmor, concentration, spawnPoint, critMultiplier, ranged, range, skills){
@@ -220,26 +221,34 @@ export default class Character extends Entity{
         }
     }
 
-    moveDirection(sprite, direction, alteredSpeed, scale, induced){
-        if(this.mayMove() || (!this.mayMove() && induced)){
+    moveDirection(sprite, direction, alteredSpeed, scale){
+        if(this.mayMove() || this.onlyMovingForward()){
             //ángulo debe venir en radianes
-            var deltaX = 0;
-            var deltaY = 0;
+            var delta = {x: 0, y: 0};
 
             if(alteredSpeed != 0){
-                deltaX = alteredSpeed * Math.cos(direction);
-                deltaY = alteredSpeed * Math.sin(direction);
+                delta = polarToEuclidean(direction, alteredSpeed);
             }else{
-                deltaX = this.getSpeed() * Math.cos(direction);
-                deltaY = this.getSpeed() * Math.sin(direction);
+                delta = polarToEuclidean(direction, this.getSpeed());
             }
-            sprite.setVelocity(deltaX * scale / 6, deltaY * scale / 6);
+            sprite.setVelocity(delta.x * scale / 6, delta.y * scale / 6);
         }
     }
 
-    moveForward(sprite, scale, induced){
-        this.moveDirection(sprite, sprite.rotation + (Math.PI / 2), 0, scale, induced);
+    moveEuclidean(sprite, x, y, scale){
+        if(this.mayMove()  || this.onlyMovingForward()){
+            sprite.setVelocity(x * scale / 6, y * scale / 6);
+        }
     }
+
+    moveForward(sprite, scale){
+        this.moveDirection(sprite, sprite.rotation + (Math.PI / 2), 0, scale);
+    }
+
+    acelerate(sprite, scale, delta){
+        sprite.body.speed = delta * scale;
+    }
+
 
     lookAtDirection(sprite, direction){
         sprite.setAngle(direction);
@@ -256,10 +265,9 @@ export default class Character extends Entity{
         }
     }
     //funciones sobre el statusManager
-    pushBody(physical, element, scene){
+    pushBody(element, scene){
         if(this.mayBeDisabled()){
-            element.timer = this.ApplyStatusResistance(element.timer, physical);
-            this.StatusManager.pushBody(element);
+            this.statusManager.pushBody(element);
             this.ccTriggered({scene: scene});
         }
     }
@@ -317,6 +325,9 @@ export default class Character extends Entity{
     banish(physical, amount){
         amount = this.ApplyStatusResistance(amount, physical);
         super.banish(physical, amount);
+    }
+    charge(amount, sprite){
+        this.statusManager.charge(amount, sprite);
     }
 
     pushBuff(physical, element, scene){ //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero}
@@ -425,7 +436,48 @@ export default class Character extends Entity{
         gameObject.getData("backend").curKey = "";
         gameObject.getData("backend").statusManager.makeVisible();
         //debe reemplazarse por una función que interprete el effect a código js
-        gameObject.getData("backend").becomeDamageInmune(60 + Math.ceil(1.92 * gameObject.getData("backend").level));
+        gameObject.getData("backend").pushBuff(true, {name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.q.name + "_speed", attribute: "speed", amount: 30, timer: -2, stacks: 1, stackable: 1, clearAtZero: false}, gameObject.scene);
+        gameObject.getData("backend").charge(-2, gameObject);
+        //let moveVector = polarToEuclidean(gameObject.rotation + (Math.PI / 2), 40);
+        //gameObject.getData("backend").pushBody({name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.q.name, x: moveVector.x, y: moveVector.y, timer: 60 + Math.ceil(1.92 * gameObject.getData("backend").level)}, gameObject.scene);
+        gameObject.setFrame(21);
+        gameObject.getData("backend").onBodyCollision = function(params){
+            params.sprite.setFrame(0);
+            params.target.setVelocity(0);
+            //gameObject.getData("backend").removeVelocity(gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.q.name);
+            gameObject.getData("backend").charge(0, gameObject);
+            gameObject.getData("backend").removeBuff(gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.q.name + "_speed", gameObject.scene);
+            gameObject.getData("backend").onBodyCollision = function(params){}
+            //daño*(1+n/25) de daño, aturdir(1+n/25, 1.3+n/50) y retroceso(1)
+            if(gameObject.body.collisionFilter.mask != params.target.body.collisionFilter.mask){
+                params.target.getData("backend").spellTriggered({});
+                params.target.getData("backend").takeDamage({
+                    scene: params.scene,
+                    sprite: params.target,
+                    body: params.target.body,
+                    group: params.group,
+                    factory: params.factory,
+                    scaleRatio: params.scaleRatio,
+                    attacker: {
+                        isAttack: false,
+                        caster: gameObject.getData("backend"),
+                        type: 2,
+                        avoidable: false,
+                        critable: false,
+                        damage: (1 + gameObject.getData("backend").getSpellPower() / 100) * ((0.04 * gameObject.getData("backend").level) + 1) * gameObject.getData("backend").getDamage(),
+                    },
+                    attackerLabel: gameObject.body.label + "#" + gameObject.body.collisionFilter.group
+                });
+                if(params.target.body != null){
+                    if(params.target.body.collisionFilter.group < 4){
+                        params.target.getData("backend").stun(true, (2.4 * gameObject.getData("backend").level) + 60, params.target);
+                        let moveVector = {x: (params.target.x - gameObject.x) / 10, y: (params.target.y - gameObject.y) / 10};
+                        console.log("velocity", moveVector);
+                        params.target.getData("backend").pushBody({name: gameObject.getData("backend").name + "*" + gameObject.getData("backend").skills.q.name, x: moveVector.x, y: moveVector.y, timer: 60}, gameObject.scene);
+                    }
+                }
+            }
+        }
     }
     commitSpelle(animation, frame, gameObject) {
         gameObject.getData("backend").statusManager.makeVisible();

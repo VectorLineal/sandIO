@@ -473,9 +473,7 @@ export default class SceneGame extends Phaser.Scene {
           this.matter.world.getAllBodies()[index].label = "usedBox." + this.matter.world.getAllBodies()[index].label.split(".")[1];
         }
         if(this.matter.world.getAllBodies()[index].updateSpeed != null){
-          let deltaX = this.matter.world.getAllBodies()[index].updateSpeed * Math.cos(this.matter.world.getAllBodies()[index].gameObject.rotation + (Math.PI / 2));
-          let deltaY = this.matter.world.getAllBodies()[index].updateSpeed * Math.sin(this.matter.world.getAllBodies()[index].gameObject.rotation + (Math.PI / 2));
-          this.matter.world.getAllBodies()[index].gameObject.setVelocity(deltaX * (9.84 / this.scaleRatio) / 6, deltaY * (9.84 / this.scaleRatio) / 6);
+          this.matter.world.getAllBodies()[index].speed = this.matter.world.getAllBodies()[index].updateSpeed * (9.84 / this.scaleRatio);
         }
 
       }
@@ -603,6 +601,9 @@ export default class SceneGame extends Phaser.Scene {
           break;
       }
       
+    }else if (!labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null && bodyA.gameObject != null){
+      bodyA.gameObject.getData("backend").onBodyCollision({scene: this, sprite: bodyA.gameObject, target: bodyB.gameObject, scaleRatio: 9.84 / this.scaleRatio, group: this.getRelatedGroup(bodyB.collisionFilter.group), factory: this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero)});
+      bodyB.gameObject.getData("backend").onBodyCollision({scene: this, sprite: bodyB.gameObject, target: bodyA.gameObject, scaleRatio: 9.84 / this.scaleRatio, group: this.getRelatedGroup(bodyA.collisionFilter.group), factory: this.getRelatedFactory(bodyA.collisionFilter.group, bodyA.gameObject.getData("backend") instanceof Hero)});
     }
     console.log("body A:", bodyA.label, ", body B:", bodyB.label);
   }

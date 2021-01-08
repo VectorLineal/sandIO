@@ -54,6 +54,25 @@ export function generateSet(max){
 export function degToRad(angle) {
     return (angle * Math.PI) / 180;
 }
+
+export function polarToEuclidean(rotation, magnitude){ //se manejan radianes
+  return {
+    x: magnitude * Math.cos(rotation),
+    y: magnitude * Math.sin(rotation)
+  };
+}
+
+export function euclideanToPolar(x, y){ //se manejan radianes
+  return {
+    rotation: getRotation(x, y),
+    magnitude: getMagnitude(x, y)
+  };
+}
+
+export function getMagnitude(x, y){
+  return Math.sqrt(x * x + y * y);
+}
+
 export function getRotation(x, y) {
     var result = 0;
     if (x > 0) {

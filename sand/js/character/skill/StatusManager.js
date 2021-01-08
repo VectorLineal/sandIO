@@ -24,10 +24,11 @@ export default class{
            physicInmune: 0,
            damageInmune: 0,
            banish: 0,
+           charge: 0, //indica si el personaje está cargando
            markedForDeath: -1 //(no purgable)indica si algun personaje morira en dado tiempo (se usa sobre todo en criaturas invocadas por x tiempo) default -1
        };
        //lista
-       this.pushes = [] //elementos tipo {name, direction, speed, timer}
+       this.pushes = [] //elementos tipo {name, x, y, timer}
        //lista
        this.buffs = []; //elementos tipo {name, attribute, amount, timer, stacks, stackable, clearAtZero} siendo los ultimos dos atributos flags que indican si el efecto es acumulable(0: no es, 1: es, cada nueva acumulación refresca su duración, 2: es, pero cada acumulación no altera el tiempo) y si se elimina cuando su atributo cambie a 0(escudo o bloqueo)
        //hastable de listas
@@ -101,6 +102,9 @@ export default class{
     isBanished(){
         return this.singleEffects.banish != 0;
     }
+    isCharging(){
+        return this.singleEffects.charge != 0;
+    }
     isMarkedForDeath(){
         return this.singleEffects.markedForDeath != 0;
     }
@@ -171,19 +175,19 @@ export default class{
     }
 
     mayMove(){
-        return !(this.isSlept() || this.isStunt() || this.isCrppled() || this.isFrozen() || this.isFeared() || this.isHypnotized() || this.isBanished() || this.isPushed());
+        return !(this.isSlept() || this.isStunt() || this.isCrppled() || this.isFrozen() || this.isFeared() || this.isCharging() || this.isHypnotized() || this.isBanished() || this.isPushed());
     }
     onlyMovingForward(){
-        return this.isFeared() || this.isHypnotized();
+        return (this.isFeared() || this.isHypnotized() || this.isPushed() || this.isCharging()) && !(this.isStunt() || this.isSlept() || this.isBanished() || this.isCrppled() || this.isFrozen());
     }
     mayAttack(){
-        return !(this.isSlept() || this.isStunt() || this.isFrozen() || this.isFeared() || this.isHypnotized() || this.isMorphed() || this.isDisarmed() || this.isBanished());
+        return !(this.isSlept() || this.isStunt() || this.isFrozen() || this.isFeared() || this.isCharging() || this.isHypnotized() || this.isMorphed() || this.isDisarmed() || this.isBanished());
     }
     mayUsePasives(){
         return !this.isDecimated();
     }
     mayCastSpells(){
-        return !(this.isSlept() || this.isStunt() || this.isMuted() || this.isMorphed() || this.isFeared() || this.isHypnotized() || this.isBanished());
+        return !(this.isSlept() || this.isStunt() || this.isMuted() || this.isMorphed() || this.isFeared() || this.isCharging() || this.isHypnotized() || this.isBanished());
     }
     mayTakeDamage(type){ //tipo 0: puro, tipo 1: fisico, tipo 2: magico
         switch(type){
@@ -399,6 +403,7 @@ export default class{
             this.singleEffects.inmortality = 0;
             this.singleEffects.CCInmune = 0;
             this.singleEffects.banish = 0;
+            this.singleEffects.charge = 0;
             this.singleEffects.fly = 0;
             this.singleEffects.spellInmune = 0;
             this.singleEffects.physicInmune = 0;
@@ -559,6 +564,11 @@ export default class{
         }
         this.singleEffects.banish = Math.max(this.singleEffects.banish, amount);
     }
+    charge(amount, sprite){
+        this.singleEffects.charge = amount;
+        if(this.singleEffects.charge == 0 && !this.isMorphed())
+            sprite.setFrame(0);
+    }
     markForDeath(amount){
         this.singleEffects.markedForDeath = Math.max(this.singleEffects.markedForDeath, amount);
     }
@@ -647,9 +657,11 @@ export default class{
                     else
                         this.buffs[posibleIndex].amount = Math.max(this.buffs[posibleIndex].amount, element.amount);
                 }*/
-                this.alterStat(entity, element.attribute, -this.buffs[posibleIndex].amount, scene);
-                this.buffs[posibleIndex].amount = element.amount;
-                this.alterStat(entity, element.attribute, element.amount, scene);
+                if(element.amount != this.buffs[posibleIndex].amount){
+                    let diference = element.amount - this.buffs[posibleIndex].amount;
+                    this.buffs[posibleIndex].amount = element.amount;
+                    this.alterStat(entity, element.attribute, diference, scene);
+                }
                 this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
             }
             //console.log("updated buff", this.buffs[posibleIndex]);
@@ -803,6 +815,8 @@ export default class{
         }
         if(this.singleEffects.polymorph > 0){
             this.singleEffects.polymorph--;
+            if(this.singleEffects.polymorph == 0)
+                params.sprite.setFrame(0);
         }
         if(this.singleEffects.decimate > 0){
             this.singleEffects.decimate--;
@@ -839,6 +853,11 @@ export default class{
         if(this.singleEffects.banish > 0){
             this.singleEffects.banish--;
         }
+        if(this.singleEffects.charge > 0){
+            this.singleEffects.charge--;
+            if(this.singleEffects.charge == 0 && !this.isMorphed())
+                params.sprite.setFrame(0);
+        }
         if(this.singleEffects.markedForDeath > 0){
             this.singleEffects.markedForDeath--;
         }
@@ -850,6 +869,8 @@ export default class{
             //se limpia
             if(this.pushes[i].timer == 0){
                 this.pushes.splice(i, 1);
+                if(!this.isPushed() && !this.isCharging() && !this.isMorphed())
+                    params.sprite.setFrame(0);
             }
         }
 
@@ -1013,13 +1034,16 @@ export default class{
         }
 
         //se ejecutan condiciones especiales de los cambios de estado
-        if(this.onlyMovingForward()){
-            params.entity.moveForward(params.sprite, params.scaleRatio, true);
+        if(this.isHypnotized() || this.isFeared() || this.isCharging()){
+            params.entity.moveForward(params.sprite, params.scaleRatio);
           }
           if(this.isPushed()){
+              var totalVector = {x: 0, y: 0};
               for(var i = 0; i < this.pushes.length; i++){
-                params.entity.moveDirection(params.sprite, this.pushes[i].direction, this.pushes[i].speed, params.scaleRatio, true)
+                totalVector.x += this.pushes[i].x;
+                totalVector.y += this.pushes[i].y;
               }
+              params.entity.moveEuclidean(params.sprite, totalVector.x, totalVector.y, params.scaleRatio);
           }
 
           if(this.isBanished()){

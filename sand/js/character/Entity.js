@@ -525,10 +525,10 @@ export default class Entity{
     becomeDamageInmune(amount){
         this.statusManager.becomeDamageInmune(amount);
     }
-    banish(physical, amount, scene){
+    banish(physical, amount, sprite){
         if(this.mayBeDisabled()){
-            this.StatusManager.banish(amount);
-            this.ccTriggered({scene: scene});
+            this.statusManager.banish(sprite, amount);
+            this.ccTriggered({scene: sprite.scene});
         }
     }
     markForDeath(amount){
@@ -740,10 +740,9 @@ export default class Entity{
     }
 
     onBodyCollision(params){ //se activa cuando el usuario colisiona con otro
-        //pendiente
     }
 
-    aura(reach, params){ //genera un aura pasiva que afecta a los que esten dentro de dicha area
+    aura(params){ //genera un aura pasiva que afecta a los que esten dentro de dicha area
         //pendiente
     }
 
