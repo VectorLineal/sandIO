@@ -201,7 +201,6 @@ export default class Entity{
     }
 
     commitAttack(animation, frame, gameObject) {
-        gameObject.getData("backend").statusManager.makeVisible();
         if(!gameObject.getData("backend").getRanged()){
             let box = gameObject.getData("backend").generateAttackBox(gameObject, true);
             box.attackParams = {
@@ -257,6 +256,7 @@ export default class Entity{
         gameObject.getData("backend").onAttack({scene: gameObject.scene});
         gameObject.play("attack_" + gameObject.getData("backend").name + "_end");
         console.log("bodies in world:", gameObject.scene.matter.world.getAllBodies());
+        gameObject.getData("backend").statusManager.makeVisible();
     }
 
     distributeXp(scene, group){
