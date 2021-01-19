@@ -308,6 +308,24 @@ export default class Hero extends Character {
         }
       }
     }
+    this.destroyAura = function(scene){
+      let codes = ["auraBox." + this.name + "_" + this.pasives[1].name]
+      for(var i = 0; i < codes.length; i++){
+          scene.destroyBox(codes[i]);
+      }
+    }
+    this.buildAura = function(params){
+      let box = this.generateAreaBox("auraBox." + this.name + "_" + this.pasives[1].name, params.scene, params.gameObject.body, this.pickCategory(params.gameObject, true), -1, 290 * params.scaleRatio);
+      box.attackParams = {caster: this, sprite: params.gameObject};
+      box.onBodyIn = function(params){
+        if(params.target != null)
+          params.target.pushBuff(true, {name: params.caster.name + "*" + params.caster.pasives[1].name + "_armor", attribute: "armor", amount: -5 - params.caster.level, timer: -2, stacks: 1, stackable: 1, clearAtZero: false}, params.scene);
+      }
+      box.onBodyOut = function(params){
+        if(params.target != null)
+          params.target.removeBuff(params.caster.name + "*" + params.caster.pasives[1].name + "_armor", params.scene);
+      }
+    }
   }
 
   //funciones sobre eventos

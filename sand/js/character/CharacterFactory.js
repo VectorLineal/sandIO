@@ -122,6 +122,7 @@ export default class CharacterFactory{ //esta es en teoría una clase abstracta
         sprite.setDepth(0.5);
         sprite.getData("backend").buildStatsPasives(scene);
         sprite.getData("backend").buildTriggerPasives();
+        sprite.getData("backend").buildAura({scene: scene, gameObject: sprite, scaleRatio: scaleRatio});
         sprite.getData("backend").addAnimation(scene, "attack_" + sprite.getData("backend").name, propertie.animations.attack);
         sprite.getData("backend").addAnimation(scene, "attack_" + sprite.getData("backend").name + "_end", propertie.animations.attackEnd);
         sprite.on("animationcomplete-attack_" + sprite.getData("backend").name, sprite.getData("backend").commitAttack, this);

@@ -172,6 +172,7 @@ export default class Character extends Entity{
         //si el último que dio el golpe es una criatura neutral, no se reparte ni xp ni oro por lo que la función termina su ejecución acá
         //se reparte oro y xp al último que dio el golpe siemre y cuando sea un heroe
         this.statusManager.onDeath(this, params.scene);
+        this.destroyAura(params.scene);
         let category = super.onDeath(params);
 
         //se reparte oro y xp a los que estaban cerca aquien murió
@@ -185,7 +186,8 @@ export default class Character extends Entity{
             
 
         if(category == params.scene.categories[1] || category == params.scene.categories[3]){
-            let box = this.generateAreaBox("bountyBox.", params.scene, this, params.body, category, 1, params.scaleRatio);
+            let radius = 150 * params.scaleRatio;
+            let box = this.generateAreaBox("bountyBox." + this.name, params.scene, params.body, category, 1, radius);
             box.bounty = bounty;
         }
         return category;

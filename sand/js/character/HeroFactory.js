@@ -136,6 +136,7 @@ export default class Herofactory extends CharacterFactory {
                   //console.log(params.group.children.entries[i].getData('backend').name,"body is", params.group.children.entries[i].body);
                   params.group.children.entries[i].getData('backend').restoreHealth();
                   params.group.children.entries[i].getData('backend').restoreMana();
+                  params.group.children.entries[i].getData('backend').buildAura({scene: params.scene, gameObject: params.group.children.entries[i], scaleRatio: params.scaleRatio});
                   params.group.children.entries[i].getData("underBar").setVisible(true);
                   params.group.children.entries[i].getData("healthBar").setVisible(true);
                   params.group.children.entries[i].getData("shieldBar").setVisible(true);

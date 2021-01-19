@@ -23,7 +23,7 @@ export default class Spell extends Skill{
         this.manaCost = getInlineLinearFunction(params.manaCost);
         this.type = params.type;
         this.isActive = false;
-        //self: el hechizo se aplica a si mismo, projectile: crea un proyectil en la dirección, conic_projectile: lo mismo, pero el area crece, melee: crea un attackBox, modifier: usa como castPoint atSpeed y agrega efectos onAttackHit, area: crea un area a su alrededor, point: crea un attackbox en el punto escogido, area_point: crea un area en el punto escogido, direction: capta la dirección actual y la usa para su funcionalidad
+        //self: el hechizo se aplica a si mismo, projectile: crea un proyectil en la dirección, projectile_pesistent: crea un proyectil en la dirección y este no se elmina sino hasta que haya recorrido su maximo alcance, conic_projectile: lo mismo, pero el area crece, melee: crea un attackBox, modifier: usa como castPoint atSpeed y agrega efectos onAttackHit, area: crea un area a su alrededor, point: crea un attackbox en el punto escogido, area_point: crea un area en el punto escogido, direction: capta la dirección actual y la usa para su funcionalidad
     }
     
     getManaCost(level){

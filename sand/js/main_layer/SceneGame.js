@@ -411,6 +411,7 @@ export default class SceneGame extends Phaser.Scene {
     this.cameras.main.startFollow(this.teamAHeroManager.getPlayer(this.teamASprites), true, 1, 1);
     this.cameras.main.roundPixels = true;
     this.matter.world.on("collisionstart", this.dealDamage, this);
+    this.matter.world.on("collisionend", this.endAura, this);
 
     this.scene.run("HUDScene");
   }
@@ -465,17 +466,21 @@ export default class SceneGame extends Phaser.Scene {
 
     //se limpian los collision box inutiles
     for (var index = 0; index < this.matter.world.getAllBodies().length; index++) {
-      let labelReader = RegExp(/^(area|bounty|projectile)Box\.\w+(\#\d+)?$/);
+      let labelReader = RegExp(/^(area|bounty|projectile|aura)Box\.\w+(\#\d+)?$/);
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
         if(this.matter.world.getAllBodies()[index].timer > 0){
           this.matter.world.getAllBodies()[index].timer--;
-        }else{
+        }else if(this.matter.world.getAllBodies()[index].timer == 0){
           this.matter.world.getAllBodies()[index].label = "usedBox." + this.matter.world.getAllBodies()[index].label.split(".")[1];
         }
         if(this.matter.world.getAllBodies()[index].updateSpeed != null){
           this.matter.world.getAllBodies()[index].speed = this.matter.world.getAllBodies()[index].updateSpeed * (9.84 / this.scaleRatio);
         }
-
+        if(this.matter.world.getAllBodies()[index].label.split(".")[0] == "auraBox"){
+          //console.log("label",this.matter.world.getAllBodies()[index].attackParams.sprite.x);
+          this.matter.world.getAllBodies()[index].position.x = this.matter.world.getAllBodies()[index].attackParams.sprite.x
+          this.matter.world.getAllBodies()[index].position.y = this.matter.world.getAllBodies()[index].attackParams.sprite.y
+        }
       }
       labelReader = RegExp(/^(used|attack)Box\.\w+(\#\d+)?$/);
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
@@ -505,43 +510,12 @@ export default class SceneGame extends Phaser.Scene {
 
   //funciones no heredadas de la escena
 
-  initialData(){
-    return {
-      health: 200,
-      maxHealth: 200,
-      regenH: 0.2,
-      shield: 0,
-      mana: 75,
-      maxMana: 75, 
-      regenM: 0.1,
-      damage: 36,
-      spellPower: 0,
-      magicArm: 0,
-      arm: 0,
-      vel: 28,
-      atS: 100,
-      atRate: 2,
-      level: 0,
-      xp: 0,
-      xpNext: 100,
-      gold: 0,
-      acc: 100,
-      fortitude : 0,
-      crit: 0,
-      will: 0,
-      concentration: 0,
-      critMultiplier: 0,
-      key: "",
-      skills: {}
-    }
-  }
-
   dealDamage(event, bodyA, bodyB) {
     //var dealtDamage = { amount: 0, isCrit: false };
-    let labelReader = RegExp(/^(bounty|attack|projectile|aoe)Box\.\w+(\#\d+)?$/);
+    let labelReader = RegExp(/^(attack|area|bounty|projectile|aura)Box\.\w+(\#\d+)?$/);
 
     if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null) {
-      switch(bodyB.label.split(".")[0]){
+      switch(bodyA.label.split(".")[0]){
         case "attackBox":
         case "projectileBox":
           let factory = this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero);
@@ -553,7 +527,6 @@ export default class SceneGame extends Phaser.Scene {
         case "bountyBox":
           for(var i = 0; i < event.pairs.length; i++){
             if(event.pairs[i].bodyB.gameObject != null){
-              console.log(event.pairs[i].bodyB);
               if(event.pairs[i].bodyB.gameObject.getData("backend") instanceof Hero){
                 let punctuation = this.getPunctuationByHeroAndGroup(event.pairs[i].bodyB.gameObject.getData("backend").name, event.pairs[i].bodyB.collisionFilter.group);
                 event.pairs[i].bodyB.gameObject.getData("backend").gainXP({scene: this, amount: event.pairs[i].bodyA.bounty.xp});
@@ -567,7 +540,14 @@ export default class SceneGame extends Phaser.Scene {
           }
           bodyA.label = "usedBox." + bodyA.label.split(".")[1];
           break;
-        case "aoeBox":
+        case "areaBox":
+        case "auraBox":
+          for(var i = 0; i < event.pairs.length; i++){
+            if(event.pairs[i].bodyB.gameObject != null){
+              //console.log("pair", event.pairs[i].bodyB);
+              bodyA.onBodyIn({scene: this, caster: bodyA.attackParams.caster, target: event.pairs[i].bodyB.gameObject.getData("backend")});
+            }
+          }
           break;
       }
     } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label) && bodyA.gameObject != null) {
@@ -597,7 +577,50 @@ export default class SceneGame extends Phaser.Scene {
           }
           bodyB.label = "usedBox." + bodyB.label.split(".")[1];
           break;
-        case "aoeBox":
+          case "areaBox":
+          case "auraBox":
+            for(var i = 0; i < event.pairs.length; i++){
+              if(event.pairs[i].bodyA.gameObject != null){
+                //console.log("pair", event.pairs[i].bodyA);
+                bodyB.onBodyIn({scene: this, caster: bodyB.attackParams.caster, target: event.pairs[i].bodyA.gameObject.getData("backend")});
+              }
+            }
+            break;
+      }
+      
+    }else if (!labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null && bodyA.gameObject != null){
+      bodyA.gameObject.getData("backend").onBodyCollision({scene: this, sprite: bodyA.gameObject, target: bodyB.gameObject, scaleRatio: 9.84 / this.scaleRatio, group: this.getRelatedGroup(bodyB.collisionFilter.group), factory: this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero)});
+      bodyB.gameObject.getData("backend").onBodyCollision({scene: this, sprite: bodyB.gameObject, target: bodyA.gameObject, scaleRatio: 9.84 / this.scaleRatio, group: this.getRelatedGroup(bodyA.collisionFilter.group), factory: this.getRelatedFactory(bodyA.collisionFilter.group, bodyA.gameObject.getData("backend") instanceof Hero)});
+    }
+    //console.log("body A:", bodyA.label, ", body B:", bodyB.label);
+  }
+
+  endAura(event, bodyA, bodyB){
+    console.log("sirvo para una mierda");
+    let labelReader = RegExp(/^(attack|area|bounty|projectile|aura)Box\.\w+(\#\d+)?$/);
+
+    if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null) {
+      switch(bodyA.label.split(".")[0]){
+        case "areaBox":
+        case "auraBox":
+          for(var i = 0; i < event.pairs.length; i++){
+            if(event.pairs[i].bodyB.gameObject != null){
+              console.log("pair", event.pairs[i].bodyB);
+              bodyA.onBodyOut({scene: this, caster: bodyA.attackParams.caster, target: event.pairs[i].bodyB.gameObject.getData("backend")});
+            }
+          }
+          break;
+      }
+    } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label) && bodyA.gameObject != null) {
+      switch(bodyB.label.split(".")[0]){
+        case "areaBox":
+        case "auraBox":
+          for(var i = 0; i < event.pairs.length; i++){
+            if(event.pairs[i].bodyA.gameObject != null){
+              console.log("pair", event.pairs[i].bodyA);
+              bodyB.onBodyOut({scene: this, caster: bodyB.attackParams.caster, target: event.pairs[i].bodyA.gameObject.getData("backend")});
+            }
+          }
           break;
       }
       
@@ -606,6 +629,21 @@ export default class SceneGame extends Phaser.Scene {
       bodyB.gameObject.getData("backend").onBodyCollision({scene: this, sprite: bodyB.gameObject, target: bodyA.gameObject, scaleRatio: 9.84 / this.scaleRatio, group: this.getRelatedGroup(bodyA.collisionFilter.group), factory: this.getRelatedFactory(bodyA.collisionFilter.group, bodyA.gameObject.getData("backend") instanceof Hero)});
     }
     console.log("body A:", bodyA.label, ", body B:", bodyB.label);
+  }
+
+  destroyBox(code){
+    for (var index = 0; index < this.matter.world.getAllBodies().length; index++) {
+      let labelReader = RegExp(/^(area|bounty|projectile|aura)Box\.\w+(\#\d+)?$/);
+      if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
+        if(this.matter.world.getAllBodies()[index].label.split("#")[0] == code){
+          console.log("destroyed body", this.matter.world.getAllBodies()[index]);
+          if(this.matter.world.getAllBodies()[index].gameObject != null)
+            this.matter.world.getAllBodies()[index].gameObject.destroy();
+          else
+            this.matter.world.remove(this.matter.world.getAllBodies()[index]);
+        }
+      }
+    }
   }
 
   getRelatedGroup(group){
@@ -687,7 +725,6 @@ export default class SceneGame extends Phaser.Scene {
       var angle = -90 + Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.teamAHeroManager.getPlayer(this.teamASprites).x, this.teamAHeroManager.getPlayer(this.teamASprites).y, pointer.x + camera.scrollX, pointer.y + camera.scrollY);
       this.teamAHeroManager.getPlayer(this.teamASprites).setAngle(angle);
     }
-    
   }
 
   setBuildingSprite(params, group, category, mask, coords) {

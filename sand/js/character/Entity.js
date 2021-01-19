@@ -187,12 +187,12 @@ export default class Entity{
         return shot;
     }
 
-    generateAreaBox(type, scene, entity, body, category, timer, scaleRatio){
-        let box = scene.matter.add.circle(body.position.x, body.position.y, 150 * scaleRatio, {
+    generateAreaBox(name, scene, body, category, timer, radius){
+        let box = scene.matter.add.circle(body.position.x, body.position.y, radius, {
             collisionFilter:{
                 category: category
             },
-            label: type + entity.name,
+            label: name,
             isSensor: true
         });
         box.timer = timer;
@@ -742,8 +742,10 @@ export default class Entity{
     onBodyCollision(params){ //se activa cuando el usuario colisiona con otro
     }
 
-    aura(params){ //genera un aura pasiva que afecta a los que esten dentro de dicha area
-        //pendiente
+    buildAura(params){ //genera un aura pasiva que afecta a los que esten dentro de dicha area
+    }
+
+    destroyAura(scene){
     }
 
     debuffTriggered(params){ //se activa cuando el usuario recibe un debuff

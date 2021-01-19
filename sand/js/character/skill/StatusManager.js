@@ -518,8 +518,10 @@ export default class{
     }
     decimate(entity, amount, scene){
         this.singleEffects.decimate = Math.max(this.singleEffects.decimate, amount);
-        if(this.singleEffects.decimate > 0)
+        if(this.singleEffects.decimate > 0){
             this.clearPasives(entity, scene);
+            entity.destroyAura(scene);
+        }
     }
     becomeInvisible(amount){
         this.singleEffects.invisibility = Math.max(this.singleEffects.invisibility, amount);
@@ -779,7 +781,7 @@ export default class{
     onDeath(entity, scene){
         //se elminan condiciones que se pierden al morir
         for(var i = this.buffs.length - 1; i >= 0; i--){
-            console.log("buff death", i, ":", this.buffs[i]);
+            //console.log("buff death", i, ":", this.buffs[i]);
             if(this.buffs[i].timer == -2){
                 let buff = this.buffs.splice(i, 1);
                 this.alterStat(entity, buff[0].attribute, -buff[0].amount, scene);
@@ -820,8 +822,10 @@ export default class{
         }
         if(this.singleEffects.decimate > 0){
             this.singleEffects.decimate--;
-            if(this.singleEffects.decimate == 0)
+            if(this.singleEffects.decimate == 0){
                 params.entity.buildStatsPasives(params.scene);
+                params.entity.buildAura({scene: params.scene, gameObject: params.sprite, scaleRatio: params.scaleRatio});
+            }    
         }
         if(this.singleEffects.invisibility > 0){
             this.singleEffects.invisibility--;
