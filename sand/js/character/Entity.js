@@ -120,6 +120,22 @@ export default class Entity{
         }
         return category;
     }
+    pickMask(category){
+        switch(category){
+            case 2:
+                return 41;
+            case 4:
+                return 3;
+            case 8:
+                return 35;
+            case 16:
+                return 9;
+            case 32:
+                return 11;
+            case 64:
+                return 33;
+        }
+    }
 
     generateAttackBox(gameObject, forEnemy){
         var xc = gameObject.x;
@@ -155,6 +171,7 @@ export default class Entity{
           );
           attackBox.label = "attackBox." + gameObject.getData("backend").name + "#" + gameObject.body.collisionFilter.group;
           attackBox.collisionFilter.category = this.pickCategory(gameObject, forEnemy);
+          attackBox.collisionFilter.mask = this.pickMask(attackBox.collisionFilter.category);
 
           return attackBox;
     }
@@ -184,13 +201,15 @@ export default class Entity{
         shot.body.updateSpeed = range.speed;
         shot.body.label = "projectileBox." + gameObject.getData("backend").name + "#" + gameObject.body.collisionFilter.group;
         shot.body.collisionFilter.category = this.pickCategory(gameObject, forEnemy);
+        shot.body.collisionFilter.mask = this.pickMask(shot.body.collisionFilter.category);
         return shot;
     }
 
     generateAreaBox(name, scene, body, category, timer, radius){
         let box = scene.matter.add.circle(body.position.x, body.position.y, radius, {
             collisionFilter:{
-                category: category
+                category: category,
+                mask: 1/*this.pickMask(category)*/
             },
             label: name,
             isSensor: true

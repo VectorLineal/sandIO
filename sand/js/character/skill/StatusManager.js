@@ -666,11 +666,11 @@ export default class{
                 }
                 this.buffs[posibleIndex].timer = Math.max(this.buffs[posibleIndex].timer, element.timer);
             }
-            //console.log("updated buff", this.buffs[posibleIndex]);
+            //console.log("updated buff", this.buffs[posibleIndex], "to", entity.name);
         }else{
             this.buffs.push(element);
             this.alterStat(entity, element.attribute, element.amount, scene);
-            //console.log("pushed", this.buffs[this.buffs.length - 1]);
+            //console.log("pushed", this.buffs[this.buffs.length - 1], "to", entity.name);
         }
     }
 

@@ -80,6 +80,8 @@ export default class SceneGame extends Phaser.Scene {
     this.spell5;
     this.consumable1;
     this.consumable2;
+
+    this.deletionList = [];
   }
 
   preload() {
@@ -412,6 +414,7 @@ export default class SceneGame extends Phaser.Scene {
     this.cameras.main.roundPixels = true;
     this.matter.world.on("collisionstart", this.dealDamage, this);
     this.matter.world.on("collisionend", this.endAura, this);
+    this.matter.world.on("collisionactive", this.restoreAura, this);
 
     this.scene.run("HUDScene");
   }
@@ -510,7 +513,7 @@ export default class SceneGame extends Phaser.Scene {
 
   //funciones no heredadas de la escena
 
-  dealDamage(event, bodyA, bodyB) {
+  dealDamage(event, bodyA, bodyB){
     //var dealtDamage = { amount: 0, isCrit: false };
     let labelReader = RegExp(/^(attack|area|bounty|projectile|aura)Box\.\w+(\#\d+)?$/);
 
@@ -596,10 +599,10 @@ export default class SceneGame extends Phaser.Scene {
   }
 
   endAura(event, bodyA, bodyB){
-    console.log("sirvo para una mierda");
-    let labelReader = RegExp(/^(attack|area|bounty|projectile|aura)Box\.\w+(\#\d+)?$/);
+    let labelReader = RegExp(/^(area|aura)Box\.\w+(\#\d+)?$/);
 
     if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null) {
+      console.log("sirvo para una mierda");
       switch(bodyA.label.split(".")[0]){
         case "areaBox":
         case "auraBox":
@@ -612,23 +615,73 @@ export default class SceneGame extends Phaser.Scene {
           break;
       }
     } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label) && bodyA.gameObject != null) {
+      console.log("sirvo para una mierda");
       switch(bodyB.label.split(".")[0]){
         case "areaBox":
         case "auraBox":
+          //console.log("origin", bodyB.label);
           for(var i = 0; i < event.pairs.length; i++){
             if(event.pairs[i].bodyA.gameObject != null){
-              console.log("pair", event.pairs[i].bodyA);
+              //console.log("pair", event.pairs[i].bodyA);
               bodyB.onBodyOut({scene: this, caster: bodyB.attackParams.caster, target: event.pairs[i].bodyA.gameObject.getData("backend")});
             }
           }
           break;
       }
       
-    }else if (!labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null && bodyA.gameObject != null){
-      bodyA.gameObject.getData("backend").onBodyCollision({scene: this, sprite: bodyA.gameObject, target: bodyB.gameObject, scaleRatio: 9.84 / this.scaleRatio, group: this.getRelatedGroup(bodyB.collisionFilter.group), factory: this.getRelatedFactory(bodyB.collisionFilter.group, bodyB.gameObject.getData("backend") instanceof Hero)});
-      bodyB.gameObject.getData("backend").onBodyCollision({scene: this, sprite: bodyB.gameObject, target: bodyA.gameObject, scaleRatio: 9.84 / this.scaleRatio, group: this.getRelatedGroup(bodyA.collisionFilter.group), factory: this.getRelatedFactory(bodyA.collisionFilter.group, bodyA.gameObject.getData("backend") instanceof Hero)});
     }
     console.log("body A:", bodyA.label, ", body B:", bodyB.label);
+  }
+
+  restoreAura(event, bodyA, bodyB){
+    let labelReader = RegExp(/^(area|aura)Box\.\w+(\#\d+)?$/);
+
+    if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null) {
+      console.log("sirvo para dos mierdas A", bodyA.label, ",", bodyA.timer);
+      var tempList = [];
+      for(var i = 0; i < event.pairs.length; i++){
+        if(event.pairs[i].bodyA.onBodyOut != null && this.deletionList.includes(event.pairs[i].bodyA.label)){
+          if(event.pairs[i].bodyB.gameObject != null){
+            event.pairs[i].bodyA.onBodyOut({scene: this, caster: event.pairs[i].bodyA.attackParams.caster, target: event.pairs[i].bodyB.gameObject.getData("backend")});
+            if(!tempList.includes(event.pairs[i].bodyA.label))
+              tempList.push(event.pairs[i].bodyA.label);
+          }
+        }
+        else if(event.pairs[i].bodyB.onBodyOut != null && this.deletionList.includes(event.pairs[i].bodyB.label)){
+          if(event.pairs[i].bodyA.gameObject != null){
+            event.pairs[i].bodyB.onBodyOut({scene: this, caster: event.pairs[i].bodyB.attackParams.caster, target: event.pairs[i].bodyA.gameObject.getData("backend")});
+            if(!tempList.includes(event.pairs[i].bodyB.label))
+              tempList.push(event.pairs[i].bodyB.label);
+          }
+        }
+        //console.log("pair", event.pairs[i].bodyA.label, ",", event.pairs[i].bodyB.label);
+      }
+      for(var j = 0; j < tempList.length; j++)
+          this.deletionList.remove(tempList[j]);
+    }
+    if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label) && bodyA.gameObject != null) {
+      console.log("sirvo para dos mierdas B", bodyA.label, ",", bodyA.timer);
+      var tempList = [];
+      for(var i = 0; i < event.pairs.length; i++){
+        if(event.pairs[i].bodyA.onBodyOut != null && this.deletionList.includes(event.pairs[i].bodyA.label)){
+          if(event.pairs[i].bodyB.gameObject != null){
+            event.pairs[i].bodyA.onBodyOut({scene: this, caster: event.pairs[i].bodyA.attackParams.caster, target: event.pairs[i].bodyB.gameObject.getData("backend")});
+            if(!tempList.includes(event.pairs[i].bodyA.label))
+              tempList.push(event.pairs[i].bodyA.label);
+          }
+        }
+        else if(event.pairs[i].bodyB.onBodyOut != null && this.deletionList.includes(event.pairs[i].bodyB.label)){
+          if(event.pairs[i].bodyA.gameObject != null){
+            event.pairs[i].bodyB.onBodyOut({scene: this, caster: event.pairs[i].bodyB.attackParams.caster, target: event.pairs[i].bodyA.gameObject.getData("backend")});
+            if(!tempList.includes(event.pairs[i].bodyB.label))
+              tempList.push(event.pairs[i].bodyB.label);
+          }
+        }
+        //console.log("pair", event.pairs[i].bodyA.label, ",", event.pairs[i].bodyB.label);
+      }
+      for(var j = 0; j < tempList.length; j++)
+          this.deletionList.remove(tempList[j]);
+    }
   }
 
   destroyBox(code){
@@ -637,10 +690,8 @@ export default class SceneGame extends Phaser.Scene {
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
         if(this.matter.world.getAllBodies()[index].label.split("#")[0] == code){
           console.log("destroyed body", this.matter.world.getAllBodies()[index]);
-          if(this.matter.world.getAllBodies()[index].gameObject != null)
-            this.matter.world.getAllBodies()[index].gameObject.destroy();
-          else
-            this.matter.world.remove(this.matter.world.getAllBodies()[index]);
+          this.matter.world.getAllBodies()[index].timer = 1;
+          this.deletionList.push(this.matter.world.getAllBodies()[index].label);
         }
       }
     }
