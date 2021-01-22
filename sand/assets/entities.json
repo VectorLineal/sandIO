@@ -1363,6 +1363,56 @@
           }
     },
     "npc": {
+      "carcinos": {
+        "name": "carcinos",
+        "width": 46,
+        "height": 136,
+        "frameWidth": 92,
+        "frameHeight": 149,
+        "centerX": true,
+        "centerY": false,
+        "character": {
+          "xpFactor": 15,
+          "bountyFactor": 20,
+          "race": "beast",
+          "fortitude": "0.6x+10",
+          "damage": "10x+112",
+          "armor": "4.6x+32",
+          "maxHealth": "40x+640",
+          "healthRegen": "0.04x+0.4",
+          "speed": "0.2x+20",
+          "atSpeed": "2.4x+76",
+          "evasion": "0",
+          "crit": "0.4x+3",
+          "accuracy": "2x+120",
+          "maxMana": "0",
+          "manaRegen": "0",
+          "spellPower": "0",
+          "will": "0.6x+5",
+          "magicArmor": "3.6x+28",
+          "concentration": "0",
+          "onCrit": "bleed 18+3x",
+          "critMultiplier": 1.65,
+          "ranged": false,
+          "range": {
+            "width": 18.4,
+            "height": 20
+          },
+          "skills":{
+            "pasives":[
+              {"name": "hard_skin", "effect": "armorChange(3x+30, -3)"}
+            ],
+            "spells":{}
+          },
+          "detectionRange": 300,
+          "behavour": 2,
+          "isBoss": false
+        },
+        "animations": {
+          "attack": [0, 1, 2, 3, 4, 5, 6, 7],
+          "attackEnd": [5, 3, 1, 0]
+        }
+      },
         "chimera": {
             "name": "chimera",
             "width": 46,
@@ -1373,7 +1423,7 @@
             "centerY": false,
             "character": {
               "xpFactor": 80,
-              "bountyFactor": 30,
+              "bountyFactor": 60,
               "race": "beast",
               "fortitude": "2x+14",
               "damage": "33x+105",
@@ -1400,7 +1450,7 @@
               },
               "skills":{
                 "pasives":[
-                  {"name": "resilience", "effect": "unstopable(-1)"}
+                  {"name": "resilience", "effect": "unstopable(-3)"}
                 ],
                 "spells":{
                   "q":{

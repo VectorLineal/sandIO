@@ -602,20 +602,20 @@ export default class SceneGame extends Phaser.Scene {
     let labelReader = RegExp(/^(area|aura)Box\.\w+(\#\d+)?$/);
 
     if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null) {
-      console.log("sirvo para una mierda");
+      //console.log("sirvo para una mierda");
       switch(bodyA.label.split(".")[0]){
         case "areaBox":
         case "auraBox":
           for(var i = 0; i < event.pairs.length; i++){
             if(event.pairs[i].bodyB.gameObject != null){
-              console.log("pair", event.pairs[i].bodyB);
+              //console.log("pair", event.pairs[i].bodyB);
               bodyA.onBodyOut({scene: this, caster: bodyA.attackParams.caster, target: event.pairs[i].bodyB.gameObject.getData("backend")});
             }
           }
           break;
       }
     } else if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label) && bodyA.gameObject != null) {
-      console.log("sirvo para una mierda");
+      //console.log("sirvo para una mierda");
       switch(bodyB.label.split(".")[0]){
         case "areaBox":
         case "auraBox":
@@ -630,14 +630,14 @@ export default class SceneGame extends Phaser.Scene {
       }
       
     }
-    console.log("body A:", bodyA.label, ", body B:", bodyB.label);
+    //console.log("body A:", bodyA.label, ", body B:", bodyB.label);
   }
 
   restoreAura(event, bodyA, bodyB){
     let labelReader = RegExp(/^(area|aura)Box\.\w+(\#\d+)?$/);
 
     if (labelReader.test(bodyA.label) && !labelReader.test(bodyB.label) && bodyB.gameObject != null) {
-      console.log("sirvo para dos mierdas A", bodyA.label, ",", bodyA.timer);
+      //console.log("sirvo para dos mierdas A", bodyA.label, ",", bodyA.timer);
       var tempList = [];
       for(var i = 0; i < event.pairs.length; i++){
         if(event.pairs[i].bodyA.onBodyOut != null && this.deletionList.includes(event.pairs[i].bodyA.label)){
@@ -660,7 +660,7 @@ export default class SceneGame extends Phaser.Scene {
           this.deletionList.remove(tempList[j]);
     }
     if (labelReader.test(bodyB.label) && !labelReader.test(bodyA.label) && bodyA.gameObject != null) {
-      console.log("sirvo para dos mierdas B", bodyA.label, ",", bodyA.timer);
+      //console.log("sirvo para dos mierdas B", bodyA.label, ",", bodyA.timer);
       var tempList = [];
       for(var i = 0; i < event.pairs.length; i++){
         if(event.pairs[i].bodyA.onBodyOut != null && this.deletionList.includes(event.pairs[i].bodyA.label)){
@@ -689,7 +689,7 @@ export default class SceneGame extends Phaser.Scene {
       let labelReader = RegExp(/^(area|bounty|projectile|aura)Box\.\w+(\#\d+)?$/);
       if (labelReader.test(this.matter.world.getAllBodies()[index].label)) {
         if(this.matter.world.getAllBodies()[index].label.split("#")[0] == code){
-          console.log("destroyed body", this.matter.world.getAllBodies()[index]);
+          //console.log("destroyed body", this.matter.world.getAllBodies()[index]);
           this.matter.world.getAllBodies()[index].timer = 1;
           this.deletionList.push(this.matter.world.getAllBodies()[index].label);
         }
@@ -828,7 +828,7 @@ export default class SceneGame extends Phaser.Scene {
         .setData("timer", 0)
         .setScale(0.2 * (9.84 / this.scaleRatio))
     );
-    sprite.body.label = "building";
+    sprite.body.label = params.name;
     sprite.setCollisionGroup(group);
     sprite.setCollisionCategory(category);
     sprite.setCollidesWith(mask);
